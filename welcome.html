@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FoneStore Welcome</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --gold: #d4af37;
+            --gold-light: #f5d76e;
+            --gold-soft: rgba(212, 175, 55, 0.12);
+            --black: #0a0a0a;
+            --dark: #111111;
+            --dark-2: #161616;
+            --text: #f5f5f5;
+            --muted: #b8b8b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(to bottom, #050505, #0d0d0d, #121212);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* ===== NAV ===== */
+        .premium-navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 999;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+            transition: all 0.4s ease;
+        }
+
+        .navbar-brand {
+            color: var(--gold) !important;
+            font-weight: 800;
+            letter-spacing: 2px;
+            font-size: 1.3rem;
+        }
+
+        .nav-link {
+            color: #f1f1f1 !important;
+            font-weight: 500;
+            margin-left: 14px;
+            transition: 0.3s;
+        }
+
+        .nav-link:hover {
+            color: var(--gold) !important;
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #111;
+            font-weight: 700;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 999px;
+            transition: all 0.35s ease;
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.25);
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(212, 175, 55, 0.35);
+            color: #111;
+        }
+
+        .btn-outline-gold {
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 11px 24px;
+            border-radius: 999px;
+            font-weight: 600;
+            transition: 0.3s;
+            background: transparent;
+        }
+
+        .btn-outline-gold:hover {
+            background: var(--gold);
+            color: #111;
+            transform: translateY(-2px);
+        }
+
+        /* ===== SECTION BASE ===== */
+        .section {
+            position: relative;
+            padding: 110px 0;
+        }
+
+        .section-title {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: var(--gold);
+            margin-bottom: 18px;
+            letter-spacing: 1px;
+        }
+
+        .section-subtitle {
+            color: var(--muted);
+            font-size: 1.05rem;
+            line-height: 1.9;
+            max-width: 720px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-radius: 26px;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.15), transparent 35%),
+                radial-gradient(circle at 80% 30%, rgba(212, 175, 55, 0.08), transparent 30%),
+                linear-gradient(135deg, #050505 0%, #0b0b0b 40%, #131313 100%);
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(212,175,55,0.15), transparent 70%);
+            top: -120px;
+            right: -150px;
+            filter: blur(60px);
+            animation: floatGlow 8s ease-in-out infinite alternate;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(212,175,55,0.08), transparent 70%);
+            bottom: -80px;
+            left: -120px;
+            filter: blur(50px);
+            animation: floatGlow 10s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes floatGlow {
+            from { transform: translateY(0px) translateX(0px) scale(1); }
+            to { transform: translateY(30px) translateX(20px) scale(1.05); }
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 999px;
+            background: rgba(212, 175, 55, 0.12);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            color: var(--gold-light);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 18px;
+        }
+
+        .hero-title span {
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+        }
+
+        .hero-desc {
+            font-size: 1.08rem;
+            color: #d5d5d5;
+            line-height: 1.9;
+            max-width: 620px;
+            margin-bottom: 34px;
+        }
+
+        .hero-video-box {
+            position: relative;
+            border-radius: 28px;
+            overflow: hidden;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+            transform: perspective(1200px) rotateY(-8deg) rotateX(4deg);
+            transition: 0.5s ease;
+        }
+
+        .hero-video-box:hover {
+            transform: perspective(1200px) rotateY(-2deg) rotateX(2deg) scale(1.01);
+        }
+
+        .hero-video-box video {
+            width: 100%;
+            height: 520px;
+            object-fit: cover;
+            display: block;
+            background: #000;
+        }
+
+        .video-label {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            background: rgba(0,0,0,0.55);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            color: var(--gold-light);
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+        }
+
+        /* ===== FEATURE CARDS ===== */
+        .feature-card {
+            padding: 32px 28px;
+            height: 100%;
+            transition: all 0.35s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(212, 175, 55, 0.35);
+            box-shadow: 0 25px 55px rgba(212, 175, 55, 0.08);
+        }
+
+        .feature-icon {
+            width: 62px;
+            height: 62px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 18px;
+            background: var(--gold-soft);
+            color: var(--gold);
+            font-size: 1.6rem;
+            margin-bottom: 22px;
+        }
+
+        .feature-card h5 {
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--muted);
+            line-height: 1.8;
+            margin-bottom: 0;
+        }
+
+        /* ===== SHOWCASE ===== */
+        .showcase-box {
+            padding: 30px;
+        }
+
+        .product-shot {
+            border-radius: 28px;
+            overflow: hidden;
+            border: 1px solid rgba(212,175,55,0.15);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+        }
+
+        .product-shot img {
+            width: 100%;
+            height: 560px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .spec-list li {
+            list-style: none;
+            margin-bottom: 16px;
+            color: #e5e5e5;
+            font-size: 1rem;
+        }
+
+        .spec-list li i {
+            color: var(--gold);
+            margin-right: 10px;
+        }
+
+        /* ===== PREMIUM STRIP ===== */
+        .premium-strip {
+            padding: 80px 0;
+            background:
+                linear-gradient(90deg, rgba(212,175,55,0.06), rgba(255,255,255,0.01), rgba(212,175,55,0.06));
+            border-top: 1px solid rgba(212,175,55,0.08);
+            border-bottom: 1px solid rgba(212,175,55,0.08);
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 24px;
+        }
+
+        .stat-number {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #d2d2d2;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        /* ===== CTA ===== */
+        .cta-box {
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .cta-box h2 {
+            font-size: 2.6rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            color: var(--gold);
+        }
+
+        .cta-box p {
+            max-width: 760px;
+            margin: auto;
+            color: var(--muted);
+            line-height: 1.9;
+            margin-bottom: 30px;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer-mini {
+            padding: 28px 0;
+            border-top: 1px solid rgba(212,175,55,0.08);
+            color: #8e8e8e;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        /* ===== SCROLL ANIMATION ===== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.9s ease;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== FLOATING BUTTON ===== */
+        .floating-enter {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 999;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 18px 40px rgba(212,175,55,0.28);
+            font-size: 1.3rem;
+            transition: 0.3s;
+        }
+
+        .floating-enter:hover {
+            transform: translateY(-4px) scale(1.04);
+            color: #111;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 991px) {
+            .hero-title {
+                font-size: 2.8rem;
+            }
+
+            .hero-video-box {
+                margin-top: 30px;
+                transform: none;
+            }
+
+            .hero-video-box video {
+                height: 320px;
+            }
+
+            .product-shot img {
+                height: 360px;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .hero-title {
+                font-size: 2.2rem;
+            }
+
+            .hero-desc {
+                font-size: 0.98rem;
+            }
+
+            .cta-box h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAV -->
+    <nav class="navbar navbar-expand-lg premium-navbar">
+        <div class="container">
+            <a class="navbar-brand" href="#">FONESTORE</a>
+            <button class="navbar-toggler bg-warning" type="button" data-bs-toggle="collapse" data-bs-target="#welcomeNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="welcomeNav">
+                <ul class="navbar-nav align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link" href="#hero">Trang đầu</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#features">Điểm nổi bật</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#showcase">Sản phẩm mới</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#experience">Trải nghiệm</a></li>
+                    <li class="nav-item ms-lg-3 mt-3 mt-lg-0">
+                        <a href="index.html" class="btn btn-gold">Khám phá thêm</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- SECTION 1: HERO -->
+    <section id="hero" class="hero section">
+        <div class="container">
+            <div class="row align-items-center gy-5">
+                <div class="col-lg-6 reveal">
+                    <div class="hero-badge">
+                        <i class="bi bi-stars"></i>
+                        Bộ sưu tập công nghệ cao cấp 2026
+                    </div>
+                    <h1 class="hero-title">
+                        Chạm <span>"điểm G"</span>, khiến đàn ông mê mẩn, đàn bà sung sướng
+                    </h1>
+                    <p class="hero-desc">
+                        Với kinh nghiệm hơn 20 năm thực chiến qua các công ty công nghệ đỉnh cao. Nay, tôi chính thức mang đến cho tất cả mọi người Shop bán điện thoại đẳng cấp nhất Việt Nam.
+                    </p>
+
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="index.html" class="btn btn-gold">
+                            <i class="bi bi-arrow-right-circle me-2"></i>Khám phá thêm
+                        </a>
+                        <a href="#showcase" class="btn btn-outline-gold">
+                            <i class="bi bi-play-circle me-2"></i>Xem sản phẩm mới
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 reveal">
+                    <div class="hero-video-box">
+                        
+                        <video autoplay muted loop playsinline preload="auto" poster="assets/video/poster.jpg">
+                                <source src="assets/video/quangcaoSamsung.mp4" type="video/mp4">
+                                Trình duyệt của bạn không hỗ trợ video.
+                        </video>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2: FEATURES -->
+    <section id="features" class="section">
+        <div class="container">
+            <div class="text-center mb-5 reveal">
+                <h2 class="section-title">Điểm nổi bật tại FoneStore</h2>
+                <p class="section-subtitle mx-auto">
+                    Không chỉ là nơi bán sản phẩm công nghệ, FoneStore được xây dựng như một không gian trải nghiệm đậm chất premium,
+                    nơi thiết kế, hiệu năng và dịch vụ cùng hội tụ trong một hệ sinh thái hiện đại.
+                </p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3 reveal">
+                    <div class="glass-card feature-card">
+                        <div class="feature-icon"><i class="bi bi-phone"></i></div>
+                        <h5>Thiết bị cao cấp</h5>
+                        <p>Các dòng điện thoại và phụ kiện được tuyển chọn với thiết kế sang trọng, cấu hình mạnh và độ hoàn thiện cao.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3 reveal">
+                    <div class="glass-card feature-card">
+                        <div class="feature-icon"><i class="bi bi-lightning-charge"></i></div>
+                        <h5>Hiệu năng vượt trội</h5>
+                        <p>Trải nghiệm tốc độ, xử lý mượt mà và tối ưu cho nhu cầu học tập, làm việc, giải trí và sáng tạo nội dung.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3 reveal">
+                    <div class="glass-card feature-card">
+                        <div class="feature-icon"><i class="bi bi-shield-check"></i></div>
+                        <h5>Chính hãng & bảo hành</h5>
+                        <p>Cam kết chất lượng sản phẩm, minh bạch thông tin và hỗ trợ khách hàng theo phong cách chuyên nghiệp.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3 reveal">
+                    <div class="glass-card feature-card">
+                        <div class="feature-icon"><i class="bi bi-gem"></i></div>
+                        <h5>Phong cách đẳng cấp</h5>
+                        <p>Giao diện, trải nghiệm và dịch vụ được thiết kế để mang lại cảm giác mua sắm công nghệ sang trọng hơn.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 3: SHOWCASE -->
+    <section id="showcase" class="section">
+        <div class="container">
+            <div class="row align-items-center gy-5">
+                <div class="col-lg-6 reveal">
+                    <div class="product-shot">
+                        <video autoplay muted loop playsinline preload="auto" poster="assets/video/poster.jpg">
+                                <source src="assets/video/quangcaoApple.mp4" type="video/mp4">
+                                Trình duyệt của bạn không hỗ trợ video.
+                        </video>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 reveal">
+                    <div class="glass-card showcase-box">
+                        <p class="text-uppercase mb-2" style="letter-spacing: 2px; color: var(--gold-light); font-weight: 600;">New Arrival 2026</p>
+                        <h2 class="section-title mb-3">Biểu tượng mới của hiệu năng và thẩm mỹ</h2>
+                        <p class="section-subtitle mb-4">
+                            Sản phẩm thế hệ mới được định hình bởi ngôn ngữ thiết kế tối giản nhưng mạnh mẽ,
+                            khung viền tinh xảo, camera sắc nét và trải nghiệm mượt mà trong từng thao tác.
+                        </p>
+
+                        <ul class="spec-list ps-0 mb-4">
+                            <li><i class="bi bi-check-circle-fill"></i>Thiết kế nguyên khối sang trọng, cảm giác cầm nắm cao cấp</li>
+                            <li><i class="bi bi-check-circle-fill"></i>Màn hình sắc nét, hiển thị chân thực và sống động</li>
+                            <li><i class="bi bi-check-circle-fill"></i>Hiệu năng mạnh mẽ cho công việc và giải trí</li>
+                            <li><i class="bi bi-check-circle-fill"></i>Camera chất lượng cao cho hình ảnh chuyên nghiệp</li>
+                        </ul>
+
+                        <a href="index.html" class="btn btn-gold">
+                            Xem bộ sưu tập <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 4: PREMIUM STRIP -->
+    <section id="experience" class="premium-strip">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4 reveal">
+                    <div class="glass-card stat-box">
+                        <div class="stat-number">Kiến Thức</div>
+                        <div class="stat-label">Thiết kế xu hướng mới</div>
+                    </div>
+                </div>
+                <div class="col-md-4 reveal">
+                    <div class="glass-card stat-box">
+                        <div class="stat-number">Kinh Nghiệm</div>
+                        <div class="stat-label">Trải nghiệm cao cấp</div>
+                    </div>
+                </div>
+                <div class="col-md-4 reveal">
+                    <div class="glass-card stat-box">
+                        <div class="stat-number">Trải Nghiệm</div>
+                        <div class="stat-label">Chuyển động mượt mà</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 5: CTA -->
+    <section class="section">
+        <div class="container">
+            <div class="glass-card cta-box reveal">
+                <h2>Sẵn sàng bước vào thế giới công nghệ sang trọng?</h2>
+                <p>
+                    Từ những thiết bị nổi bật nhất đến trải nghiệm mua sắm trực quan và hiện đại,
+                    FoneStore được thiết kế để mang lại cho bạn cảm giác chuyên nghiệp ngay từ lần chạm đầu tiên.
+                </p>
+                <a href="index.html" class="btn btn-gold btn-lg px-5">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Vào trang chính
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer id="mainFooter" class="mt-5">
+        <div class="container py-4">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5 class="fw-bold text-warning">FSTORE</h5>
+                    <p class="small">
+                        Nền tảng thương mại điện tử uy tín hàng đầu Việt Nam,
+                        chuyên cung cấp các sản phẩm điện thoại chính hãng,
+                        giá tốt và dịch vụ khách hàng tận tâm.
+                    </p>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <h6 class="fw-bold text-warning">Liên kết nhanh</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="index.html">Trang chủ</a></li>
+                        <li><a href="#">Sản phẩm</a></li>
+                        <li><a href="#">Diễn đàn</a></li>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <h6 class="fw-bold text-warning">Liên hệ</h6>
+                    <p class="small mb-1"><i class="fas fa-map-marker-alt me-2"></i> 828 Sư Vạn Hạnh, Phường Hòa Hưng, Quận 10, TP. HCM</p>
+                    <p class="small mb-1"><i class="fas fa-phone me-2"></i> 028 3863 2052</p>
+                    <p class="small mb-2"><i class="fas fa-envelope me-2"></i> support@st.huflit.edu.vn</p>
+
+                    <div class="mt-3">
+                        <a href="https://www.facebook.com/huflit.edu.vn" target="_blank" class="me-2 text-warning"><i class="fab fa-facebook fa-lg"></i></a>
+                        <a href="https://www.instagram.com/huflit.uni/" target="_blank" class="me-2 text-warning"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="https://www.tiktok.com/@huflit.official" target="_blank" class="text-warning"><i class="fab fa-tiktok fa-lg"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-light opacity-50" />
+
+            <div class="text-center small opacity-75">
+                Công ty TNHH Thương Mại và Dịch Vụ Kỹ Thuật FriendShipStore - GPĐKKD: 0999999999 cấp tại Sở KH & ĐT TP. HCM. <br />
+                Địa chỉ văn phòng: 828 Sư Vạn Hạnh, Phường Hòa Hưng, Quận 10, TP. HCM. Điện thoại: 028 3863 2052.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Hiệu ứng hiện khi cuộn
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll(".reveal");
+
+            reveals.forEach((el) => {
+                const windowHeight = window.innerHeight;
+                const elementTop = el.getBoundingClientRect().top;
+                const visiblePoint = 120;
+
+                if (elementTop < windowHeight - visiblePoint) {
+                    el.classList.add("active");
+                }
+            });
+        }
+
+        window.addEventListener("scroll", revealOnScroll);
+        window.addEventListener("load", revealOnScroll);
+    </script>
+</body>
+</html>

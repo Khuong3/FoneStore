@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Sản phẩm - FoneStore Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .sidebar { min-height: 100vh; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+        .nav-link { color: #ced4da; transition: 0.3s; border-radius: 5px; margin-bottom: 5px; }
+        .nav-link:hover, .nav-link.active { background: #343a40; color: #fff !important; }
+        .nav-pills .nav-link.active { background-color: #0d6efd !important; }
+        .form-label { font-weight: 600; font-size: 0.9rem; margin-bottom: 2px; }
+        .card { border: none; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); }
+
+        /* Style cho dải xám hết hàng */
+        .stock-out { background-color: #f8f9fa !important; color: #adb5bd !important; }
+        .stock-out img { opacity: 0.5; filter: grayscale(1); }
+        .out-of-stock-label { 
+            background: #6c757d; color: white; padding: 2px 8px; 
+            border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 5px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 d-none d-md-block bg-dark sidebar p-3 text-center">
+                <h4 class="text-white mb-4 border-bottom pb-3">Admin Panel</h4>
+                <ul class="nav flex-column text-start">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">📊 Thống kê</a></li>
+                    <li class="nav-item"><a class="nav-link active fw-bold" href="products.html">📦 Sản phẩm</a></li>
+                    <li class="nav-item"><a class="nav-link" href="orders.html">📋 Đơn hàng</a></li>
+                    <li class="nav-item mt-5"><a class="nav-link text-secondary" href="../../index.html">← Về trang chủ</a></li>
+                </ul>
+            </nav>
+
+            <main class="col-md-10 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Quản lý kho hàng</h2>
+                </div>
+
+                <ul class="nav nav-pills mb-4 bg-white p-2 rounded shadow-sm" id="pills-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-category">1. Danh mục</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-product">2. Chi tiết Sản phẩm</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-stock" onclick="loadStockManagement()">3. Số lượng tồn kho</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="tab-category">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card p-3">
+                                    <h5 id="cat-form-title">Thêm danh mục</h5>
+                                    <input type="hidden" id="cat-id">
+                                    <div class="mb-3">
+                                        <input type="text" id="cat-name" class="form-control" placeholder="Tên danh mục (VD: iPhone 16)">
+                                    </div>
+                                    <button class="btn btn-primary w-100" onclick="saveCategory()">Lưu danh mục</button>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="card p-3">
+                                    <table class="table table-hover align-middle">
+                                        <thead><tr><th>Tên danh mục</th><th class="text-end">Hành động</th></tr></thead>
+                                        <tbody id="cat-list-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tab-product">
+                        <div class="card p-4 mb-4">
+                            <h5 id="prod-form-title" class="text-primary mb-3">Thêm sản phẩm mới</h5>
+                            <form id="productForm" class="row g-3">
+                                <input type="hidden" id="prod-id">
+                                
+                                <div class="col-md-3">
+                                    <label class="form-label">Danh mục</label>
+                                    <select id="prod-category" class="form-select border-primary" required></select>
+                                </div>
+                                <div class="col-md-4"><label class="form-label">Tên máy</label><input type="text" id="name" class="form-control" required></div>
+                                <div class="col-md-3"><label class="form-label">Giá (đ)</label><input type="number" id="price" class="form-control" required></div>
+                                <div class="col-md-2"><label class="form-label text-success">Số lượng kho</label><input type="number" id="prod-stock" class="form-control border-success" value="0" min="0" required></div>
+
+                                <div class="col-12">
+                                    <label class="form-label text-primary fw-bold">Mô tả sản phẩm (Hiển thị trang chi tiết)</label>
+                                    <textarea id="description" class="form-control" rows="2" placeholder="Nhập giới thiệu về sản phẩm, khuyến mãi..."></textarea>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label text-danger fw-bold">Hình 1 (Ảnh chính)</label>
+                                    <input type="text" id="img1" class="form-control form-control-sm" placeholder="URL ảnh 1" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-secondary">Hình 2</label>
+                                    <input type="text" id="img2" class="form-control form-control-sm" placeholder="URL ảnh 2">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-secondary">Hình 3</label>
+                                    <input type="text" id="img3" class="form-control form-control-sm" placeholder="URL ảnh 3">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-secondary">Hình 4</label>
+                                    <input type="text" id="img4" class="form-control form-control-sm" placeholder="URL ảnh 4">
+                                </div>
+
+                                <div class="col-md-2"><label class="form-label text-muted small">Hệ điều hành</label><input type="text" id="os" class="form-control form-control-sm"></div>
+                                <div class="col-md-2"><label class="form-label text-muted small">CPU</label><input type="text" id="cpu" class="form-control form-control-sm"></div>
+                                <div class="col-md-2"><label class="form-label text-muted small">RAM</label><input type="text" id="ram" class="form-control form-control-sm"></div>
+                                <div class="col-md-2"><label class="form-label text-muted small">ROM</label><input type="text" id="rom" class="form-control form-control-sm"></div>
+                                <div class="col-md-2"><label class="form-label text-muted small">Pin & Sạc</label><input type="text" id="battery" class="form-control form-control-sm"></div>
+                                <div class="col-md-2"><label class="form-label text-muted small">GPU</label><input type="text" id="gpu" class="form-control form-control-sm"></div>
+                                <div class="col-md-3"><label class="form-label text-muted small">Màn hình</label><input type="text" id="screen" class="form-control form-control-sm"></div>
+                                <div class="col-md-3"><label class="form-label text-muted small">Camera sau</label><input type="text" id="backCam" class="form-control form-control-sm"></div>
+                                <div class="col-md-3"><label class="form-label text-muted small">Camera trước</label><input type="text" id="frontCam" class="form-control form-control-sm"></div>
+                                <div class="col-md-3"><label class="form-label text-muted small">Thẻ nhớ/Khác</label><input type="text" id="microSD" class="form-control form-control-sm"></div>
+
+                                <div class="col-12 text-end border-top pt-3">
+                                    <button type="button" class="btn btn-secondary me-2" onclick="resetProdForm()">Hủy/Làm mới</button>
+                                    <button type="submit" class="btn btn-success px-4">Lưu sản phẩm</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="card p-3">
+                            <table class="table align-middle">
+                                <thead class="table-dark">
+                                    <tr><th>Ảnh chính</th><th>Tên sản phẩm</th><th>Danh mục</th><th>Kho</th><th>Giá</th><th class="text-end">Thao tác</th></tr>
+                                </thead>
+                                <tbody id="prod-list-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tab-stock">
+                        <div class="card p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5>Điều chỉnh số lượng nhanh</h5>
+                                <button class="btn btn-outline-primary btn-sm" onclick="loadStockManagement()">Làm mới kho</button>
+                            </div>
+                            <table class="table table-bordered align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th width="150">Số lượng hiện có</th>
+                                        <th width="200">Cập nhật mới</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stock-list-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { auth, db } from '../../js/config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { collection, addDoc, getDocs, doc, deleteDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        // 1. BẢO VỆ TRANG
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { window.location.href = "../login.html"; return; }
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (!userDoc.exists() || userDoc.data().role !== "admin") {
+                alert("Bạn không có quyền truy cập!");
+                window.location.href = "../../index.html";
+            }
+        });
+
+        // 2. QUẢN LÝ DANH MỤC (Giữ nguyên)
+        window.saveCategory = async () => {
+            const id = document.getElementById('cat-id').value;
+            const name = document.getElementById('cat-name').value;
+            if(!name) return alert("Vui lòng nhập tên danh mục!");
+            if(id) await updateDoc(doc(db, "categories", id), { name });
+            else await addDoc(collection(db, "categories"), { name });
+            document.getElementById('cat-name').value = '';
+            document.getElementById('cat-id').value = '';
+            document.getElementById('cat-form-title').innerText = "Thêm danh mục";
+            loadCategories();
+        };
+
+        async function loadCategories() {
+            const snap = await getDocs(collection(db, "categories"));
+            let html = '', options = '<option value="">-- Chọn danh mục --</option>';
+            snap.forEach(d => {
+                const c = d.data();
+                html += `<tr><td><b>${c.name}</b></td><td class="text-end">
+                    <button class="btn btn-sm btn-warning me-1" onclick="editCat('${d.id}','${c.name}')"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteCat('${d.id}')"><i class="bi bi-trash"></i></button>
+                </td></tr>`;
+                options += `<option value="${d.id}">${c.name}</option>`;
+            });
+            document.getElementById('cat-list-body').innerHTML = html;
+            document.getElementById('prod-category').innerHTML = options;
+        }
+
+        window.editCat = (id, name) => { 
+            document.getElementById('cat-id').value = id; 
+            document.getElementById('cat-name').value = name;
+            document.getElementById('cat-form-title').innerText = "Sửa danh mục";
+        };
+        
+        window.deleteCat = async (id) => { if(confirm("Xóa danh mục này?")) { await deleteDoc(doc(db, "categories", id)); loadCategories(); } };
+
+        // 3. QUẢN LÝ SẢN PHẨM
+        const prodForm = document.getElementById('productForm');
+        prodForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('prod-id').value;
+
+            const imgList = [
+                document.getElementById('img1').value,
+                document.getElementById('img2').value,
+                document.getElementById('img3').value,
+                document.getElementById('img4').value
+            ].filter(url => url.trim() !== "");
+
+            const data = {
+                categoryId: document.getElementById('prod-category').value,
+                name: document.getElementById('name').value,
+                price: Number(document.getElementById('price').value),
+                stock: Number(document.getElementById('prod-stock').value || 0), // Thêm stock
+                img: imgList[0] || "",
+                images: imgList,
+                description: document.getElementById('description').value,
+                specs: {
+                    os: document.getElementById('os').value, cpu: document.getElementById('cpu').value,
+                    ram: document.getElementById('ram').value, rom: document.getElementById('rom').value,
+                    battery: document.getElementById('battery').value, gpu: document.getElementById('gpu').value,
+                    screen: document.getElementById('screen').value, backCam: document.getElementById('backCam').value,
+                    frontCam: document.getElementById('frontCam').value, microSD: document.getElementById('microSD').value
+                }
+            };
+
+            try {
+                if(id) await updateDoc(doc(db, "products", id), data);
+                else await addDoc(collection(db, "products"), data);
+                alert("Đã lưu thành công!");
+                resetProdForm();
+                loadProducts();
+            } catch (err) { alert("Lỗi: " + err.message); }
+        };
+
+        async function loadProducts() {
+            const prodSnap = await getDocs(collection(db, "products"));
+            const catSnap = await getDocs(collection(db, "categories"));
+            const cats = {}; catSnap.forEach(d => cats[d.id] = d.data().name);
+
+            let html = '';
+            prodSnap.forEach(d => {
+                const p = d.data();
+                const isOutOfStock = p.stock <= 0;
+                // Render dải xám nếu hết hàng
+                html += `<tr class="${isOutOfStock ? 'stock-out' : ''}">
+                    <td><img src="${p.img}" width="45" class="rounded border"></td>
+                    <td>
+                        <b>${p.name}</b>
+                        ${isOutOfStock ? '<span class="out-of-stock-label">HẾT HÀNG</span>' : ''}
+                    </td>
+                    <td><span class="badge bg-secondary">${cats[p.categoryId] || 'N/A'}</span></td>
+                    <td><span class="fw-bold ${isOutOfStock ? 'text-danger' : 'text-primary'}">${p.stock || 0}</span></td>
+                    <td class="text-danger fw-bold">${p.price.toLocaleString()}đ</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-warning me-1" onclick="editProd('${d.id}')">Sửa</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteProd('${d.id}')">Xóa</button>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('prod-list-body').innerHTML = html;
+        }
+
+        // 4. QUẢN LÝ TỒN KHO RIÊNG BIỆT
+        window.loadStockManagement = async () => {
+            const snap = await getDocs(collection(db, "products"));
+            let html = '';
+            snap.forEach(d => {
+                const p = d.data();
+                html += `<tr>
+                    <td>${p.name}</td>
+                    <td class="text-center"><span class="badge ${p.stock > 0 ? 'bg-success' : 'bg-danger'}">${p.stock || 0}</span></td>
+                    <td>
+                        <div class="input-group input-group-sm">
+                            <input type="number" id="quick-stock-${d.id}" class="form-control" value="${p.stock || 0}">
+                            <button class="btn btn-primary" onclick="quickUpdateStock('${d.id}')">Cập nhật</button>
+                        </div>
+                    </td>
+                    <td>${p.stock > 0 ? '✅ Còn hàng' : '❌ Hết hàng'}</td>
+                </tr>`;
+            });
+            document.getElementById('stock-list-body').innerHTML = html;
+        };
+
+        window.quickUpdateStock = async (id) => {
+            const newStock = document.getElementById(`quick-stock-${id}`).value;
+            await updateDoc(doc(db, "products", id), { stock: Number(newStock) });
+            alert("Đã cập nhật số lượng kho!");
+            loadStockManagement();
+            loadProducts();
+        };
+
+        window.editProd = async (id) => {
+            const d = await getDoc(doc(db, "products", id));
+            const p = d.data();
+            document.getElementById('prod-id').value = id;
+            document.getElementById('prod-category').value = p.categoryId;
+            document.getElementById('name').value = p.name;
+            document.getElementById('price').value = p.price;
+            document.getElementById('prod-stock').value = p.stock || 0; // Đổ stock vào form
+            document.getElementById('description').value = p.description || "";
+            if(p.images) {
+                document.getElementById('img1').value = p.images[0] || "";
+                document.getElementById('img2').value = p.images[1] || "";
+                document.getElementById('img3').value = p.images[2] || "";
+                document.getElementById('img4').value = p.images[3] || "";
+            }
+            if(p.specs) {
+                for(let key in p.specs) {
+                    const el = document.getElementById(key);
+                    if(el) el.value = p.specs[key];
+                }
+            }
+            document.getElementById('prod-form-title').innerText = "Đang sửa: " + p.name;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.resetProdForm = () => { 
+            prodForm.reset(); 
+            document.getElementById('prod-id').value = ''; 
+            document.getElementById('prod-form-title').innerText = "Thêm sản phẩm mới"; 
+        };
+
+        window.deleteProd = async (id) => { 
+            if(confirm("Xóa sản phẩm này?")) { await deleteDoc(doc(db, "products", id)); loadProducts(); } 
+        };
+
+        loadCategories();
+        loadProducts();
+    </script>
+</body>
+</html>

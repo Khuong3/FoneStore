@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Giỏ hàng - FoneStore</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container"><a class="navbar-brand fw-bold" href="../index.html">FoneStore</a></div>
+    </nav>
+
+    <div class="container">
+        <h2 class="mb-4">Giỏ hàng của <span id="user-display" class="text-primary fw-bold">Đang tải...</span></h2>
+        
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <table class="table mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr><th>Sản phẩm</th><th>Giá</th><th>Số lượng</th><th>Tổng</th><th>Thao tác</th></tr>
+                    </thead>
+                    <tbody id="cart-table-body">
+                        <tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer text-end">
+                <h4>Tổng cộng: <span id="total-price" class="text-danger">0đ</span></h4>
+                <button id="btn-checkout" class="btn btn-primary btn-lg px-5 fw-bold">
+                    <i class="bi bi-wallet2"></i> THANH TOÁN MOMO
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db } from '../js/config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { doc, getDoc, updateDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        let userUID = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userUID = user.uid;
+                const userSnap = await getDoc(doc(db, "users", userUID));
+                document.getElementById('user-display').innerText = (userSnap.exists() && userSnap.data().fullName) ? userSnap.data().fullName : user.email;
+                renderCart();
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // --- GIỮ NGUYÊN LOGIC RENDER ---
+        async function renderCart() {
+            if (!userUID) return;
+            const cartSnap = await getDoc(doc(db, "carts", userUID));
+            const tableBody = document.getElementById('cart-table-body');
+            let total = 0;
+
+            if (!cartSnap.exists() || !cartSnap.data().items || cartSnap.data().items.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Giỏ hàng trống!</td></tr>';
+                document.getElementById('total-price').innerText = "0đ";
+                return;
+            }
+
+            const items = cartSnap.data().items;
+            let html = '';
+            items.forEach((item, index) => {
+                const subtotal = item.price * item.quantity;
+                total += subtotal;
+                html += `
+                    <tr>
+                        <td><img src="${item.img}" width="50" class="me-2 rounded border"><span>${item.name}</span></td>
+                        <td>${item.price.toLocaleString()}đ</td>
+                        <td>
+                            <div class="input-group input-group-sm" style="width: 120px;">
+                                <button class="btn btn-outline-secondary" onclick="updateQty(${index}, -1)">-</button>
+                                <input type="text" class="form-control text-center" value="${item.quantity}" readonly>
+                                <button class="btn btn-outline-secondary" onclick="updateQty(${index}, 1)">+</button>
+                            </div>
+                        </td>
+                        <td class="fw-bold">${subtotal.toLocaleString()}đ</td>
+                        <td><button class="btn btn-sm btn-outline-danger" onclick="removeItem(${index})">Xóa</button></td>
+                    </tr>`;
+            });
+            tableBody.innerHTML = html;
+            document.getElementById('total-price').innerText = total.toLocaleString() + "đ";
+        }
+
+        // --- GIỮ NGUYÊN LOGIC CỘNG/TRỪ KHO ---
+        window.updateQty = async (index, change) => {
+            const cartRef = doc(db, "carts", userUID);
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const cartSnap = await transaction.get(cartRef);
+                    let items = cartSnap.data().items;
+                    const item = items[index];
+                    const productRef = doc(db, "products", item.id);
+                    const productSnap = await transaction.get(productRef);
+                    const currentStock = productSnap.data().stock || 0;
+
+                    if (change > 0) {
+                        if (currentStock <= 0) throw "Kho không đủ hàng!";
+                        item.quantity += 1;
+                        transaction.update(productRef, { stock: currentStock - 1 });
+                    } else if (change < 0 && item.quantity > 1) {
+                        item.quantity -= 1;
+                        transaction.update(productRef, { stock: currentStock + 1 });
+                    }
+                    transaction.update(cartRef, { items: items });
+                });
+                renderCart();
+            } catch (e) { alert(e); }
+        };
+
+        // --- GIỮ NGUYÊN LOGIC XÓA SẢN PHẨM ---
+        window.removeItem = async (index) => {
+            if (!confirm("Bạn muốn xóa sản phẩm này?")) return;
+            const cartRef = doc(db, "carts", userUID);
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const cartSnap = await transaction.get(cartRef);
+                    let items = cartSnap.data().items;
+                    const removedItem = items[index];
+                    const productRef = doc(db, "products", removedItem.id);
+                    const productSnap = await transaction.get(productRef);
+                    
+                    const newStock = (productSnap.data().stock || 0) + removedItem.quantity;
+                    transaction.update(productRef, { stock: newStock });
+
+                    items.splice(index, 1);
+                    transaction.update(cartRef, { items: items });
+                });
+                renderCart();
+            } catch (e) { console.error(e); }
+        };
+
+        // --- BỔ SUNG LOGIC THANH TOÁN MOMO ---
+        async function startMoMoPayment() {
+            if (!userUID) return alert("Vui lòng đăng nhập!");
+
+            const btn = document.getElementById('btn-checkout');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Đang kết nối MoMo...`;
+
+            try {
+                // 1. Lấy thông tin Profile để gán địa chỉ
+                const userDoc = await getDoc(doc(db, "users", userUID));
+                if (!userDoc.exists()) throw "Bạn cần cập nhật hồ sơ địa chỉ trước khi thanh toán!";
+                const userData = userDoc.data();
+
+                // 2. Lấy dữ liệu giỏ hàng chính xác từ DB
+                const cartSnap = await getDoc(doc(db, "carts", userUID));
+                const cartItems = cartSnap.data().items || [];
+                
+                if (cartItems.length === 0) throw "Giỏ hàng trống!";
+
+                const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const orderId = "FSTORE_" + Date.now();
+
+                const userInfo = {
+                    uid: userUID,
+                    fullName: userData.fullName || "Khách hàng",
+                    phone: userData.phone || "",
+                    address: `${userData.homeAddress || ""}, ${userData.ward || ""}, ${userData.district || ""}, ${userData.province || ""}`
+                };
+
+                // 3. Gọi Backend MoMo (Node.js)
+                const response = await fetch('http://localhost:3000/create-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        amount: totalAmount, 
+                        orderId: orderId,
+                        userInfo: userInfo 
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.payUrl) {
+                    // Lưu giỏ hàng tạm để phục vụ việc tạo record 'orders' khi quay lại
+                    localStorage.setItem('pending_items', JSON.stringify(cartItems));
+                    window.location.href = data.payUrl;
+                } else {
+                    throw "Không thể tạo liên kết thanh toán. Thử lại sau!";
+                }
+
+            } catch (e) {
+                alert("Lỗi: " + e);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // Gán sự kiện click cho nút
+        document.getElementById('btn-checkout').addEventListener('click', startMoMoPayment);
+
+    </script>
+</body>
+</html>

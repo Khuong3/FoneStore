@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>FoneStore - Thế giới Apple</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        .carousel-item img { height: 400px; object-fit: cover; border-radius: 15px; }
+        .category-menu .list-group-item:hover { background-color: #f8f9fa; cursor: pointer; color: #0d6efd; transition: 0.3s; }
+        .product-card { transition: transform 0.3s; border: none; cursor: pointer; position: relative; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+        #wishlist-count { font-size: 0.7rem; }
+        .category-active { background-color: #e7f1ff !important; color: #0d6efd !important; font-weight: bold; }
+        .out-of-stock-label { position: absolute; top: 10px; left: 10px; z-index: 2; }
+        .img-out-of-stock { opacity: 0.6; filter: grayscale(0.5); }
+
+        /* CSS FOOTER */
+        #mainFooter { background-color: #212529; color: #ffffff; border-top: 4px solid #ffc107; }
+        #mainFooter a { color: #bbb; text-decoration: none; transition: 0.3s; }
+        #mainFooter a:hover { color: #ffc107; padding-left: 5px; }
+        .text-warning { color: #ffc107 !important; }
+        
+        /* USER STYLE */
+        #user-name-link { cursor: pointer; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-uppercase" href="index.html">FoneStore</a>
+            <div class="d-flex align-items-center">
+                <a href="pages/admin/products.html" id="admin-link" class="btn btn-outline-warning btn-sm me-2" style="display: none;">Admin</a>
+                <div id="auth-section" class="me-3">
+                    <a href="pages/login.html" class="btn btn-primary btn-sm">Đăng nhập</a>
+                </div>
+                <a href="pages/wishlist.html" class="btn btn-outline-danger btn-sm me-2 position-relative">
+                    <i class="bi bi-heart-fill"></i>
+                    <span id="wishlist-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-white text-danger border border-danger">0</span>
+                </a>
+                <div id="cart-info">
+                    <a href="pages/cart.html" class="btn btn-outline-light btn-sm position-relative">
+                        <i class="bi bi-cart3"></i> Giỏ hàng
+                        <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="list-group category-menu shadow-sm mb-4">
+                    <div class="list-group-item bg-primary text-white fw-bold">
+                        <i class="bi bi-menu-button-wide"></i> DANH MỤC
+                    </div>
+                    <div class="list-group-item" onclick="loadProductsByCategory(null, 'Tất cả sản phẩm')">Tất cả sản phẩm</div>
+                    <div id="dynamic-categories">
+                        <div class="text-center p-3"><div class="spinner-border spinner-border-sm text-primary"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div id="mainBanner" class="carousel slide shadow-sm overflow-hidden" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <img src="https://thietkeinanktp.com/wp-content/uploads/2022/05/mau-banner-quang-cao-dep-an-tuong-thu-hut-khach-hang-.jpg" class="d-block w-100" alt="Banner 1">
+                        </div>
+                        <div class="carousel-item">
+                            <img src="https://thietkeinanktp.com/wp-content/uploads/2022/05/50-mau-banner-dep-thu-hut-khach-hang-muc-tieu.jpg" class="d-block w-100" alt="Banner 2">
+                        </div>
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#mainBanner" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#mainBanner" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <h3 id="category-title" class="mt-5 mb-4 fw-bold text-secondary text-uppercase border-start border-primary border-4 ps-3">Tất cả sản phẩm</h3>
+        <div class="row" id="product-list">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-person-bounding-box me-2"></i>Hồ sơ cá nhân</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="profile-form">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Họ và tên</label>
+                                <input type="text" id="profile-fullname" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Số điện thoại</label>
+                                <input type="tel" id="profile-phone" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Email</label>
+                            <input type="email" id="profile-email" class="form-control" required>
+                        </div>
+                        <hr>
+                        <p class="small fw-bold text-secondary">ĐỊA CHỈ GIAO HÀNG</p>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <select id="province" class="form-select" required>
+                                    <option value="">Chọn Tỉnh/Thành</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <select id="district" class="form-select" required disabled>
+                                    <option value="">Chọn Quận/Huyện</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <select id="ward" class="form-select" required disabled>
+                                    <option value="">Chọn Phường/Xã</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3 mt-2">
+                            <input type="text" id="address-detail" class="form-control" placeholder="Số nhà, tên đường...">
+                        </div>
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="historyorder.html" class="btn btn-outline-dark">
+                                <i class="bi bi-clock-history"></i> Lịch sử mua hàng
+                            </a>
+                            <button type="submit" id="btn-save-profile" class="btn btn-primary px-5">Lưu thay đổi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer id="mainFooter" class="mt-5">
+        <div class="container py-4">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5 class="fw-bold text-warning">FSTORE</h5>
+                    <p class="small">
+                        Nền tảng thương mại điện tử uy tín hàng đầu Việt Nam,
+                        chuyên cung cấp các sản phẩm điện thoại chính hãng,
+                        giá tốt và dịch vụ khách hàng tận tâm.
+                    </p>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <h6 class="fw-bold text-warning">Liên kết nhanh</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="index.html">Trang chủ</a></li>
+                        <li><a href="#">Sản phẩm</a></li>
+                        <li><a href="#">Diễn đàn</a></li>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <h6 class="fw-bold text-warning">Liên hệ</h6>
+                    <p class="small mb-1"><i class="fas fa-map-marker-alt me-2"></i> 828 Sư Vạn Hạnh, Phường Hòa Hưng, Quận 10, TP. HCM</p>
+                    <p class="small mb-1"><i class="fas fa-phone me-2"></i> 028 3863 2052</p>
+                    <p class="small mb-2"><i class="fas fa-envelope me-2"></i> support@st.huflit.edu.vn</p>
+
+                    <div class="mt-3">
+                        <a href="https://www.facebook.com/huflit.edu.vn" target="_blank" class="me-2 text-warning"><i class="fab fa-facebook fa-lg"></i></a>
+                        <a href="https://www.instagram.com/huflit.uni/" target="_blank" class="me-2 text-warning"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="https://www.tiktok.com/@huflit.official" target="_blank" class="text-warning"><i class="fab fa-tiktok fa-lg"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-light opacity-50" />
+
+            <div class="text-center small opacity-75">
+                Công ty TNHH Thương Mại và Dịch Vụ Kỹ Thuật FriendShipStore - GPĐKKD: 0999999999 cấp tại Sở KH & ĐT TP. HCM. <br />
+                Địa chỉ văn phòng: 828 Sư Vạn Hạnh, Phường Hòa Hưng, Quận 10, TP. HCM. Điện thoại: 028 3863 2052.
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+        import { auth, db } from './js/config.js';
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { collection, getDocs, query, where, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        let userUID = null;
+        let currentUserData = null;
+
+        // =========================
+        // BỘ CHỌN ĐỊA CHỈ VIỆT NAM
+        // =========================
+        const citis = document.getElementById("province");
+        const districts = document.getElementById("district");
+        const wards = document.getElementById("ward");
+
+        let provinceData = [];
+
+        async function loadProvinceData() {
+            try {
+                const res = await axios.get("https://provinces.open-api.vn/api/?depth=3");
+                provinceData = res.data;
+                console.log("Dữ liệu tỉnh thành:", provinceData);
+
+                // reset tỉnh
+                citis.length = 1;
+                provinceData.forEach(province => {
+                    citis.options[citis.options.length] = new Option(province.name, province.name);
+                });
+
+                // khi chọn tỉnh
+                citis.onchange = function () {
+                    districts.length = 1;
+                    wards.length = 1;
+                    districts.disabled = true;
+                    wards.disabled = true;
+
+                    if (this.value !== "") {
+                        districts.disabled = false;
+
+                        const selectedProvince = provinceData.find(p => p.name === this.value);
+                        if (selectedProvince) {
+                            selectedProvince.districts.forEach(district => {
+                                districts.options[districts.options.length] = new Option(district.name, district.name);
+                            });
+                        }
+                    }
+                };
+
+                // khi chọn quận
+                districts.onchange = function () {
+                    wards.length = 1;
+                    wards.disabled = true;
+
+                    if (this.value !== "") {
+                        wards.disabled = false;
+
+                        const selectedProvince = provinceData.find(p => p.name === citis.value);
+                        const selectedDistrict = selectedProvince?.districts.find(d => d.name === this.value);
+
+                        if (selectedDistrict) {
+                            selectedDistrict.wards.forEach(ward => {
+                                wards.options[wards.options.length] = new Option(ward.name, ward.name);
+                            });
+                        }
+                    }
+                };
+            } catch (err) {
+                console.error("Lỗi load API tỉnh thành:", err);
+                alert("Không thể tải dữ liệu tỉnh thành!");
+            }
+        }
+
+        // =========================
+        // LOAD ĐỊA CHỈ TỪ FIREBASE VÀO FORM
+        // =========================
+        async function fillAddressToForm(userData) {
+            if (!provinceData.length) return;
+
+            // reset dropdown
+            citis.value = "";
+            districts.length = 1;
+            wards.length = 1;
+            districts.disabled = true;
+            wards.disabled = true;
+
+            // chỉ đưa address text vào ô nhập
+            let addressText = userData.address || "";
+
+            if (userData.province || userData.district || userData.ward) {
+                document.getElementById('address-detail').value = addressText;
+            } else {
+                // fallback cho dữ liệu cũ
+                if (addressText.includes(",")) {
+                    document.getElementById('address-detail').value = addressText.split(",")[0].trim();
+                } else {
+                    document.getElementById('address-detail').value = addressText;
+                }
+            }
+
+            // set tỉnh
+            if (userData.province) {
+                citis.value = userData.province;
+                citis.dispatchEvent(new Event("change"));
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            // set quận
+            if (userData.district) {
+                districts.value = userData.district;
+                districts.dispatchEvent(new Event("change"));
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            // set phường
+            if (userData.ward) {
+                wards.value = userData.ward;
+            }
+        }
+
+        // =========================
+        // AUTH
+        // =========================
+        onAuthStateChanged(auth, async (user) => {
+            const authSection = document.getElementById('auth-section');
+            const adminBtn = document.getElementById('admin-link');
+
+            if (user) {
+                userUID = user.uid;
+                const userRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userRef);
+
+                if (userDoc.exists()) {
+                    currentUserData = userDoc.data();
+
+                    if (currentUserData.role === 'admin') {
+                        adminBtn.style.display = 'inline-block';
+                    }
+
+                    authSection.innerHTML = `
+                        <span class="text-white me-2">Chào, 
+                            <b id="user-name-link" class="text-warning" data-bs-toggle="modal" data-bs-target="#profileModal">
+                                ${currentUserData.fullName || user.email}
+                            </b>
+                        </span>
+                        <button id="logout-btn" class="btn btn-outline-danger btn-sm">Thoát</button>
+                    `;
+
+                    document.getElementById('user-name-link').onclick = async () => {
+                        document.getElementById('profile-fullname').value = currentUserData.fullName || "";
+                        document.getElementById('profile-phone').value = currentUserData.phone || "";
+                        document.getElementById('profile-email').value = currentUserData.email || user.email;
+
+                        await fillAddressToForm(currentUserData);
+                    };
+                } else {
+                    // tạo user mới nếu chưa có document
+                    currentUserData = {
+                        fullName: "",
+                        phone: "",
+                        email: user.email || "",
+                        address: "",
+                        province: "",
+                        district: "",
+                        ward: "",
+                        role: "customer"
+                    };
+
+                    await setDoc(userRef, currentUserData);
+
+                    authSection.innerHTML = `
+                        <span class="text-white me-2">Chào, 
+                            <b id="user-name-link" class="text-warning" data-bs-toggle="modal" data-bs-target="#profileModal">
+                                ${user.email}
+                            </b>
+                        </span>
+                        <button id="logout-btn" class="btn btn-outline-danger btn-sm">Thoát</button>
+                    `;
+
+                    document.getElementById('user-name-link').onclick = async () => {
+                        document.getElementById('profile-fullname').value = "";
+                        document.getElementById('profile-phone').value = "";
+                        document.getElementById('profile-email').value = user.email || "";
+
+                        await fillAddressToForm(currentUserData);
+                    };
+                }
+
+                document.getElementById('logout-btn')?.addEventListener('click', () => {
+                    signOut(auth).then(() => location.reload());
+                });
+
+                updateCartIcon();
+            }
+
+            updateWishlistBadge();
+        });
+
+        // =========================
+        // LƯU PROFILE
+        // =========================
+        document.getElementById('profile-form').onsubmit = async (e) => {
+            e.preventDefault();
+
+            if (!userUID) {
+                alert("Bạn chưa đăng nhập!");
+                return;
+            }
+
+            const saveBtn = document.getElementById('btn-save-profile');
+            saveBtn.disabled = true;
+            saveBtn.innerText = "Đang lưu...";
+
+            const fullName = document.getElementById('profile-fullname').value.trim();
+            const phone = document.getElementById('profile-phone').value.trim();
+            const email = document.getElementById('profile-email').value.trim();
+            const addressDetail = document.getElementById('address-detail').value.trim();
+
+            const province = citis.value;
+            const district = districts.value;
+            const ward = wards.value;
+
+            if (!fullName || !phone || !email) {
+                alert("Vui lòng nhập đầy đủ họ tên, số điện thoại và email.");
+                saveBtn.disabled = false;
+                saveBtn.innerText = "Lưu thay đổi";
+                return;
+            }
+
+            if (!province || !district || !ward) {
+                alert("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện và Phường/Xã.");
+                saveBtn.disabled = false;
+                saveBtn.innerText = "Lưu thay đổi";
+                return;
+            }
+
+            try {
+                const userRef = doc(db, "users", userUID);
+
+                const updatedData = {
+                    ...(currentUserData || {}),
+                    fullName,
+                    phone,
+                    email,
+                    address: addressDetail, // chỉ lưu số nhà / tên đường
+                    province,
+                    district,
+                    ward
+                };
+
+                await setDoc(userRef, updatedData, { merge: true });
+
+                // cập nhật lại bộ nhớ local
+                currentUserData = updatedData;
+
+                alert("Đã lưu thông tin cá nhân thành công!");
+
+                // cập nhật tên ngay trên navbar
+                const nameLink = document.getElementById('user-name-link');
+                if (nameLink) {
+                    nameLink.innerText = fullName || email;
+                }
+
+                // đóng modal
+                const modalEl = document.getElementById('profileModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+
+            } catch (err) {
+                console.error("Lỗi cập nhật profile:", err);
+                alert("Lỗi khi cập nhật hồ sơ.");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerText = "Lưu thay đổi";
+            }
+        };
+
+        // =========================
+        // LOAD DANH MỤC
+        // =========================
+        async function loadCategoriesMenu() {
+            const dynamicContainer = document.getElementById('dynamic-categories');
+
+            try {
+                const snap = await getDocs(collection(db, "categories"));
+                let html = '';
+
+                snap.forEach(d => {
+                    html += `<div class="list-group-item" onclick="loadProductsByCategory('${d.id}', '${d.data().name}')">${d.data().name}</div>`;
+                });
+
+                dynamicContainer.innerHTML = html;
+            } catch (err) {
+                console.error(err);
+                dynamicContainer.innerHTML = '<div class="list-group-item text-danger">Lỗi tải danh mục</div>';
+            }
+        }
+
+        // =========================
+        // LOAD SẢN PHẨM
+        // =========================
+        window.loadProductsByCategory = async (categoryId = null, categoryName = null) => {
+            const container = document.getElementById('product-list');
+            document.getElementById('category-title').innerText = categoryName || "Tất cả sản phẩm";
+            container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+
+            try {
+                let q = collection(db, "products");
+
+                if (categoryId) {
+                    q = query(collection(db, "products"), where("categoryId", "==", categoryId));
+                }
+
+                const snap = await getDocs(q);
+                let html = '';
+
+                snap.forEach(d => {
+                    const p = d.data();
+                    const isOutOfStock = (p.stock <= 0 || p.stock === undefined);
+
+                    html += `
+                        <div class="col-md-3 mb-4">
+                            <div class="card h-100 product-card shadow-sm">
+                                ${isOutOfStock ? '<span class="badge bg-secondary out-of-stock-label">HẾT HÀNG</span>' : ''}
+                                <a href="pages/product-detail.html?id=${d.id}">
+                                    <img src="${p.img}" class="card-img-top p-4 ${isOutOfStock ? 'img-out-of-stock' : ''}" style="height:200px; object-fit:contain">
+                                </a>
+                                <div class="card-body text-center">
+                                    <h6 class="fw-bold">${p.name}</h6>
+                                    <p class="text-danger fw-bold">${Number(p.price).toLocaleString()}đ</p>
+                                    <div class="d-grid gap-2">
+                                        <button class="btn ${isOutOfStock ? 'btn-secondary disabled' : 'btn-dark'} btn-sm" 
+                                            ${isOutOfStock ? 'disabled' : `onclick="addToCart('${d.id}', '${p.name}', ${p.price}, '${p.img}')"`}>
+                                            ${isOutOfStock ? 'Tạm hết hàng' : 'Thêm vào giỏ'}
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="addToWishlist('${d.id}', '${p.name}', ${p.price}, '${p.img}')">
+                                            <i class="bi bi-heart"></i> Yêu thích
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+
+                container.innerHTML = html || '<div class="col-12 text-center py-5">Chưa có sản phẩm nào.</div>';
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<div class="alert alert-danger">Lỗi tải dữ liệu.</div>';
+            }
+        };
+
+        // =========================
+        // GIỎ HÀNG
+        // =========================
+        window.addToCart = async (id, name, price, img) => {
+            if (!userUID) return alert("Vui lòng đăng nhập!");
+
+            const cartRef = doc(db, "carts", userUID);
+            const snap = await getDoc(cartRef);
+            let items = snap.exists() ? snap.data().items : [];
+
+            const exist = items.find(i => i.id === id);
+
+            if (exist) exist.quantity += 1;
+            else items.push({ id, name, price, img, quantity: 1 });
+
+            await setDoc(cartRef, { items });
+            alert("Đã thêm vào giỏ!");
+            updateCartIcon();
+        };
+
+        async function updateCartIcon() {
+            if (!userUID) return;
+
+            const snap = await getDoc(doc(db, "carts", userUID));
+            if (snap.exists()) {
+                const count = snap.data().items.reduce((s, i) => s + i.quantity, 0);
+                document.getElementById('cart-count').innerText = count;
+            } else {
+                document.getElementById('cart-count').innerText = 0;
+            }
+        }
+
+        // =========================
+        // WISHLIST
+        // =========================
+        window.addToWishlist = (id, name, price, img) => {
+            let list = JSON.parse(localStorage.getItem('wishlist')) || [];
+
+            if (list.find(i => i.id === id)) {
+                return alert("Đã có trong danh sách!");
+            }
+
+            list.push({ id, name, price, img });
+            localStorage.setItem('wishlist', JSON.stringify(list));
+            updateWishlistBadge();
+            alert("Đã thêm vào yêu thích ❤️");
+        };
+
+        function updateWishlistBadge() {
+            const list = JSON.parse(localStorage.getItem('wishlist')) || [];
+            const el = document.getElementById('wishlist-count');
+            if (el) el.innerText = list.length;
+        }
+
+        // =========================
+        // INIT
+        // =========================
+        await loadProvinceData();
+        loadCategoriesMenu();
+        loadProductsByCategory(null);
+    </script>
+</body>
+</html>

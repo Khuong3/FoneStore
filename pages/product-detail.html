@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông tin sản phẩm - FoneStore</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .spec-label { width: 40%; font-weight: 600; color: #555; background-color: #f8f9fa; }
+        .carousel-item img { height: 450px; object-fit: contain; background-color: #fff; }
+        .carousel-indicators [data-bs-target] { background-color: #000; width: 10px; height: 10px; border-radius: 50%; }
+        .carousel-control-prev-icon, .carousel-control-next-icon { filter: invert(1); }
+        .sticky-md-top { top: 20px; }
+        .table-specs td { padding: 12px; font-size: 14px; border-bottom: 1px solid #eee; }
+        .img-out-of-stock { opacity: 0.5; filter: grayscale(1); }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark mb-4 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../index.html"><i class="bi bi-arrow-left"></i> FoneStore</a>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        <div id="product-detail-container" class="bg-white p-4 shadow-sm rounded">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 text-muted">Đang tải thông tin sản phẩm...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { auth, db } from '../js/config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { doc, getDoc, setDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+        let userUID = null;
+        let productData = null; // Lưu trữ dữ liệu sản phẩm để dùng cho hàm add
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userUID = user.uid;
+            } else {
+                userUID = null;
+            }
+        });
+
+        async function fetchDetail() {
+            const container = document.getElementById('product-detail-container');
+            if (!productId) {
+                container.innerHTML = `<div class="alert alert-warning text-center">Lỗi: Không tìm thấy ID sản phẩm.</div>`;
+                return;
+            }
+
+            try {
+                const docRef = doc(db, "products", productId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    productData = docSnap.data();
+                    const p = productData;
+                    const s = p.specs || {};
+                    
+                    const isOutOfStock = (p.stock === undefined || p.stock <= 0);
+                    const imgList = (p.images && p.images.length > 0) ? p.images : [p.img];
+
+                    const indicatorsHtml = imgList.map((_, index) => 
+                        `<button type="button" data-bs-target="#productCarousel" data-bs-slide-to="${index}" class="${index === 0 ? 'active' : ''}"></button>`
+                    ).join('');
+
+                    const slidesHtml = imgList.map((url, index) => 
+                        `<div class="carousel-item ${index === 0 ? 'active' : ''}">
+                            <img src="${url}" class="d-block w-100 ${isOutOfStock ? 'img-out-of-stock' : ''}" alt="Slide ${index + 1}">
+                        </div>`
+                    ).join('');
+
+                    container.innerHTML = `
+                        <div class="row g-5">
+                            <div class="col-md-6">
+                                <div class="sticky-md-top">
+                                    <div class="position-relative">
+                                        <div id="productCarousel" class="carousel slide border rounded shadow-sm" data-bs-ride="carousel">
+                                            <div class="carousel-indicators">${indicatorsHtml}</div>
+                                            <div class="carousel-inner">${slidesHtml}</div>
+                                            <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                                                <span class="carousel-control-prev-icon"></span>
+                                            </button>
+                                            <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                                                <span class="carousel-control-next-icon"></span>
+                                            </button>
+                                        </div>
+                                        ${isOutOfStock ? '<div class="position-absolute top-50 start-50 translate-middle badge bg-danger fs-4 shadow">HẾT HÀNG</div>' : ''}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h1 class="fw-bold mb-2">${p.name}</h1>
+                                <div class="d-flex align-items-center mb-3">
+                                    <h2 class="text-danger fw-bold m-0">${Number(p.price).toLocaleString()}đ</h2>
+                                    <span class="ms-3 badge bg-light text-dark border">Kho còn: ${p.stock || 0}</span>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h5 class="fw-bold border-bottom pb-2 text-primary"><i class="bi bi-info-circle"></i> Mô tả</h5>
+                                    <p class="text-muted" style="white-space: pre-line;">${p.description || "Đang cập nhật..."}</p>
+                                </div>
+
+                                <div class="mb-4">
+                                    <h5 class="fw-bold border-bottom pb-2 text-primary"><i class="bi bi-cpu"></i> Thông số kỹ thuật</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-specs mb-0">
+                                            <tr><td class="spec-label">Hệ điều hành:</td><td>${s.os || '---'}</td></tr>
+                                            <tr><td class="spec-label">Chip (CPU):</td><td>${s.cpu || '---'}</td></tr>
+                                            <tr><td class="spec-label">RAM:</td><td>${s.ram || '---'}</td></tr>
+                                            <tr><td class="spec-label">Bộ nhớ:</td><td>${s.rom || '---'}</td></tr>
+                                            <tr><td class="spec-label">Màn hình:</td><td>${s.screen || '---'}</td></tr>
+                                            <tr><td class="spec-label">Pin:</td><td>${s.battery || '---'}</td></tr>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-3 pt-3">
+                                    <button id="btn-add-to-cart" class="btn ${isOutOfStock ? 'btn-secondary disabled' : 'btn-success'} btn-lg fw-bold" 
+                                        ${isOutOfStock ? 'disabled' : ''}>
+                                        <i class="bi ${isOutOfStock ? 'bi-x-circle' : 'bi-cart-plus'}"></i> 
+                                        ${isOutOfStock ? 'HẾT HÀNG' : 'THÊM VÀO GIỎ HÀNG'}
+                                    </button>
+                                    <button id="btn-wishlist" class="btn btn-outline-danger btn-lg">
+                                        <i class="bi bi-heart"></i> Lưu vào yêu thích
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Gán sự kiện trực tiếp sau khi render HTML để tránh lỗi scope
+                    document.getElementById('btn-add-to-cart').addEventListener('click', addToCart);
+                    document.getElementById('btn-wishlist').addEventListener('click', addToWishlist);
+
+                } else {
+                    container.innerHTML = `<div class="alert alert-danger text-center">Sản phẩm không tồn tại.</div>`;
+                }
+            } catch (error) {
+                console.error("Lỗi fetchDetail:", error);
+                container.innerHTML = `<div class="alert alert-danger text-center">Lỗi tải dữ liệu: ${error.message}</div>`;
+            }
+        }
+
+        // HÀM THÊM VÀO GIỎ HÀNG (Dùng Transaction để trừ kho)
+        async function addToCart() {
+            if (!userUID) return alert("Vui lòng đăng nhập để mua hàng!");
+            if (!productData) return;
+
+            const productRef = doc(db, "products", productId);
+            const cartRef = doc(db, "carts", userUID);
+            
+            const btn = document.getElementById('btn-add-to-cart');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const productDoc = await transaction.get(productRef);
+                    if (!productDoc.exists()) throw "Sản phẩm không còn tồn tại trên hệ thống!";
+
+                    const currentStock = productDoc.data().stock || 0;
+                    if (currentStock <= 0) throw "Sản phẩm vừa hết hàng!";
+
+                    // 1. Lấy giỏ hàng
+                    const cartDoc = await transaction.get(cartRef);
+                    let items = cartDoc.exists() ? cartDoc.data().items : [];
+                    
+                    // 2. Kiểm tra sản phẩm trong giỏ
+                    const exist = items.find(i => i.id === productId);
+                    
+                    // 3. Thực hiện trừ kho
+                    transaction.update(productRef, { stock: currentStock - 1 });
+
+                    // 4. Cập nhật mảng items
+                    if (exist) {
+                        exist.quantity += 1;
+                    } else {
+                        items.push({ 
+                            id: productId, 
+                            name: productData.name, 
+                            price: productData.price, 
+                            img: productData.img, 
+                            quantity: 1 
+                        });
+                    }
+
+                    transaction.set(cartRef, { items }, { merge: true });
+                });
+
+                alert("Đã thêm vào giỏ hàng thành công! 🛒");
+                fetchDetail(); // Load lại để cập nhật số lượng kho hiển thị
+            } catch (e) {
+                alert("Lỗi: " + e);
+                fetchDetail(); // Load lại để cập nhật trạng thái nút
+            }
+        }
+
+        function addToWishlist() {
+            if (!productData) return;
+            let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+            if(wishlist.find(i => i.id === productId)) return alert("Sản phẩm đã có trong danh sách yêu thích ❤️");
+            
+            wishlist.push({
+                id: productId, 
+                name: productData.name, 
+                price: productData.price, 
+                img: productData.img
+            });
+            localStorage.setItem('wishlist', JSON.stringify(wishlist));
+            alert("Đã thêm vào yêu thích thành công ❤️");
+        }
+
+        fetchDetail();
+    </script>
+</body>
+</html>
