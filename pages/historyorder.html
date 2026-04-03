@@ -9,7 +9,7 @@
 <body class="bg-light">
     <nav class="navbar navbar-dark bg-dark shadow mb-4">
         <div class="container d-flex justify-content-between">
-            <a class="navbar-brand fw-bold" href="index.html"><i class="bi bi-arrow-left"></i> Quay lại</a>
+            <a class="navbar-brand fw-bold" href="../index.html"><i class="bi bi-arrow-left"></i> Quay lại</a>
             <span class="navbar-text text-white">Đơn hàng của tôi</span>
         </div>
     </nav>
@@ -24,8 +24,7 @@
     </div>
 
     <script type="module">
-        // Đảm bảo đường dẫn config.js chính xác (ví dụ ./js/config.js)
-        import { auth, db } from './js/config.js'; 
+        import { auth, db } from '../js/config.js';
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
         import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -38,8 +37,8 @@
             }
 
             try {
-                // KIỂM TRA: Collection tên là 'orders', field chứa UID là 'customerUID'
-                const q = query(collection(db, "orders"), where("customerUID", "==", user.uid));
+                // SỬA: Đổi "customerUID" thành "userId" để chuẩn với cấu trúc Backend
+                const q = query(collection(db, "orders"), where("userId", "==", user.uid));
                 const snap = await getDocs(q);
                 
                 document.getElementById('loading-spinner').style.display = 'none';
@@ -57,9 +56,13 @@
                 let html = '';
                 snap.forEach(doc => {
                     const order = doc.data();
-                    // Xử lý ngày tháng từ Firebase Timestamp
                     const dateDisplay = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString('vi-VN') : (order.createdAt || 'N/A');
                     
+                    // Lớp bảo vệ: Tìm tiền trong mọi biến, nếu không có thì gán = 0
+                    const safeTotal = Number(order.amount || order.totalAmount || order.totalPrice || 0);
+                    // Lớp bảo vệ: Nếu items không tồn tại thì cho nó là mảng rỗng []
+                    const safeItems = order.items || [];
+
                     html += `
                         <div class="col-12 mb-3">
                             <div class="card border-0 shadow-sm">
@@ -79,24 +82,24 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                ${order.items.map(item => `
+                                                ${safeItems.map(item => `
                                                     <tr>
                                                         <td>
                                                             <div class="d-flex align-items-center">
-                                                                <img src="${item.img}" width="40" class="me-2 rounded">
-                                                                <span>${item.name}</span>
+                                                                <img src="${item.img || ''}" width="40" class="me-2 rounded" onerror="this.src='https://via.placeholder.40'">
+                                                                <span>${item.name || 'Sản phẩm không xác định'}</span>
                                                             </div>
                                                         </td>
-                                                        <td class="text-center">x${item.quantity}</td>
-                                                        <td class="text-end fw-bold">${Number(item.price * item.quantity).toLocaleString()}đ</td>
+                                                        <td class="text-center">x${item.quantity || 1}</td>
+                                                        <td class="text-end fw-bold">${Number((item.price || 0) * (item.quantity || 1)).toLocaleString()}đ</td>
                                                     </tr>
                                                 `).join('')}
                                             </tbody>
                                         </table>
                                     </div>
                                     <div class="border-top pt-3 d-flex justify-content-between align-items-center">
-                                        <span class="text-muted small">Hình thức: Thanh toán khi nhận hàng</span>
-                                        <h5 class="text-danger fw-bold mb-0">Tổng: ${Number(order.totalAmount).toLocaleString()}đ</h5>
+                                        <span class="text-muted small">Hình thức: ${order.method || 'Thanh toán MoMo'}</span>
+                                        <h5 class="text-danger fw-bold mb-0">Tổng: ${safeTotal.toLocaleString()}đ</h5>
                                     </div>
                                 </div>
                             </div>
@@ -105,7 +108,7 @@
                 container.innerHTML = html;
             } catch (err) {
                 console.error("Lỗi lấy đơn hàng:", err);
-                container.innerHTML = '<div class="alert alert-danger text-center">Có lỗi xảy ra khi tải dữ liệu đơn hàng.</div>';
+                container.innerHTML = '<div class="alert alert-danger text-center">Có lỗi xảy ra khi tải dữ liệu đơn hàng. Kiểm tra Console để biết chi tiết.</div>';
             }
         });
     </script>

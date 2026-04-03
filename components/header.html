@@ -1,0 +1,24 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-uppercase" href="/index.html">FoneStore</a>
+        <div class="d-flex align-items-center">
+            <a href="/pages/admin/products.html" id="admin-link" class="btn btn-outline-warning btn-sm me-2" style="display: none;">Admin</a>
+            
+            <div id="auth-section" class="me-3">
+                <a href="/pages/login.html" class="btn btn-primary btn-sm">Đăng nhập</a>
+            </div>
+
+            <a href="/pages/wishlist.html" class="btn btn-outline-danger btn-sm me-2 position-relative">
+                <i class="bi bi-heart-fill"></i>
+                <span id="wishlist-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-white text-danger border border-danger">0</span>
+            </a>
+
+            <div id="cart-info">
+                <a href="/pages/cart.html" class="btn btn-outline-light btn-sm position-relative">
+                    <i class="bi bi-cart3"></i> Giỏ hàng
+                    <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>

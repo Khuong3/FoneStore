@@ -22,34 +22,15 @@
         #mainFooter a { color: #bbb; text-decoration: none; transition: 0.3s; }
         #mainFooter a:hover { color: #ffc107; padding-left: 5px; }
         .text-warning { color: #ffc107 !important; }
-        
+
         /* USER STYLE */
         #user-name-link { cursor: pointer; }
     </style>
 </head>
 <body class="bg-light">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-uppercase" href="index.html">FoneStore</a>
-            <div class="d-flex align-items-center">
-                <a href="pages/admin/products.html" id="admin-link" class="btn btn-outline-warning btn-sm me-2" style="display: none;">Admin</a>
-                <div id="auth-section" class="me-3">
-                    <a href="pages/login.html" class="btn btn-primary btn-sm">Đăng nhập</a>
-                </div>
-                <a href="pages/wishlist.html" class="btn btn-outline-danger btn-sm me-2 position-relative">
-                    <i class="bi bi-heart-fill"></i>
-                    <span id="wishlist-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-white text-danger border border-danger">0</span>
-                </a>
-                <div id="cart-info">
-                    <a href="pages/cart.html" class="btn btn-outline-light btn-sm position-relative">
-                        <i class="bi bi-cart3"></i> Giỏ hàng
-                        <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- HEADER -->
+    <div id="header-container"></div>
 
     <div class="container mt-4">
         <div class="row">
@@ -93,6 +74,7 @@
         </div>
     </div>
 
+    <!-- PROFILE MODAL -->
     <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content border-0 shadow">
@@ -139,7 +121,7 @@
                             <input type="text" id="address-detail" class="form-control" placeholder="Số nhà, tên đường...">
                         </div>
                         <div class="d-flex justify-content-between mt-4">
-                            <a href="historyorder.html" class="btn btn-outline-dark">
+                            <a href="/pages/historyorder.html" class="btn btn-outline-dark">
                                 <i class="bi bi-clock-history"></i> Lịch sử mua hàng
                             </a>
                             <button type="submit" id="btn-save-profile" class="btn btn-primary px-5">Lưu thay đổi</button>
@@ -150,65 +132,24 @@
         </div>
     </div>
 
-    <footer id="mainFooter" class="mt-5">
-        <div class="container py-4">
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <h5 class="fw-bold text-warning">FSTORE</h5>
-                    <p class="small">
-                        Nền tảng thương mại điện tử uy tín hàng đầu Việt Nam,
-                        chuyên cung cấp các sản phẩm điện thoại chính hãng,
-                        giá tốt và dịch vụ khách hàng tận tâm.
-                    </p>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <h6 class="fw-bold text-warning">Liên kết nhanh</h6>
-                    <ul class="list-unstyled small">
-                        <li><a href="index.html">Trang chủ</a></li>
-                        <li><a href="#">Sản phẩm</a></li>
-                        <li><a href="#">Diễn đàn</a></li>
-                        <li><a href="#">Chính sách bảo mật</a></li>
-                    </ul>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <h6 class="fw-bold text-warning">Liên hệ</h6>
-                    <p class="small mb-1"><i class="fas fa-map-marker-alt me-2"></i> 828 Sư Vạn Hạnh, Phường Hòa Hưng, Quận 10, TP. HCM</p>
-                    <p class="small mb-1"><i class="fas fa-phone me-2"></i> 028 3863 2052</p>
-                    <p class="small mb-2"><i class="fas fa-envelope me-2"></i> support@st.huflit.edu.vn</p>
-
-                    <div class="mt-3">
-                        <a href="https://www.facebook.com/huflit.edu.vn" target="_blank" class="me-2 text-warning"><i class="fab fa-facebook fa-lg"></i></a>
-                        <a href="https://www.instagram.com/huflit.uni/" target="_blank" class="me-2 text-warning"><i class="fab fa-instagram fa-lg"></i></a>
-                        <a href="https://www.tiktok.com/@huflit.official" target="_blank" class="text-warning"><i class="fab fa-tiktok fa-lg"></i></a>
-                    </div>
-                </div>
-            </div>
-
-            <hr class="border-light opacity-50" />
-
-            <div class="text-center small opacity-75">
-                Công ty TNHH Thương Mại và Dịch Vụ Kỹ Thuật FriendShipStore - GPĐKKD: 0999999999 cấp tại Sở KH & ĐT TP. HCM. <br />
-                Địa chỉ văn phòng: 828 Sư Vạn Hạnh, Phường Hòa Hưng, Quận 10, TP. HCM. Điện thoại: 028 3863 2052.
-            </div>
-        </div>
-    </footer>
+    <!-- FOOTER -->
+    <div id="footer-container"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script type="module">
+        import { loadLayout } from './js/layout.js';
         import { auth, db } from './js/config.js';
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
         import { collection, getDocs, query, where, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
+        // load header/footer trước
+        await loadLayout();
+
         let userUID = null;
         let currentUserData = null;
 
-        // =========================
-        // BỘ CHỌN ĐỊA CHỈ VIỆT NAM
-        // =========================
         const citis = document.getElementById("province");
         const districts = document.getElementById("district");
         const wards = document.getElementById("ward");
@@ -219,15 +160,12 @@
             try {
                 const res = await axios.get("https://provinces.open-api.vn/api/?depth=3");
                 provinceData = res.data;
-                console.log("Dữ liệu tỉnh thành:", provinceData);
 
-                // reset tỉnh
                 citis.length = 1;
                 provinceData.forEach(province => {
                     citis.options[citis.options.length] = new Option(province.name, province.name);
                 });
 
-                // khi chọn tỉnh
                 citis.onchange = function () {
                     districts.length = 1;
                     wards.length = 1;
@@ -236,7 +174,6 @@
 
                     if (this.value !== "") {
                         districts.disabled = false;
-
                         const selectedProvince = provinceData.find(p => p.name === this.value);
                         if (selectedProvince) {
                             selectedProvince.districts.forEach(district => {
@@ -246,14 +183,12 @@
                     }
                 };
 
-                // khi chọn quận
                 districts.onchange = function () {
                     wards.length = 1;
                     wards.disabled = true;
 
                     if (this.value !== "") {
                         wards.disabled = false;
-
                         const selectedProvince = provinceData.find(p => p.name === citis.value);
                         const selectedDistrict = selectedProvince?.districts.find(d => d.name === this.value);
 
@@ -270,26 +205,20 @@
             }
         }
 
-        // =========================
-        // LOAD ĐỊA CHỈ TỪ FIREBASE VÀO FORM
-        // =========================
         async function fillAddressToForm(userData) {
             if (!provinceData.length) return;
 
-            // reset dropdown
             citis.value = "";
             districts.length = 1;
             wards.length = 1;
             districts.disabled = true;
             wards.disabled = true;
 
-            // chỉ đưa address text vào ô nhập
             let addressText = userData.address || "";
 
             if (userData.province || userData.district || userData.ward) {
                 document.getElementById('address-detail').value = addressText;
             } else {
-                // fallback cho dữ liệu cũ
                 if (addressText.includes(",")) {
                     document.getElementById('address-detail').value = addressText.split(",")[0].trim();
                 } else {
@@ -297,29 +226,23 @@
                 }
             }
 
-            // set tỉnh
             if (userData.province) {
                 citis.value = userData.province;
                 citis.dispatchEvent(new Event("change"));
                 await new Promise(resolve => setTimeout(resolve, 200));
             }
 
-            // set quận
             if (userData.district) {
                 districts.value = userData.district;
                 districts.dispatchEvent(new Event("change"));
                 await new Promise(resolve => setTimeout(resolve, 200));
             }
 
-            // set phường
             if (userData.ward) {
                 wards.value = userData.ward;
             }
         }
 
-        // =========================
-        // AUTH
-        // =========================
         onAuthStateChanged(auth, async (user) => {
             const authSection = document.getElementById('auth-section');
             const adminBtn = document.getElementById('admin-link');
@@ -349,11 +272,9 @@
                         document.getElementById('profile-fullname').value = currentUserData.fullName || "";
                         document.getElementById('profile-phone').value = currentUserData.phone || "";
                         document.getElementById('profile-email').value = currentUserData.email || user.email;
-
                         await fillAddressToForm(currentUserData);
                     };
                 } else {
-                    // tạo user mới nếu chưa có document
                     currentUserData = {
                         fullName: "",
                         phone: "",
@@ -380,7 +301,6 @@
                         document.getElementById('profile-fullname').value = "";
                         document.getElementById('profile-phone').value = "";
                         document.getElementById('profile-email').value = user.email || "";
-
                         await fillAddressToForm(currentUserData);
                     };
                 }
@@ -395,9 +315,6 @@
             updateWishlistBadge();
         });
 
-        // =========================
-        // LƯU PROFILE
-        // =========================
         document.getElementById('profile-form').onsubmit = async (e) => {
             e.preventDefault();
 
@@ -441,26 +358,22 @@
                     fullName,
                     phone,
                     email,
-                    address: addressDetail, // chỉ lưu số nhà / tên đường
+                    address: addressDetail,
                     province,
                     district,
                     ward
                 };
 
                 await setDoc(userRef, updatedData, { merge: true });
-
-                // cập nhật lại bộ nhớ local
                 currentUserData = updatedData;
 
                 alert("Đã lưu thông tin cá nhân thành công!");
 
-                // cập nhật tên ngay trên navbar
                 const nameLink = document.getElementById('user-name-link');
                 if (nameLink) {
                     nameLink.innerText = fullName || email;
                 }
 
-                // đóng modal
                 const modalEl = document.getElementById('profileModal');
                 const modal = bootstrap.Modal.getInstance(modalEl);
                 if (modal) modal.hide();
@@ -474,9 +387,6 @@
             }
         };
 
-        // =========================
-        // LOAD DANH MỤC
-        // =========================
         async function loadCategoriesMenu() {
             const dynamicContainer = document.getElementById('dynamic-categories');
 
@@ -495,9 +405,6 @@
             }
         }
 
-        // =========================
-        // LOAD SẢN PHẨM
-        // =========================
         window.loadProductsByCategory = async (categoryId = null, categoryName = null) => {
             const container = document.getElementById('product-list');
             document.getElementById('category-title').innerText = categoryName || "Tất cả sản phẩm";
@@ -548,9 +455,6 @@
             }
         };
 
-        // =========================
-        // GIỎ HÀNG
-        // =========================
         window.addToCart = async (id, name, price, img) => {
             if (!userUID) return alert("Vui lòng đăng nhập!");
 
@@ -570,7 +474,6 @@
 
         async function updateCartIcon() {
             if (!userUID) return;
-
             const snap = await getDoc(doc(db, "carts", userUID));
             if (snap.exists()) {
                 const count = snap.data().items.reduce((s, i) => s + i.quantity, 0);
@@ -580,9 +483,6 @@
             }
         }
 
-        // =========================
-        // WISHLIST
-        // =========================
         window.addToWishlist = (id, name, price, img) => {
             let list = JSON.parse(localStorage.getItem('wishlist')) || [];
 
@@ -602,9 +502,6 @@
             if (el) el.innerText = list.length;
         }
 
-        // =========================
-        // INIT
-        // =========================
         await loadProvinceData();
         loadCategoriesMenu();
         loadProductsByCategory(null);
