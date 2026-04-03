@@ -41,14 +41,10 @@
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
         let userUID = null;
-        let productData = null; // Lưu trữ dữ liệu sản phẩm để dùng cho hàm add
+        let productData = null;
 
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                userUID = user.uid;
-            } else {
-                userUID = null;
-            }
+            userUID = user ? user.uid : null;
         });
 
         async function fetchDetail() {
@@ -65,7 +61,7 @@
                 if (docSnap.exists()) {
                     productData = docSnap.data();
                     const p = productData;
-                    const s = p.specs || {};
+                    const s = p.specs || {}; // Toàn bộ field trong map specs
                     
                     const isOutOfStock = (p.stock === undefined || p.stock <= 0);
                     const imgList = (p.images && p.images.length > 0) ? p.images : [p.img];
@@ -121,16 +117,21 @@
                                             <tr><td class="spec-label">RAM:</td><td>${s.ram || '---'}</td></tr>
                                             <tr><td class="spec-label">Bộ nhớ:</td><td>${s.rom || '---'}</td></tr>
                                             <tr><td class="spec-label">Màn hình:</td><td>${s.screen || '---'}</td></tr>
+                                            <tr><td class="spec-label">Camera sau:</td><td>${s.backCam || '---'}</td></tr>
+                                            <tr><td class="spec-label">Camera trước:</td><td>${s.frontCam || '---'}</td></tr>
+                                            <tr><td class="spec-label">Thẻ nhớ:</td><td>${s.microSD || '---'}</td></tr>
+                                            <tr><td class="spec-label">GPU:</td><td>${s.gpu || '---'}</td></tr>
                                             <tr><td class="spec-label">Pin:</td><td>${s.battery || '---'}</td></tr>
                                         </table>
                                     </div>
                                 </div>
 
-                                <div class="d-grid gap-3 pt-3">
-                                    <button id="btn-add-to-cart" class="btn ${isOutOfStock ? 'btn-secondary disabled' : 'btn-success'} btn-lg fw-bold" 
-                                        ${isOutOfStock ? 'disabled' : ''}>
-                                        <i class="bi ${isOutOfStock ? 'bi-x-circle' : 'bi-cart-plus'}"></i> 
-                                        ${isOutOfStock ? 'HẾT HÀNG' : 'THÊM VÀO GIỎ HÀNG'}
+                                <div class="d-grid gap-2 pt-3">
+                                    <button id="btn-add-to-cart" class="btn ${isOutOfStock ? 'btn-secondary disabled' : 'btn-success'} btn-lg fw-bold">
+                                        <i class="bi bi-cart-plus"></i> THÊM VÀO GIỎ HÀNG
+                                    </button>
+                                    <button id="btn-buy-now" class="btn ${isOutOfStock ? 'btn-secondary disabled' : 'btn-primary'} btn-lg fw-bold">
+                                        <i class="bi bi-wallet2"></i> MUA NGAY QUA MOMO
                                     </button>
                                     <button id="btn-wishlist" class="btn btn-outline-danger btn-lg">
                                         <i class="bi bi-heart"></i> Lưu vào yêu thích
@@ -140,86 +141,84 @@
                         </div>
                     `;
 
-                    // Gán sự kiện trực tiếp sau khi render HTML để tránh lỗi scope
-                    document.getElementById('btn-add-to-cart').addEventListener('click', addToCart);
-                    document.getElementById('btn-wishlist').addEventListener('click', addToWishlist);
+                    document.getElementById('btn-add-to-cart').onclick = addToCart;
+                    document.getElementById('btn-buy-now').onclick = buyNowMoMo;
+                    document.getElementById('btn-wishlist').onclick = addToWishlist;
 
                 } else {
                     container.innerHTML = `<div class="alert alert-danger text-center">Sản phẩm không tồn tại.</div>`;
                 }
             } catch (error) {
-                console.error("Lỗi fetchDetail:", error);
-                container.innerHTML = `<div class="alert alert-danger text-center">Lỗi tải dữ liệu: ${error.message}</div>`;
+                container.innerHTML = `<div class="alert alert-danger text-center">Lỗi: ${error.message}</div>`;
             }
         }
 
-        // HÀM THÊM VÀO GIỎ HÀNG (Dùng Transaction để trừ kho)
+        // Logic thêm vào giỏ (Giữ nguyên logic transaction của bạn)
         async function addToCart() {
-            if (!userUID) return alert("Vui lòng đăng nhập để mua hàng!");
-            if (!productData) return;
-
-            const productRef = doc(db, "products", productId);
-            const cartRef = doc(db, "carts", userUID);
-            
+            if (!userUID) return alert("Vui lòng đăng nhập!");
             const btn = document.getElementById('btn-add-to-cart');
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
 
             try {
                 await runTransaction(db, async (transaction) => {
-                    const productDoc = await transaction.get(productRef);
-                    if (!productDoc.exists()) throw "Sản phẩm không còn tồn tại trên hệ thống!";
+                    const productRef = doc(db, "products", productId);
+                    const cartRef = doc(db, "carts", userUID);
+                    const pSnap = await transaction.get(productRef);
+                    const currentStock = pSnap.data().stock || 0;
+                    if (currentStock <= 0) throw "Hết hàng!";
 
-                    const currentStock = productDoc.data().stock || 0;
-                    if (currentStock <= 0) throw "Sản phẩm vừa hết hàng!";
-
-                    // 1. Lấy giỏ hàng
-                    const cartDoc = await transaction.get(cartRef);
-                    let items = cartDoc.exists() ? cartDoc.data().items : [];
-                    
-                    // 2. Kiểm tra sản phẩm trong giỏ
+                    const cSnap = await transaction.get(cartRef);
+                    let items = cSnap.exists() ? cSnap.data().items : [];
                     const exist = items.find(i => i.id === productId);
-                    
-                    // 3. Thực hiện trừ kho
-                    transaction.update(productRef, { stock: currentStock - 1 });
 
-                    // 4. Cập nhật mảng items
-                    if (exist) {
-                        exist.quantity += 1;
-                    } else {
-                        items.push({ 
-                            id: productId, 
-                            name: productData.name, 
-                            price: productData.price, 
-                            img: productData.img, 
-                            quantity: 1 
-                        });
-                    }
+                    transaction.update(productRef, { stock: currentStock - 1 });
+                    if (exist) exist.quantity += 1;
+                    else items.push({ id: productId, name: productData.name, price: productData.price, img: productData.img, quantity: 1 });
 
                     transaction.set(cartRef, { items }, { merge: true });
                 });
+                alert("Đã thêm vào giỏ!");
+                fetchDetail();
+            } catch (e) { alert(e); btn.disabled = false; }
+        }
 
-                alert("Đã thêm vào giỏ hàng thành công! 🛒");
-                fetchDetail(); // Load lại để cập nhật số lượng kho hiển thị
-            } catch (e) {
-                alert("Lỗi: " + e);
-                fetchDetail(); // Load lại để cập nhật trạng thái nút
-            }
+        // Logic Mua ngay qua MoMo
+        async function buyNowMoMo() {
+            if (!userUID) return alert("Vui lòng đăng nhập!");
+            const btn = document.getElementById('btn-buy-now');
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Đang kết nối...`;
+            btn.disabled = true;
+
+            try {
+                const userDoc = await getDoc(doc(db, "users", userUID));
+                const userData = userDoc.data() || {};
+                
+                const response = await fetch('http://127.0.0.1:3000/create-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: productData.price,
+                        orderId: "FS_BUY_" + Date.now(),
+                        userInfo: { uid: userUID, fullName: userData.fullName || "Khách", phone: userData.phone || "", address: userData.homeAddress || "" }
+                    })
+                });
+
+                const data = await response.json();
+                if (data.payUrl) {
+                    // Lưu sản phẩm đơn lẻ vào pending để xử lý sau khi thanh toán xong
+                    localStorage.setItem('pending_items', JSON.stringify([{ ...productData, id: productId, quantity: 1 }]));
+                    window.location.href = data.payUrl;
+                } else { throw "Lỗi tạo link thanh toán!"; }
+            } catch (e) { alert(e); btn.innerHTML = '<i class="bi bi-wallet2"></i> MUA NGAY QUA MOMO'; btn.disabled = false; }
         }
 
         function addToWishlist() {
-            if (!productData) return;
             let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-            if(wishlist.find(i => i.id === productId)) return alert("Sản phẩm đã có trong danh sách yêu thích ❤️");
-            
-            wishlist.push({
-                id: productId, 
-                name: productData.name, 
-                price: productData.price, 
-                img: productData.img
-            });
-            localStorage.setItem('wishlist', JSON.stringify(wishlist));
-            alert("Đã thêm vào yêu thích thành công ❤️");
+            if(!wishlist.find(i => i.id === productId)) {
+                wishlist.push({ id: productId, name: productData.name, price: productData.price, img: productData.img });
+                localStorage.setItem('wishlist', JSON.stringify(wishlist));
+                alert("Đã lưu yêu thích!");
+            }
         }
 
         fetchDetail();

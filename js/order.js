@@ -26,7 +26,7 @@ export async function handlePaymentProcess() {
 
     // 3. Gọi Backend tạo link MoMo
     try {
-        const response = await fetch('http://127.0.0.1:3000/create-payment', { // Thử dùng IP thay vì localhost
+        const response = await fetch('https://fonestore.pages.dev/create-payment', { // Thử dùng IP thay vì localhost
     method: 'POST',
     headers: { 
         'Content-Type': 'application/json'

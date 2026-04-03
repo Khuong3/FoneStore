@@ -1,0 +1,105 @@
+    <!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả thanh toán - FoneStore</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .result-card { background: white; padding: 40px; border-radius: 20px; shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; max-width: 500px; width: 100%; }
+        .icon-box { font-size: 80px; margin-bottom: 20px; }
+        .success-icon { color: #28a745; }
+        .error-icon { color: #dc3545; }
+    </style>
+</head>
+<body>
+
+    <div class="result-card shadow border-0">
+        <div id="status-content">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-3">Đang xác nhận thanh toán, vui lòng đợi giây lát...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, auth } from '../js/config.js';
+        import { doc, setDoc, deleteDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+        // 1. Lấy tham số từ URL do MoMo trả về
+        const urlParams = new URLSearchParams(window.location.search);
+        const resultCode = urlParams.get('resultCode');
+        const orderId = urlParams.get('orderId');
+        const amount = urlParams.get('amount');
+
+        const statusContent = document.getElementById('status-content');
+
+        onAuthStateChanged(auth, async (user) => {
+            if (resultCode === "0") {
+                // THANH TOÁN THÀNH CÔNG
+                try {
+                    if (user) {
+                        // A. Lưu đơn hàng vào Firestore (Nếu Cloud Function chưa lưu hoặc bạn muốn lưu chi tiết SP)
+                        const cartItems = JSON.parse(localStorage.getItem('temp_order_items')) || [];
+                        
+                        await setDoc(doc(db, "orders", orderId), {
+                            userId: user.uid,
+                            items: cartItems,
+                            total: Number(amount),
+                            status: "paid", // Đã thanh toán
+                            method: "MoMo",
+                            createdAt: serverTimestamp()
+                        });
+
+                        // B. Xóa giỏ hàng của người dùng trên Firestore
+                        await deleteDoc(doc(db, "carts", user.uid));
+                        
+                        // C. Xóa localStorage
+                        localStorage.removeItem('cart');
+                        localStorage.removeItem('temp_order_items');
+                    }
+
+                    showSuccess(orderId, amount);
+                } catch (error) {
+                    console.error("Lỗi cập nhật đơn hàng:", error);
+                    showError("Thanh toán khớp nhưng không thể cập nhật dữ liệu. Vui lòng liên hệ hỗ trợ.");
+                }
+            } else {
+                // THANH TOÁN THẤT BẠI HOẶC HỦY
+                showError("Giao dịch không thành công hoặc bạn đã hủy thanh toán.");
+            }
+        });
+
+        function showSuccess(id, total) {
+            statusContent.innerHTML = `
+                <div class="icon-box success-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <h2 class="fw-bold text-success">Thanh toán thành công!</h2>
+                <p class="text-muted">Cảm ơn bạn đã mua sắm tại FoneStore.</p>
+                <div class="alert alert-light border text-start">
+                    <small class="d-block text-muted">Mã đơn hàng:</small> <strong>${id}</strong>
+                    <hr>
+                    <small class="d-block text-muted">Số tiền:</small> <strong>${Number(total).toLocaleString()}đ</strong>
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="../index.html" class="btn btn-primary btn-lg rounded-pill">Tiếp tục mua sắm</a>
+                    <a href="historyorder.html" class="btn btn-outline-secondary rounded-pill">Xem lịch sử đơn hàng</a>
+                </div>
+            `;
+        }
+
+        function showError(msg) {
+            statusContent.innerHTML = `
+                <div class="icon-box error-icon"><i class="bi bi-x-circle-fill"></i></div>
+                <h2 class="fw-bold text-danger">Thanh toán thất bại</h2>
+                <p class="text-muted">${msg}</p>
+                <div class="d-grid gap-2 mt-4">
+                    <a href="cart.html" class="btn btn-danger btn-lg rounded-pill">Quay lại giỏ hàng</a>
+                    <a href="../index.html" class="btn btn-link text-decoration-none">Về trang chủ</a>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
