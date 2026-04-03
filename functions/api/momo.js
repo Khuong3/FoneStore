@@ -15,7 +15,7 @@ export async function onRequestPost({ request }) {
         const amountNum = Number(amount);
         const requestId = "REQ_" + Date.now();
         const orderId = "FS_" + Date.now();
-        const requestType = "payWithMethod";
+        const requestType = "captureWallet";
         const extraData = "";
 
         // 1. Tạo chuỗi ký tự theo quy tắc của MoMo
