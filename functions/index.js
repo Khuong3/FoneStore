@@ -70,7 +70,7 @@ exports.createMoMoPayment = functions.https.onCall(async (data, context) => {
                 paymentMethod: "MoMo",
                 momoRequestId: requestId,
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                updatedAt: admin.firestore.FieldValue.serverTimestamp() 
             });
 
             return {
