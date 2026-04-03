@@ -35,15 +35,12 @@
     </div>
 
     <script type="module">
+    // Đã xóa bỏ import Firebase Functions, chỉ giữ lại Auth và Firestore
     import { auth, db } from '../js/config.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
     import { doc, getDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js";
 
     let userUID = null;
-    const functions = getFunctions();
-    // Khởi tạo hàm gọi đến Firebase
-    const createMoMoPayment = httpsCallable(functions, 'createMoMoPayment');
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -139,7 +136,7 @@
         } catch (e) { console.error(e); }
     };
 
-    // LOGIC THANH TOÁN
+    // LOGIC THANH TOÁN (Sử dụng Cloudflare API bằng fetch)
     async function startMoMoPayment() {
         if (!userUID) return alert("Vui lòng đăng nhập!");
 
@@ -155,28 +152,34 @@
             const cartSnap = await getDoc(doc(db, "carts", userUID));
             const cartItems = cartSnap.data().items || [];
             
-            if (cartItems.length === 0) throw "Giỏ hàng trống!";
+            if (cartItems.length === 0) throw new Error("Giỏ hàng trống!");
 
             const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const orderDescription = `FoneStore: ${userData.fullName || auth.currentUser.email}`;
 
-            // QUAN TRỌNG: Truyền thêm cartItems và userId sang Backend
-            const result = await createMoMoPayment({
-                amount: totalAmount,
-                orderInfo: orderDescription,
-                cartItems: cartItems, // Để backend lưu vào Firestore 'orders'
-                userId: userUID       // Để backend biết đơn của ai
+            // QUAN TRỌNG: Gọi tới API Cloudflare của bạn (/api/momo)
+            const response = await fetch('/api/momo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    amount: totalAmount,
+                    orderInfo: orderDescription,
+                    cartItems: cartItems, 
+                    userId: userUID       
+                })
             });
 
-            // Khi dùng httpsCallable, kết quả nằm trong result.data
-            const data = result.data;
+            // Chuyển kết quả trả về thành chuỗi JSON
+            const data = await response.json();
 
             if (data.success && data.payUrl) {
                 // Lưu lại items để đối chiếu ở trang thành công nếu cần
                 localStorage.setItem('pending_items', JSON.stringify(cartItems));
                 window.location.href = data.payUrl;
             } else {
-                throw (data.message || "Không thể tạo liên kết thanh toán.");
+                throw new Error(data.message || "Không thể tạo liên kết thanh toán.");
             }
 
         } catch (e) {
