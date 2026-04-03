@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>FoneStore - Thế giới Apple</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="preconnect" href="https://provinces.open-api.vn">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        .carousel-item img { height: 400px; object-fit: cover; border-radius: 15px; }
+        .category-menu .list-group-item:hover { background-color: #f8f9fa; cursor: pointer; color: #0d6efd; transition: 0.3s; }
+        .product-card { transition: transform 0.3s; border: none; cursor: pointer; position: relative; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+        #wishlist-count { font-size: 0.7rem; }
+        .category-active { background-color: #e7f1ff !important; color: #0d6efd !important; font-weight: bold; }
+        .out-of-stock-label { position: absolute; top: 10px; left: 10px; z-index: 2; }
+        .img-out-of-stock { opacity: 0.6; filter: grayscale(0.5); }
+
+        /* CSS FOOTER */
+        #mainFooter { background-color: #212529; color: #ffffff; border-top: 4px solid #ffc107; }
+        #mainFooter a { color: #bbb; text-decoration: none; transition: 0.3s; }
+        #mainFooter a:hover { color: #ffc107; padding-left: 5px; }
+        .text-warning { color: #ffc107 !important; }
+
+        /* USER STYLE */
+        #user-name-link { cursor: pointer; }
+
+        /* skeleton loading */
+        .skeleton-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            animation: pulse 1.2s infinite ease-in-out;
+        }
+
+        .skeleton-box {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 37%, #f0f0f0 63%);
+            background-size: 400% 100%;
+            animation: shimmer 1.4s ease infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.96; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- HEADER -->
+    <div id="header-container"></div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="list-group category-menu shadow-sm mb-4">
+                    <div class="list-group-item bg-primary text-white fw-bold">
+                        <i class="bi bi-menu-button-wide"></i> DANH MỤC
+                    </div>
+                    <div class="list-group-item" onclick="loadProductsByCategory(null, 'Tất cả sản phẩm')">Tất cả sản phẩm</div>
+                    <div id="dynamic-categories">
+                        <div class="text-center p-3"><div class="spinner-border spinner-border-sm text-primary"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div id="mainBanner" class="carousel slide shadow-sm overflow-hidden" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <img loading="eager" fetchpriority="high" src="https://thietkeinanktp.com/wp-content/uploads/2022/05/mau-banner-quang-cao-dep-an-tuong-thu-hut-khach-hang-.jpg" class="d-block w-100" alt="Banner 1">
+                        </div>
+                        <div class="carousel-item">
+                            <img loading="lazy" src="https://thietkeinanktp.com/wp-content/uploads/2022/05/50-mau-banner-dep-thu-hut-khach-hang-muc-tieu.jpg" class="d-block w-100" alt="Banner 2">
+                        </div>
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#mainBanner" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#mainBanner" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <h3 id="category-title" class="mt-5 mb-4 fw-bold text-secondary text-uppercase border-start border-primary border-4 ps-3">Tất cả sản phẩm</h3>
+        <div class="row" id="product-list">
+            <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
+            <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
+            <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
+            <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
+    <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-person-bounding-box me-2"></i>Hồ sơ cá nhân</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="profile-form">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Họ và tên</label>
+                                <input type="text" id="profile-fullname" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label small fw-bold">Số điện thoại</label>
+                                <input type="tel" id="profile-phone" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Email</label>
+                            <input type="email" id="profile-email" class="form-control" required>
+                        </div>
+                        <hr>
+                        <p class="small fw-bold text-secondary">ĐỊA CHỈ GIAO HÀNG</p>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <select id="province" class="form-select" required>
+                                    <option value="">Chọn Tỉnh/Thành</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <select id="district" class="form-select" required disabled>
+                                    <option value="">Chọn Quận/Huyện</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <select id="ward" class="form-select" required disabled>
+                                    <option value="">Chọn Phường/Xã</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3 mt-2">
+                            <input type="text" id="address-detail" class="form-control" placeholder="Số nhà, tên đường...">
+                        </div>
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="/pages/historyorder.html" class="btn btn-outline-dark">
+                                <i class="bi bi-clock-history"></i> Lịch sử mua hàng
+                            </a>
+                            <button type="submit" id="btn-save-profile" class="btn btn-primary px-5">Lưu thay đổi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div id="footer-container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+        import { loadLayout } from './js/layout.js';
+        import { auth, db } from './js/config.js';
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { collection, getDocs, query, where, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        // load header/footer trước
+        await loadLayout();
+
+        let userUID = null;
+        let currentUserData = null;
+
+        const citis = document.getElementById("province");
+        const districts = document.getElementById("district");
+        const wards = document.getElementById("ward");
+
+        let provinceData = [];
+
+        // =========================
+        // CACHE NHANH
+        // =========================
+        const CACHE_KEYS = {
+            categories: "fonestore_categories_cache",
+            products_all: "fonestore_products_all_cache",
+            province: "fonestore_province_cache"
+        };
+
+        function setCache(key, data, minutes = 10) {
+            localStorage.setItem(key, JSON.stringify({
+                data,
+                expire: Date.now() + minutes * 60 * 1000
+            }));
+        }
+
+        function getCache(key) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (Date.now() > parsed.expire) {
+                    localStorage.removeItem(key);
+                    return null;
+                }
+                return parsed.data;
+            } catch {
+                return null;
+            }
+        }
+
+        function preloadImage(src) {
+            if (!src) return;
+            const img = new Image();
+            img.src = src;
+        }
+
+        function renderProductsHTML(products, useDocId = true) {
+            let html = '';
+
+            products.forEach(item => {
+                const d = useDocId ? item.id : item.docId;
+                const p = useDocId ? item.data : item;
+                const isOutOfStock = (p.stock <= 0 || p.stock === undefined);
+
+                html += `
+                    <div class="col-md-3 mb-4">
+                        <div class="card h-100 product-card shadow-sm">
+                            ${isOutOfStock ? '<span class="badge bg-secondary out-of-stock-label">HẾT HÀNG</span>' : ''}
+                            <a href="pages/product-detail.html?id=${d}">
+                                <img loading="lazy" src="${p.img}" class="card-img-top p-4 ${isOutOfStock ? 'img-out-of-stock' : ''}" style="height:200px; object-fit:contain">
+                            </a>
+                            <div class="card-body text-center">
+                                <h6 class="fw-bold">${p.name}</h6>
+                                <p class="text-danger fw-bold">${Number(p.price).toLocaleString()}đ</p>
+                                <div class="d-grid gap-2">
+                                    <button class="btn ${isOutOfStock ? 'btn-secondary disabled' : 'btn-dark'} btn-sm" 
+                                        ${isOutOfStock ? 'disabled' : `onclick="addToCart('${d}', '${p.name}', ${p.price}, '${p.img}')"`}>
+                                        ${isOutOfStock ? 'Tạm hết hàng' : 'Thêm vào giỏ'}
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="addToWishlist('${d}', '${p.name}', ${p.price}, '${p.img}')">
+                                        <i class="bi bi-heart"></i> Yêu thích
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+
+            return html || '<div class="col-12 text-center py-5">Chưa có sản phẩm nào.</div>';
+        }
+
+        async function loadProvinceData() {
+            try {
+                const provinceCache = getCache(CACHE_KEYS.province);
+                if (provinceCache) {
+                    provinceData = provinceCache;
+                } else {
+                    const res = await axios.get("https://provinces.open-api.vn/api/?depth=3");
+                    provinceData = res.data;
+                    setCache(CACHE_KEYS.province, provinceData, 1440);
+                }
+
+                citis.length = 1;
+                provinceData.forEach(province => {
+                    citis.options[citis.options.length] = new Option(province.name, province.name);
+                });
+
+                citis.onchange = function () {
+                    districts.length = 1;
+                    wards.length = 1;
+                    districts.disabled = true;
+                    wards.disabled = true;
+
+                    if (this.value !== "") {
+                        districts.disabled = false;
+                        const selectedProvince = provinceData.find(p => p.name === this.value);
+                        if (selectedProvince) {
+                            selectedProvince.districts.forEach(district => {
+                                districts.options[districts.options.length] = new Option(district.name, district.name);
+                            });
+                        }
+                    }
+                };
+
+                districts.onchange = function () {
+                    wards.length = 1;
+                    wards.disabled = true;
+
+                    if (this.value !== "") {
+                        wards.disabled = false;
+                        const selectedProvince = provinceData.find(p => p.name === citis.value);
+                        const selectedDistrict = selectedProvince?.districts.find(d => d.name === this.value);
+
+                        if (selectedDistrict) {
+                            selectedDistrict.wards.forEach(ward => {
+                                wards.options[wards.options.length] = new Option(ward.name, ward.name);
+                            });
+                        }
+                    }
+                };
+            } catch (err) {
+                console.error("Lỗi load API tỉnh thành:", err);
+                alert("Không thể tải dữ liệu tỉnh thành!");
+            }
+        }
+
+        async function fillAddressToForm(userData) {
+            if (!provinceData.length) return;
+
+            citis.value = "";
+            districts.length = 1;
+            wards.length = 1;
+            districts.disabled = true;
+            wards.disabled = true;
+
+            let addressText = userData.address || "";
+
+            if (userData.province || userData.district || userData.ward) {
+                document.getElementById('address-detail').value = addressText;
+            } else {
+                if (addressText.includes(",")) {
+                    document.getElementById('address-detail').value = addressText.split(",")[0].trim();
+                } else {
+                    document.getElementById('address-detail').value = addressText;
+                }
+            }
+
+            if (userData.province) {
+                citis.value = userData.province;
+                citis.dispatchEvent(new Event("change"));
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            if (userData.district) {
+                districts.value = userData.district;
+                districts.dispatchEvent(new Event("change"));
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            if (userData.ward) {
+                wards.value = userData.ward;
+            }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            const authSection = document.getElementById('auth-section');
+            const adminBtn = document.getElementById('admin-link');
+
+            if (user) {
+                userUID = user.uid;
+                const userRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userRef);
+
+                if (userDoc.exists()) {
+                    currentUserData = userDoc.data();
+
+                    if (currentUserData.role === 'admin') {
+                        adminBtn.style.display = 'inline-block';
+                    }
+
+                    authSection.innerHTML = `
+                        <span class="text-white me-2">Chào, 
+                            <b id="user-name-link" class="text-warning" data-bs-toggle="modal" data-bs-target="#profileModal">
+                                ${currentUserData.fullName || user.email}
+                            </b>
+                        </span>
+                        <button id="logout-btn" class="btn btn-outline-danger btn-sm">Thoát</button>
+                    `;
+
+                    document.getElementById('user-name-link').onclick = async () => {
+                        document.getElementById('profile-fullname').value = currentUserData.fullName || "";
+                        document.getElementById('profile-phone').value = currentUserData.phone || "";
+                        document.getElementById('profile-email').value = currentUserData.email || user.email;
+                        await fillAddressToForm(currentUserData);
+                    };
+                } else {
+                    currentUserData = {
+                        fullName: "",
+                        phone: "",
+                        email: user.email || "",
+                        address: "",
+                        province: "",
+                        district: "",
+                        ward: "",
+                        role: "customer"
+                    };
+
+                    await setDoc(userRef, currentUserData);
+
+                    authSection.innerHTML = `
+                        <span class="text-white me-2">Chào, 
+                            <b id="user-name-link" class="text-warning" data-bs-toggle="modal" data-bs-target="#profileModal">
+                                ${user.email}
+                            </b>
+                        </span>
+                        <button id="logout-btn" class="btn btn-outline-danger btn-sm">Thoát</button>
+                    `;
+
+                    document.getElementById('user-name-link').onclick = async () => {
+                        document.getElementById('profile-fullname').value = "";
+                        document.getElementById('profile-phone').value = "";
+                        document.getElementById('profile-email').value = user.email || "";
+                        await fillAddressToForm(currentUserData);
+                    };
+                }
+
+                document.getElementById('logout-btn')?.addEventListener('click', () => {
+                    signOut(auth).then(() => location.reload());
+                });
+
+                updateCartIcon();
+            }
+
+            updateWishlistBadge();
+        });
+
+        document.getElementById('profile-form').onsubmit = async (e) => {
+            e.preventDefault();
+
+            if (!userUID) {
+                alert("Bạn chưa đăng nhập!");
+                return;
+            }
+
+            const saveBtn = document.getElementById('btn-save-profile');
+            saveBtn.disabled = true;
+            saveBtn.innerText = "Đang lưu...";
+
+            const fullName = document.getElementById('profile-fullname').value.trim();
+            const phone = document.getElementById('profile-phone').value.trim();
+            const email = document.getElementById('profile-email').value.trim();
+            const addressDetail = document.getElementById('address-detail').value.trim();
+
+            const province = citis.value;
+            const district = districts.value;
+            const ward = wards.value;
+
+            if (!fullName || !phone || !email) {
+                alert("Vui lòng nhập đầy đủ họ tên, số điện thoại và email.");
+                saveBtn.disabled = false;
+                saveBtn.innerText = "Lưu thay đổi";
+                return;
+            }
+
+            if (!province || !district || !ward) {
+                alert("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện và Phường/Xã.");
+                saveBtn.disabled = false;
+                saveBtn.innerText = "Lưu thay đổi";
+                return;
+            }
+
+            try {
+                const userRef = doc(db, "users", userUID);
+
+                const updatedData = {
+                    ...(currentUserData || {}),
+                    fullName,
+                    phone,
+                    email,
+                    address: addressDetail,
+                    province,
+                    district,
+                    ward
+                };
+
+                await setDoc(userRef, updatedData, { merge: true });
+                currentUserData = updatedData;
+
+                alert("Đã lưu thông tin cá nhân thành công!");
+
+                const nameLink = document.getElementById('user-name-link');
+                if (nameLink) {
+                    nameLink.innerText = fullName || email;
+                }
+
+                const modalEl = document.getElementById('profileModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+
+            } catch (err) {
+                console.error("Lỗi cập nhật profile:", err);
+                alert("Lỗi khi cập nhật hồ sơ.");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerText = "Lưu thay đổi";
+            }
+        };
+
+        async function loadCategoriesMenu() {
+            const dynamicContainer = document.getElementById('dynamic-categories');
+
+            try {
+                const categoryCache = getCache(CACHE_KEYS.categories);
+                if (categoryCache) {
+                    let html = '';
+                    categoryCache.forEach(item => {
+                        html += `<div class="list-group-item" onclick="loadProductsByCategory('${item.id}', '${item.name}')">${item.name}</div>`;
+                    });
+                    dynamicContainer.innerHTML = html;
+                }
+
+                const snap = await getDocs(collection(db, "categories"));
+                let html = '';
+                const categoryList = [];
+
+                snap.forEach(d => {
+                    const name = d.data().name;
+                    categoryList.push({ id: d.id, name });
+                    html += `<div class="list-group-item" onclick="loadProductsByCategory('${d.id}', '${name}')">${name}</div>`;
+                });
+
+                setCache(CACHE_KEYS.categories, categoryList, 30);
+                dynamicContainer.innerHTML = html;
+            } catch (err) {
+                console.error(err);
+                if (!dynamicContainer.innerHTML.trim()) {
+                    dynamicContainer.innerHTML = '<div class="list-group-item text-danger">Lỗi tải danh mục</div>';
+                }
+            }
+        }
+
+        window.loadProductsByCategory = async (categoryId = null, categoryName = null) => {
+            const container = document.getElementById('product-list');
+            document.getElementById('category-title').innerText = categoryName || "Tất cả sản phẩm";
+
+            if (!categoryId) {
+                const productCache = getCache(CACHE_KEYS.products_all);
+                if (productCache) {
+                    container.innerHTML = renderProductsHTML(productCache, false);
+                    productCache.slice(0, 6).forEach(p => preloadImage(p.img));
+                } else {
+                    container.innerHTML = `
+                        <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
+                        <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
+                        <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
+                        <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
+                    `;
+                }
+            } else {
+                container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+            }
+
+            try {
+                let q = collection(db, "products");
+
+                if (categoryId) {
+                    q = query(collection(db, "products"), where("categoryId", "==", categoryId));
+                }
+
+                const snap = await getDocs(q);
+                let products = [];
+
+                snap.forEach(d => {
+                    const p = d.data();
+                    products.push({
+                        id: d.id,
+                        data: p
+                    });
+                });
+
+                products.slice(0, 8).forEach(item => preloadImage(item.data.img));
+
+                container.innerHTML = renderProductsHTML(products, true);
+
+                if (!categoryId) {
+                    const cacheProducts = products.map(item => ({
+                        docId: item.id,
+                        ...item.data
+                    }));
+                    setCache(CACHE_KEYS.products_all, cacheProducts, 10);
+                }
+
+            } catch (err) {
+                console.error(err);
+                if (!container.innerHTML.trim()) {
+                    container.innerHTML = '<div class="alert alert-danger">Lỗi tải dữ liệu.</div>';
+                }
+            }
+        };
+
+        window.addToCart = async (id, name, price, img) => {
+            if (!userUID) return alert("Vui lòng đăng nhập!");
+
+            const cartRef = doc(db, "carts", userUID);
+            const snap = await getDoc(cartRef);
+            let items = snap.exists() ? snap.data().items : [];
+
+            const exist = items.find(i => i.id === id);
+
+            if (exist) exist.quantity += 1;
+            else items.push({ id, name, price, img, quantity: 1 });
+
+            await setDoc(cartRef, { items });
+            alert("Đã thêm vào giỏ!");
+            updateCartIcon();
+        };
+
+        async function updateCartIcon() {
+            if (!userUID) return;
+            const snap = await getDoc(doc(db, "carts", userUID));
+            if (snap.exists()) {
+                const count = snap.data().items.reduce((s, i) => s + i.quantity, 0);
+                document.getElementById('cart-count').innerText = count;
+            } else {
+                document.getElementById('cart-count').innerText = 0;
+            }
+        }
+
+        window.addToWishlist = (id, name, price, img) => {
+            let list = JSON.parse(localStorage.getItem('wishlist')) || [];
+
+            if (list.find(i => i.id === id)) {
+                return alert("Đã có trong danh sách!");
+            }
+
+            list.push({ id, name, price, img });
+            localStorage.setItem('wishlist', JSON.stringify(list));
+            updateWishlistBadge();
+            alert("Đã thêm vào yêu thích ❤️");
+        };
+
+        function updateWishlistBadge() {
+            const list = JSON.parse(localStorage.getItem('wishlist')) || [];
+            const el = document.getElementById('wishlist-count');
+            if (el) el.innerText = list.length;
+        }
+
+        // =========================
+        // CHẠY SONG SONG ĐỂ NHANH HƠN
+        // =========================
+        // =========================
+        // NHẬN KEYWORD TỪ URL (?search=...)
+        // =========================
+        const urlParams = new URLSearchParams(window.location.search);
+        const keywordFromUrl = urlParams.get("search");
+        await Promise.allSettled([
+    loadProvinceData(),
+    loadCategoriesMenu(),
+    loadProductsByCategory(null)
+]);
+
+if (keywordFromUrl && typeof window.loadProductsByCategory === "function") {
+    setTimeout(() => {
+        const input = document.getElementById("header-search-input");
+        if (input) input.value = keywordFromUrl;
+
+        const cachedProducts =
+            JSON.parse(localStorage.getItem("fonestore_products_all_cache") || "null")?.data || [];
+
+        const container = document.getElementById("product-list");
+        const title = document.getElementById("category-title");
+
+        if (title) title.innerText = `Kết quả tìm kiếm: ${keywordFromUrl}`;
+
+        const matched = cachedProducts.filter(p =>
+            (p.name || "").toLowerCase().includes(keywordFromUrl.toLowerCase())
+        );
+
+        if (container) {
+            if (!matched.length) {
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-search fs-1 text-muted"></i>
+                        <h5 class="mt-3">Không tìm thấy sản phẩm phù hợp</h5>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = matched.map(p => {
+                    const isOutOfStock = (p.stock <= 0 || p.stock === undefined);
+
+                    return `
+                        <div class="col-md-3 mb-4">
+                            <div class="card h-100 product-card shadow-sm">
+                                ${isOutOfStock ? '<span class="badge bg-secondary out-of-stock-label">HẾT HÀNG</span>' : ''}
+                                <a href="pages/product-detail.html?id=${p.docId}">
+                                    <img loading="lazy" src="${p.img}" class="card-img-top p-4 ${isOutOfStock ? 'img-out-of-stock' : ''}" style="height:200px; object-fit:contain">
+                                </a>
+                                <div class="card-body text-center">
+                                    <h6 class="fw-bold">${p.name}</h6>
+                                    <p class="text-danger fw-bold">${Number(p.price).toLocaleString()}đ</p>
+                                    <div class="d-grid gap-2">
+                                        <button class="btn ${isOutOfStock ? 'btn-secondary disabled' : 'btn-dark'} btn-sm" 
+                                            ${isOutOfStock ? 'disabled' : `onclick="addToCart('${p.docId}', '${p.name}', ${p.price}, '${p.img}')"`}>
+                                            ${isOutOfStock ? 'Tạm hết hàng' : 'Thêm vào giỏ'}
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="addToWishlist('${p.docId}', '${p.name}', ${p.price}, '${p.img}')">
+                                            <i class="bi bi-heart"></i> Yêu thích
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+            }
+        }
+    }, 200);
+}
+    </script>
+</body>
+</html>

@@ -31,7 +31,7 @@
                     <li class="nav-item"><a class="nav-link" href="dashboard.html">📊 Thống kê</a></li>
                     <li class="nav-item"><a class="nav-link active fw-bold" href="products.html">📦 Sản phẩm</a></li>
                     <li class="nav-item"><a class="nav-link" href="orders.html">📋 Đơn hàng</a></li>
-                    <li class="nav-item mt-5"><a class="nav-link text-secondary" href="../../index.html">← Về trang chủ</a></li>
+                    <li class="nav-item mt-5"><a class="nav-link text-secondary" href="../../home.html">← Về trang chủ</a></li>
                 </ul>
             </nav>
 
@@ -176,7 +176,7 @@
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (!userDoc.exists() || userDoc.data().role !== "admin") {
                 alert("Bạn không có quyền truy cập!");
-                window.location.href = "../../index.html";
+                window.location.href = "../../home.html";
             }
         });
 
