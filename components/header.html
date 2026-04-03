@@ -1,50 +1,375 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow py-2">
-    <div class="container d-flex align-items-center justify-content-between gap-3 flex-wrap">
+<!-- =====================================================
+     FONESTORE — HEADER
+     Match: welcome.html aesthetic
+     Font: Montserrat (same as welcome page)
+     Theme: Gold/Black glassmorphism + smooth animations
+     ===================================================== -->
 
-        <!-- Logo -->
-        <a class="navbar-brand fw-bold text-uppercase m-0" href="/index.html">FoneStore</a>
+<!-- Google Font — same as welcome.html -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-        <!-- Dynamic Island Search -->
-        <div class="header-search-wrapper flex-grow-1 d-flex justify-content-center">
-            <form id="header-search-form" class="dynamic-island-search" autocomplete="off">
-                <div class="search-icon-left">
-                    <i class="bi bi-search"></i>
-                </div>
+<style>
+  /* ── SHARED VARIABLES — đồng bộ với welcome.html ── */
+  :root {
+    --gold:        #d4af37;
+    --gold-light:  #f5d76e;
+    --gold-soft:   rgba(212, 175, 55, 0.12);
+    --gold-border: rgba(212, 175, 55, 0.2);
+    --black:       #0a0a0a;
+    --dark:        #111111;
+    --dark-2:      #161616;
+    --text:        #f5f5f5;
+    --muted:       #b8b8b8;
+    --font-main:   'Montserrat', sans-serif;
+  }
 
-                <input 
-                    type="text" 
-                    id="header-search-input" 
-                    class="search-input" 
-                    placeholder="Tìm iPhone, AirPods, MacBook..." 
-                />
+  /* ── NAVBAR ── */
+  #mainNavbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1030;
+    font-family: var(--font-main);
 
-                <button type="submit" class="search-btn">
-                    Tìm
-                </button>
+    /* glassmorphism — match welcome.html .premium-navbar */
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.15);
 
-                <div id="header-search-suggestions" class="search-suggestions d-none"></div>
-            </form>
+    /* scroll transition */
+    transition: background 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+
+    /* entrance slide-down */
+    animation: navSlideDown 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* thêm class này bằng JS khi scroll > 40px */
+  #mainNavbar.scrolled {
+    background: rgba(5, 5, 5, 0.88);
+    border-bottom-color: rgba(212, 175, 55, 0.28);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+  }
+
+  @keyframes navSlideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to   { transform: translateY(0);     opacity: 1; }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  #mainNavbar .container {
+    height: 68px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  /* ── BRAND ── */
+  #mainNavbar .navbar-brand {
+    font-family: var(--font-main);
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: 2px;
+    color: var(--gold) !important;
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: text-shadow 0.35s;
+    animation: fadeInUp 0.6s 0.05s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  #mainNavbar .navbar-brand:hover {
+    text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+  }
+
+  /* ── SEARCH ── */
+  .header-search-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    animation: fadeInUp 0.6s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .dynamic-island-search {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    border-radius: 999px;
+    padding: 0 6px 0 16px;
+    width: min(480px, 100%);
+    gap: 8px;
+    position: relative;
+    transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+  }
+  .dynamic-island-search:focus-within {
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.06);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+  }
+
+  .search-icon-left {
+    color: rgba(212, 175, 55, 0.55);
+    font-size: 13px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    transition: color 0.3s;
+  }
+  .dynamic-island-search:focus-within .search-icon-left {
+    color: var(--gold);
+  }
+
+  .dynamic-island-search .search-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--font-main);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 0;
+  }
+  .dynamic-island-search .search-input::placeholder {
+    color: rgba(245, 245, 245, 0.28);
+    font-weight: 400;
+  }
+
+  .dynamic-island-search .search-btn {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: #111;
+    border: none;
+    border-radius: 999px;
+    padding: 7px 18px;
+    font-family: var(--font-main);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(212, 175, 55, 0.25);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .dynamic-island-search .search-btn:hover {
+    transform: translateY(-1px) scale(1.03);
+    box-shadow: 0 8px 22px rgba(212, 175, 55, 0.38);
+  }
+  .dynamic-island-search .search-btn:active {
+    transform: scale(0.97);
+  }
+
+  .search-suggestions {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0; right: 0;
+    background: rgba(12, 12, 12, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 18px;
+    overflow: hidden;
+    z-index: 200;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+  }
+
+  /* ── RIGHT ACTIONS ── */
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    animation: fadeInUp 0.6s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Admin */
+  #admin-link {
+    font-family: var(--font-main);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 7px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--gold) !important;
+    color: var(--gold) !important;
+    background: transparent !important;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+  #admin-link:hover {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light)) !important;
+    color: #111 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+  }
+
+  /* Login */
+  #auth-section a.btn-primary {
+    font-family: var(--font-main) !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 8px 20px !important;
+    border-radius: 999px !important;
+    border: none !important;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light)) !important;
+    color: #111 !important;
+    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.25);
+    transition: all 0.3s ease !important;
+    text-decoration: none;
+    display: inline-block;
+  }
+  #auth-section a.btn-primary:hover {
+    transform: translateY(-2px) scale(1.03) !important;
+    box-shadow: 0 10px 28px rgba(212, 175, 55, 0.4) !important;
+  }
+  #auth-section a.btn-primary:active {
+    transform: scale(0.97) !important;
+  }
+
+  /* Wishlist */
+  a[href*="wishlist"].btn {
+    font-size: 14px !important;
+    padding: 7px 12px !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(212, 175, 55, 0.18) !important;
+    color: var(--muted) !important;
+    position: relative;
+    transition: all 0.3s ease !important;
+    text-decoration: none;
+  }
+  a[href*="wishlist"].btn:hover {
+    background: rgba(212, 175, 55, 0.1) !important;
+    border-color: var(--gold) !important;
+    color: var(--gold) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(212, 175, 55, 0.15) !important;
+  }
+
+  /* Cart */
+  #cart-info a.btn {
+    font-family: var(--font-main) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    padding: 8px 16px !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(212, 175, 55, 0.18) !important;
+    color: var(--text) !important;
+    position: relative;
+    transition: all 0.3s ease !important;
+    text-decoration: none;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+  }
+  #cart-info a.btn:hover {
+    background: rgba(212, 175, 55, 0.1) !important;
+    border-color: var(--gold) !important;
+    color: var(--gold) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(212, 175, 55, 0.15) !important;
+  }
+
+  /* Badges */
+  #cart-count {
+    position: absolute !important;
+    top: -5px !important; right: -5px !important;
+    transform: none !important;
+    width: 17px; height: 17px;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light)) !important;
+    color: #111 !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    font-family: var(--font-main);
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--dark) !important;
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.45);
+    line-height: 1;
+  }
+
+  #wishlist-count {
+    position: absolute !important;
+    top: -5px !important; right: -5px !important;
+    transform: none !important;
+    width: 17px; height: 17px;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    background: #e63946 !important;
+    color: #fff !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    font-family: var(--font-main);
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--dark) !important;
+    box-shadow: 0 2px 8px rgba(230, 57, 70, 0.45);
+    line-height: 1;
+  }
+
+  /* Spacer cho trang không dùng hero full-height */
+  .navbar-spacer { height: 68px; }
+</style>
+
+<nav id="mainNavbar" class="navbar navbar-expand-lg navbar-dark">
+  <div class="container d-flex align-items-center gap-3">
+
+    <!-- Logo -->
+    <a class="navbar-brand" href="/index.html">FONESTORE</a>
+
+    <!-- Dynamic Island Search -->
+    <div class="header-search-wrapper flex-grow-1 d-flex justify-content-center">
+      <form id="header-search-form" class="dynamic-island-search" autocomplete="off">
+        <div class="search-icon-left">
+          <i class="bi bi-search"></i>
         </div>
-
-        <!-- Right actions -->
-        <div class="d-flex align-items-center flex-wrap gap-2">
-            <a href="/pages/admin/products.html" id="admin-link" class="btn btn-outline-warning btn-sm" style="display: none;">Admin</a>
-
-            <div id="auth-section">
-                <a href="/pages/login.html" class="btn btn-primary btn-sm">Đăng nhập</a>
-            </div>
-
-            <a href="/pages/wishlist.html" class="btn btn-outline-danger btn-sm position-relative">
-                <i class="bi bi-heart-fill"></i>
-                <span id="wishlist-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-white text-danger border border-danger">0</span>
-            </a>
-
-            <div id="cart-info">
-                <a href="/pages/cart.html" class="btn btn-outline-light btn-sm position-relative">
-                    <i class="bi bi-cart3"></i> Giỏ hàng
-                    <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
-                </a>
-            </div>
-        </div>
+        <input
+          type="text"
+          id="header-search-input"
+          class="search-input"
+          placeholder="Tìm iPhone, AirPods, MacBook..."
+        />
+        <button type="submit" class="search-btn">Tìm</button>
+        <div id="header-search-suggestions" class="search-suggestions d-none"></div>
+      </form>
     </div>
+
+    <!-- Right actions -->
+    <div class="nav-actions">
+      <a href="/pages/admin/products.html" id="admin-link" style="display:none;">Admin</a>
+
+      <div id="auth-section">
+        <a href="/pages/login.html" class="btn btn-primary btn-sm">Đăng nhập</a>
+      </div>
+
+      <a href="/pages/wishlist.html" class="btn btn-outline-danger btn-sm position-relative">
+        <i class="bi bi-heart-fill"></i>
+        <span id="wishlist-count" class="position-absolute badge">0</span>
+      </a>
+
+      <div id="cart-info">
+        <a href="/pages/cart.html" class="btn btn-outline-light btn-sm position-relative">
+          <i class="bi bi-cart3"></i> Giỏ hàng
+          <span id="cart-count" class="position-absolute badge">0</span>
+        </a>
+      </div>
+    </div>
+  </div>
 </nav>
+
+<script>
+  (function () {
+    const nav = document.getElementById('mainNavbar');
+    if (!nav) return;
+    const tick = () => nav.classList.toggle('scrolled', window.scrollY > 40);
+    window.addEventListener('scroll', tick, { passive: true });
+    tick();
+  })();
+</script>

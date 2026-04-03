@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>FoneStore - Thế giới Apple</title>
+    <title>FoneStore - Thế giới công nghệ</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -13,108 +13,472 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
-        .carousel-item img { height: 400px; object-fit: cover; border-radius: 15px; }
-        .category-menu .list-group-item:hover { background-color: #f8f9fa; cursor: pointer; color: #0d6efd; transition: 0.3s; }
-        .product-card { transition: transform 0.3s; border: none; cursor: pointer; position: relative; }
-        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
-        #wishlist-count { font-size: 0.7rem; }
-        .category-active { background-color: #e7f1ff !important; color: #0d6efd !important; font-weight: bold; }
-        .out-of-stock-label { position: absolute; top: 10px; left: 10px; z-index: 2; }
-        .img-out-of-stock { opacity: 0.6; filter: grayscale(0.5); }
-
-        /* CSS FOOTER */
-        #mainFooter { background-color: #212529; color: #ffffff; border-top: 4px solid #ffc107; }
-        #mainFooter a { color: #bbb; text-decoration: none; transition: 0.3s; }
-        #mainFooter a:hover { color: #ffc107; padding-left: 5px; }
-        .text-warning { color: #ffc107 !important; }
-
-        /* USER STYLE */
-        #user-name-link { cursor: pointer; }
-
-        /* skeleton loading */
-        .skeleton-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            animation: pulse 1.2s infinite ease-in-out;
+        /* ── VARIABLES — đồng bộ header ── */
+        :root {
+            --gold:        #d4af37;
+            --gold-light:  #f5d76e;
+            --gold-soft:   rgba(212, 175, 55, 0.1);
+            --gold-border: rgba(212, 175, 55, 0.25);
+            --black:       #0a0a0a;
+            --dark:        #111111;
+            --text:        #1a1a1a;
+            --muted:       #6b7280;
+            --font-main:   'Montserrat', sans-serif;
         }
 
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-main);
+            background: #ffffff;
+            color: var(--text);
+        }
+
+        /* ── FIX NAVBAR OVERLAP ──
+           Header fixed height = 68px → padding-top trang */
+        .page-wrapper {
+            padding-top: 68px;
+        }
+
+        /* ── CATEGORY SIDEBAR ── */
+        .category-menu {
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid #f0f0f0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06) !important;
+        }
+
+        .category-menu .list-group-item {
+            font-family: var(--font-main);
+            font-size: 13.5px;
+            font-weight: 500;
+            color: #333;
+            border: none;
+            border-bottom: 1px solid #f5f5f5;
+            padding: 11px 16px;
+            cursor: pointer;
+            transition: all 0.22s ease;
+        }
+
+        .category-menu .list-group-item:last-child {
+            border-bottom: none;
+        }
+
+        .category-menu .list-group-item:hover {
+            background: var(--gold-soft);
+            color: var(--gold);
+            padding-left: 22px;
+        }
+
+        .category-menu .cat-header {
+            background: var(--dark);
+            color: var(--gold);
+            font-family: var(--font-main);
+            font-weight: 800;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 14px 16px;
+            border: none;
+        }
+
+        .category-active {
+            background: var(--gold-soft) !important;
+            color: var(--gold) !important;
+            font-weight: 700 !important;
+            border-left: 3px solid var(--gold) !important;
+        }
+
+        /* ── BANNER CAROUSEL ── */
+        #mainBanner {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+
+        #mainBanner .carousel-item img,
+        #mainBanner .carousel-item .banner-placeholder {
+            height: 380px;
+            object-fit: cover;
+            display: block;
+            width: 100%;
+            border-radius: 0;
+        }
+
+        /* Placeholder cho banner trống */
+        .banner-placeholder {
+            height: 380px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f8f8f8, #efefef);
+            color: #bbb;
+            font-size: 14px;
+            font-family: var(--font-main);
+            font-weight: 500;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .banner-placeholder:hover { background: linear-gradient(135deg, #f0f0f0, #e8e8e8); }
+        .banner-placeholder i { font-size: 2rem; color: #ccc; }
+
+        .carousel-control-prev-icon,
+        .carousel-control-next-icon {
+            background-color: rgba(0,0,0,0.35);
+            border-radius: 50%;
+            padding: 20px;
+            background-size: 55%;
+        }
+
+        .carousel-indicators [data-bs-target] {
+            background-color: var(--gold);
+            border-radius: 999px;
+            width: 24px;
+            height: 4px;
+            opacity: 0.45;
+        }
+        .carousel-indicators .active { opacity: 1; width: 36px; }
+
+        /* ── SECTION TITLE ── */
+        .section-heading {
+            font-family: var(--font-main);
+            font-weight: 800;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: black;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 2.5rem 0 1.5rem;
+        }
+        .section-heading::before {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 22px;
+            border-radius: 4px;
+            background: linear-gradient(180deg, var(--gold), var(--gold-light));
+            flex-shrink: 0;
+        }
+
+        /* ── PRODUCT CARDS ── */
+        .product-card {
+            border: 1px solid #f0f0f0 !important;
+            border-radius: 16px !important;
+            transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            background: #fff;
+        }
+        .product-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.1) !important;
+            border-color: rgba(212,175,55,0.3) !important;
+        }
+
+        .product-card .card-img-top {
+            transition: transform 0.35s ease;
+        }
+        .product-card:hover .card-img-top {
+            transform: scale(1.04);
+        }
+
+        .product-card .card-body {
+            padding: 14px 16px 18px;
+        }
+
+        .product-card h6 {
+            font-family: var(--font-main);
+            font-size: 13px;
+            font-weight: 700;
+            color: black;
+            margin-bottom: 6px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-card .price {
+            font-family: var(--font-main);
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+
+        /* Add to cart button — match .btn-gold */
+        .btn-add-cart {
+            font-family: var(--font-main);
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #111;
+            border: none;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 12px rgba(212,175,55,0.2);
+            width: 100%;
+        }
+        .btn-add-cart:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(212,175,55,0.35);
+            color: #111;
+        }
+        .btn-add-cart:active { transform: scale(0.97); }
+        .btn-add-cart.disabled, .btn-add-cart:disabled {
+            background: #e0e0e0;
+            color: #999;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Wishlist button */
+        .btn-wishlist {
+            font-family: var(--font-main);
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: transparent;
+            color: #999;
+            border: 1px solid #e8e8e8;
+            transition: all 0.25s ease;
+            width: 100%;
+        }
+        .btn-wishlist:hover {
+            border-color: #e63946;
+            color: #e63946;
+            background: rgba(230,57,70,0.05);
+        }
+
+        /* Out of stock badge */
+        .out-of-stock-label {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 2;
+            font-family: var(--font-main);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #555 !important;
+        }
+        .img-out-of-stock { opacity: 0.55; filter: grayscale(0.4); }
+
+        /* ── SKELETON ── */
+        .skeleton-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid #f0f0f0;
+        }
         .skeleton-box {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 37%, #f0f0f0 63%);
+            background: linear-gradient(90deg, #f5f5f5 25%, #ebebeb 37%, #f5f5f5 63%);
             background-size: 400% 100%;
             animation: shimmer 1.4s ease infinite;
             border-radius: 8px;
         }
-
         @keyframes shimmer {
-            0% { background-position: 100% 0; }
+            0%   { background-position: 100% 0; }
             100% { background-position: -100% 0; }
         }
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.96; }
-            100% { opacity: 1; }
+        /* ── FOOTER OVERRIDE — đồng bộ với welcome.html footer ── */
+        #mainFooter {
+            background: var(--dark) !important;
+            border-top: 1px solid rgba(212, 175, 55, 0.15) !important;
+            color: #fff;
         }
+        #mainFooter a { color: #b8b8b8; text-decoration: none; transition: 0.25s; }
+        #mainFooter a:hover { color: var(--gold); padding-left: 4px; }
+        #mainFooter .text-warning { color: var(--gold) !important; }
+
+        /* ── PROFILE MODAL ── */
+        .modal-header.bg-dark-gold {
+            background: var(--dark);
+            border-bottom: 1px solid var(--gold-border);
+            
+        }
+
+        /* ── USER SECTION in header ── */
+        #user-name-link { cursor: pointer; }
+
+        /* Logout button match header style */
+        #logout-btn {
+            font-family: var(--font-main);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(230,57,70,0.5) !important;
+            color: #e63946 !important;
+            background: transparent !important;
+            transition: all 0.25s ease;
+        }
+        #logout-btn:hover {
+            background: rgba(230,57,70,0.1) !important;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            #mainBanner .carousel-item img,
+            #mainBanner .carousel-item .banner-placeholder { height: 220px; }
+            .section-heading { font-size: 0.85rem; }
+        }
+                    /* ── PROFILE MODAL FORM STYLE ── */
+            #profileModal .form-label {
+                color: #111 !important;
+                font-family: var(--font-main);
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+            #profileModal .form-control,
+            #profileModal .form-select {
+                color: #111 !important;              /* MÀU CHỮ NGƯỜI DÙNG NHẬP */
+                background: #fff !important;
+                border: 1px solid #ddd !important;
+                border-radius: 12px !important;
+                font-family: var(--font-main);
+                font-size: 13px;
+                padding: 10px 14px;
+                box-shadow: none !important;
+            }
+
+            #profileModal .form-control::placeholder {
+                color: #999 !important;              /* MÀU PLACEHOLDER */
+            }
+
+            #profileModal .form-control:focus,
+            #profileModal .form-select:focus {
+                border-color: var(--gold) !important;
+                box-shadow: 0 0 0 0.2rem rgba(212,175,55,0.15) !important;
+            }
+
+            #profileModal .form-select option {
+                color: #111;
+            }
     </style>
 </head>
-<body class="bg-light">
+<body>
 
-    <!-- HEADER -->
+    <!-- HEADER (fixed, 68px height) -->
     <div id="header-container"></div>
 
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-md-3">
-                <div class="list-group category-menu shadow-sm mb-4">
-                    <div class="list-group-item bg-primary text-white fw-bold">
-                        <i class="bi bi-menu-button-wide"></i> DANH MỤC
+    <!-- PAGE CONTENT — padding-top: 68px để không bị che -->
+    <div class="page-wrapper">
+        <div class="container mt-4">
+            <div class="row g-4">
+
+                <!-- CATEGORY SIDEBAR -->
+                <div class="col-md-3">
+                    <div class="list-group category-menu shadow-sm mb-4">
+                        <div class="list-group-item cat-header">
+                            <i class="bi bi-grid-fill me-2"></i>DANH MỤC
+                        </div>
+                        <div class="list-group-item" onclick="loadProductsByCategory(null, 'Tất cả sản phẩm')">
+                            Tất cả sản phẩm
+                        </div>
+                        <div id="dynamic-categories">
+                            <div class="text-center p-3">
+                                <div class="spinner-border spinner-border-sm" style="color: var(--gold);"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="list-group-item" onclick="loadProductsByCategory(null, 'Tất cả sản phẩm')">Tất cả sản phẩm</div>
-                    <div id="dynamic-categories">
-                        <div class="text-center p-3"><div class="spinner-border spinner-border-sm text-primary"></div></div>
+                </div>
+
+                <!-- BANNER CAROUSEL -->
+                <div class="col-md-9">
+                    <div id="mainBanner" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4000">
+
+                        <!-- Indicators -->
+                        <div class="carousel-indicators">
+                            <button type="button" data-bs-target="#mainBanner" data-bs-slide-to="0" class="active"></button>
+                            <button type="button" data-bs-target="#mainBanner" data-bs-slide-to="1"></button>
+                            <button type="button" data-bs-target="#mainBanner" data-bs-slide-to="2"></button>
+                            <button type="button" data-bs-target="#mainBanner" data-bs-slide-to="3"></button>
+                        </div>
+
+                        <div class="carousel-inner">
+                            <!-- Banner 1 -->
+                            <div class="carousel-item active">
+                                <img loading="eager" fetchpriority="high"
+                                    src="https://thietkeinanktp.com/wp-content/uploads/2022/05/mau-banner-quang-cao-dep-an-tuong-thu-hut-khach-hang-.jpg"
+                                    class="d-block w-100" alt="Banner 1">
+                            </div>
+
+                            <!-- Banner 2 -->
+                            <div class="carousel-item">
+                                <img loading="lazy"
+                                    src="https://thietkeinanktp.com/wp-content/uploads/2022/05/50-mau-banner-dep-thu-hut-khach-hang-muc-tieu.jpg"
+                                    class="d-block w-100" alt="Banner 2">
+                            </div>
+
+                            <!-- Banner 3 — thêm ảnh vào src="" -->
+                            <div class="carousel-item">
+                                <div class="banner-placeholder">
+                                    <img loading="lazy" src="https://tmiweb.vn/wp-content/uploads/2021/02/thiet_ke_website_thiet-ke-banner-chuyen-nghiep-tai-thien-minh-01.jpg" class="d-block w-100" alt="Banner 3">
+
+                                </div>
+                                
+                                
+                            </div>
+
+                            <!-- Banner 4 — thêm ảnh vào src="" -->
+                            <div class="carousel-item">
+                                <div class="banner-placeholder">
+                                    
+                                     <img loading="lazy" src="https://kea.vn/wp-content/uploads/2018/09/12-quy-tac-thiet-ke-banner-quang-cao-online-tang-luong-truy-cap-1.jpg" class="d-block w-100" alt="Banner 4">
+                                </div>
+                                
+                               
+                            </div>
+                        </div>
+
+                        <button class="carousel-control-prev" type="button" data-bs-target="#mainBanner" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#mainBanner" data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-9">
-                <div id="mainBanner" class="carousel slide shadow-sm overflow-hidden" data-bs-ride="carousel">
-                    <div class="carousel-inner">
-                        <div class="carousel-item active">
-                            <img loading="eager" fetchpriority="high" src="https://thietkeinanktp.com/wp-content/uploads/2022/05/mau-banner-quang-cao-dep-an-tuong-thu-hut-khach-hang-.jpg" class="d-block w-100" alt="Banner 1">
-                        </div>
-                        <div class="carousel-item">
-                            <img loading="lazy" src="https://thietkeinanktp.com/wp-content/uploads/2022/05/50-mau-banner-dep-thu-hut-khach-hang-muc-tieu.jpg" class="d-block w-100" alt="Banner 2">
-                        </div>
-                    </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#mainBanner" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon"></span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#mainBanner" data-bs-slide="next">
-                        <span class="carousel-control-next-icon"></span>
-                    </button>
-                </div>
-            </div>
-        </div>
+            <!-- SECTION TITLE -->
+            <h3 id="category-title" class="section-heading">Tất cả sản phẩm</h3>
 
-        <h3 id="category-title" class="mt-5 mb-4 fw-bold text-secondary text-uppercase border-start border-primary border-4 ps-3">Tất cả sản phẩm</h3>
-        <div class="row" id="product-list">
-            <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
-            <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
-            <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
-            <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
-        </div>
-    </div>
+            <!-- PRODUCT GRID -->
+            <div class="row" id="product-list">
+                <!-- skeleton -->
+                <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:16px;"></div><div class="skeleton-box mt-2" style="height:16px; width:55%;"></div><div class="skeleton-box mt-3" style="height:34px;"></div></div></div>
+                <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:16px;"></div><div class="skeleton-box mt-2" style="height:16px; width:55%;"></div><div class="skeleton-box mt-3" style="height:34px;"></div></div></div>
+                <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:16px;"></div><div class="skeleton-box mt-2" style="height:16px; width:55%;"></div><div class="skeleton-box mt-3" style="height:34px;"></div></div></div>
+                <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:16px;"></div><div class="skeleton-box mt-2" style="height:16px; width:55%;"></div><div class="skeleton-box mt-3" style="height:34px;"></div></div></div>
+            </div>
+        </div><!-- /.container -->
+    </div><!-- /.page-wrapper -->
 
     <!-- PROFILE MODAL -->
     <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title"><i class="bi bi-person-bounding-box me-2"></i>Hồ sơ cá nhân</h5>
+                <div class="modal-header bg-dark-gold" style="background: #111; border-bottom: 1px solid rgba(212,175,55,0.2);">
+                    <h5 class="modal-title text-white" style="font-family: var(--font-main); font-weight:700; font-size:15px; letter-spacing:0.5px;">
+                        <i class="bi bi-person-bounding-box me-2" style="color: var(--gold);"></i>Hồ sơ cá nhân
+                    </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -156,10 +520,13 @@
                             <input type="text" id="address-detail" class="form-control" placeholder="Số nhà, tên đường...">
                         </div>
                         <div class="d-flex justify-content-between mt-4">
-                            <a href="/pages/historyorder.html" class="btn btn-outline-dark">
+                            <a href="/pages/historyorder.html" class="btn btn-outline-secondary btn-sm" style="border-radius:999px; font-family:var(--font-main); font-size:12px; font-weight:600;">
                                 <i class="bi bi-clock-history"></i> Lịch sử mua hàng
                             </a>
-                            <button type="submit" id="btn-save-profile" class="btn btn-primary px-5">Lưu thay đổi</button>
+                            <button type="submit" id="btn-save-profile" class="btn btn-sm px-5"
+                                style="border-radius:999px; font-family:var(--font-main); font-weight:700; font-size:12px; background: linear-gradient(135deg, var(--gold), var(--gold-light)); color:#111; border:none; box-shadow: 0 4px 14px rgba(212,175,55,0.25);">
+                                Lưu thay đổi
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -179,186 +546,124 @@
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
         import { collection, getDocs, query, where, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-        // load header/footer trước
         await loadLayout();
 
         let userUID = null;
         let currentUserData = null;
 
-        const citis = document.getElementById("province");
+        const citis     = document.getElementById("province");
         const districts = document.getElementById("district");
-        const wards = document.getElementById("ward");
-
+        const wards     = document.getElementById("ward");
         let provinceData = [];
 
-        // =========================
-        // CACHE NHANH
-        // =========================
+        /* ── CACHE ── */
         const CACHE_KEYS = {
-            categories: "fonestore_categories_cache",
+            categories:   "fonestore_categories_cache",
             products_all: "fonestore_products_all_cache",
-            province: "fonestore_province_cache"
+            province:     "fonestore_province_cache"
         };
 
         function setCache(key, data, minutes = 10) {
-            localStorage.setItem(key, JSON.stringify({
-                data,
-                expire: Date.now() + minutes * 60 * 1000
-            }));
+            localStorage.setItem(key, JSON.stringify({ data, expire: Date.now() + minutes * 60 * 1000 }));
         }
-
         function getCache(key) {
             try {
                 const raw = localStorage.getItem(key);
                 if (!raw) return null;
                 const parsed = JSON.parse(raw);
-                if (Date.now() > parsed.expire) {
-                    localStorage.removeItem(key);
-                    return null;
-                }
+                if (Date.now() > parsed.expire) { localStorage.removeItem(key); return null; }
                 return parsed.data;
-            } catch {
-                return null;
-            }
+            } catch { return null; }
         }
-
         function preloadImage(src) {
             if (!src) return;
-            const img = new Image();
-            img.src = src;
+            const img = new Image(); img.src = src;
         }
 
+        /* ── RENDER PRODUCTS ── */
         function renderProductsHTML(products, useDocId = true) {
             let html = '';
-
             products.forEach(item => {
                 const d = useDocId ? item.id : item.docId;
                 const p = useDocId ? item.data : item;
                 const isOutOfStock = (p.stock <= 0 || p.stock === undefined);
 
                 html += `
-                    <div class="col-md-3 mb-4">
-                        <div class="card h-100 product-card shadow-sm">
-                            ${isOutOfStock ? '<span class="badge bg-secondary out-of-stock-label">HẾT HÀNG</span>' : ''}
-                            <a href="pages/product-detail.html?id=${d}">
-                                <img loading="lazy" src="${p.img}" class="card-img-top p-4 ${isOutOfStock ? 'img-out-of-stock' : ''}" style="height:200px; object-fit:contain">
-                            </a>
-                            <div class="card-body text-center">
-                                <h6 class="fw-bold">${p.name}</h6>
-                                <p class="text-danger fw-bold">${Number(p.price).toLocaleString()}đ</p>
-                                <div class="d-grid gap-2">
-                                    <button class="btn ${isOutOfStock ? 'btn-secondary disabled' : 'btn-dark'} btn-sm" 
-                                        ${isOutOfStock ? 'disabled' : `onclick="addToCart('${d}', '${p.name}', ${p.price}, '${p.img}')"`}>
-                                        ${isOutOfStock ? 'Tạm hết hàng' : 'Thêm vào giỏ'}
-                                    </button>
-                                    <button class="btn btn-outline-danger btn-sm" onclick="addToWishlist('${d}', '${p.name}', ${p.price}, '${p.img}')">
-                                        <i class="bi bi-heart"></i> Yêu thích
-                                    </button>
-                                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100 product-card shadow-sm">
+                        ${isOutOfStock ? '<span class="badge out-of-stock-label">HẾT HÀNG</span>' : ''}
+                        <a href="pages/product-detail.html?id=${d}" style="overflow:hidden; display:block;">
+                            <img loading="lazy" src="${p.img}"
+                                class="card-img-top p-3 ${isOutOfStock ? 'img-out-of-stock' : ''}"
+                                style="height:200px; object-fit:contain;">
+                        </a>
+                        <div class="card-body text-center">
+                            <h6 class="fw-bold">${p.name}</h6>
+                            <p class="price">${Number(p.price).toLocaleString()}đ</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn-add-cart ${isOutOfStock ? 'disabled' : ''}"
+                                    ${isOutOfStock ? 'disabled' : `onclick="addToCart('${d}','${p.name}',${p.price},'${p.img}')"`}>
+                                    ${isOutOfStock ? 'Tạm hết hàng' : '<i class="bi bi-cart-plus me-1"></i>Thêm vào giỏ'}
+                                </button>
+                                <button class="btn-wishlist" onclick="addToWishlist('${d}','${p.name}',${p.price},'${p.img}')">
+                                    <i class="bi bi-heart me-1"></i>Yêu thích
+                                </button>
                             </div>
                         </div>
-                    </div>`;
+                    </div>
+                </div>`;
             });
-
-            return html || '<div class="col-12 text-center py-5">Chưa có sản phẩm nào.</div>';
+            return html || '<div class="col-12 text-center py-5 text-muted">Chưa có sản phẩm nào.</div>';
         }
 
+        /* ── PROVINCE API ── */
         async function loadProvinceData() {
             try {
-                const provinceCache = getCache(CACHE_KEYS.province);
-                if (provinceCache) {
-                    provinceData = provinceCache;
-                } else {
+                const cached = getCache(CACHE_KEYS.province);
+                if (cached) { provinceData = cached; }
+                else {
                     const res = await axios.get("https://provinces.open-api.vn/api/?depth=3");
                     provinceData = res.data;
                     setCache(CACHE_KEYS.province, provinceData, 1440);
                 }
-
                 citis.length = 1;
-                provinceData.forEach(province => {
-                    citis.options[citis.options.length] = new Option(province.name, province.name);
-                });
+                provinceData.forEach(p => citis.options[citis.options.length] = new Option(p.name, p.name));
 
                 citis.onchange = function () {
-                    districts.length = 1;
-                    wards.length = 1;
-                    districts.disabled = true;
-                    wards.disabled = true;
-
-                    if (this.value !== "") {
+                    districts.length = 1; wards.length = 1;
+                    districts.disabled = true; wards.disabled = true;
+                    if (this.value) {
                         districts.disabled = false;
-                        const selectedProvince = provinceData.find(p => p.name === this.value);
-                        if (selectedProvince) {
-                            selectedProvince.districts.forEach(district => {
-                                districts.options[districts.options.length] = new Option(district.name, district.name);
-                            });
-                        }
+                        const sel = provinceData.find(p => p.name === this.value);
+                        sel?.districts.forEach(d => districts.options[districts.options.length] = new Option(d.name, d.name));
                     }
                 };
-
                 districts.onchange = function () {
-                    wards.length = 1;
-                    wards.disabled = true;
-
-                    if (this.value !== "") {
+                    wards.length = 1; wards.disabled = true;
+                    if (this.value) {
                         wards.disabled = false;
-                        const selectedProvince = provinceData.find(p => p.name === citis.value);
-                        const selectedDistrict = selectedProvince?.districts.find(d => d.name === this.value);
-
-                        if (selectedDistrict) {
-                            selectedDistrict.wards.forEach(ward => {
-                                wards.options[wards.options.length] = new Option(ward.name, ward.name);
-                            });
-                        }
+                        const selP = provinceData.find(p => p.name === citis.value);
+                        const selD = selP?.districts.find(d => d.name === this.value);
+                        selD?.wards.forEach(w => wards.options[wards.options.length] = new Option(w.name, w.name));
                     }
                 };
-            } catch (err) {
-                console.error("Lỗi load API tỉnh thành:", err);
-                alert("Không thể tải dữ liệu tỉnh thành!");
-            }
+            } catch (err) { console.error("Lỗi load tỉnh thành:", err); }
         }
 
         async function fillAddressToForm(userData) {
             if (!provinceData.length) return;
-
-            citis.value = "";
-            districts.length = 1;
-            wards.length = 1;
-            districts.disabled = true;
-            wards.disabled = true;
-
-            let addressText = userData.address || "";
-
-            if (userData.province || userData.district || userData.ward) {
-                document.getElementById('address-detail').value = addressText;
-            } else {
-                if (addressText.includes(",")) {
-                    document.getElementById('address-detail').value = addressText.split(",")[0].trim();
-                } else {
-                    document.getElementById('address-detail').value = addressText;
-                }
-            }
-
-            if (userData.province) {
-                citis.value = userData.province;
-                citis.dispatchEvent(new Event("change"));
-                await new Promise(resolve => setTimeout(resolve, 50));
-            }
-
-            if (userData.district) {
-                districts.value = userData.district;
-                districts.dispatchEvent(new Event("change"));
-                await new Promise(resolve => setTimeout(resolve, 50));
-            }
-
-            if (userData.ward) {
-                wards.value = userData.ward;
-            }
+            citis.value = ""; districts.length = 1; wards.length = 1;
+            districts.disabled = true; wards.disabled = true;
+            document.getElementById('address-detail').value = userData.address || "";
+            if (userData.province) { citis.value = userData.province; citis.dispatchEvent(new Event("change")); await new Promise(r => setTimeout(r, 50)); }
+            if (userData.district) { districts.value = userData.district; districts.dispatchEvent(new Event("change")); await new Promise(r => setTimeout(r, 50)); }
+            if (userData.ward) wards.value = userData.ward;
         }
 
+        /* ── AUTH ── */
         onAuthStateChanged(auth, async (user) => {
             const authSection = document.getElementById('auth-section');
-            const adminBtn = document.getElementById('admin-link');
+            const adminBtn    = document.getElementById('admin-link');
 
             if (user) {
                 userUID = user.uid;
@@ -367,243 +672,131 @@
 
                 if (userDoc.exists()) {
                     currentUserData = userDoc.data();
-
-                    if (currentUserData.role === 'admin') {
-                        adminBtn.style.display = 'inline-block';
-                    }
+                    if (currentUserData.role === 'admin') adminBtn.style.display = 'inline-block';
 
                     authSection.innerHTML = `
-                        <span class="text-white me-2">Chào, 
-                            <b id="user-name-link" class="text-warning" data-bs-toggle="modal" data-bs-target="#profileModal">
-                                ${currentUserData.fullName || user.email}
+                        <span style="font-family:var(--font-main); font-size:13px; color:#f5f5f5;">Chào,
+                            <b id="user-name-link" style="color:var(--gold); cursor:pointer;"
+                               data-bs-toggle="modal" data-bs-target="#profileModal">
+                               ${currentUserData.fullName || user.email}
                             </b>
                         </span>
-                        <button id="logout-btn" class="btn btn-outline-danger btn-sm">Thoát</button>
-                    `;
+                        <button id="logout-btn" class="btn btn-sm">Thoát</button>`;
 
                     document.getElementById('user-name-link').onclick = async () => {
                         document.getElementById('profile-fullname').value = currentUserData.fullName || "";
-                        document.getElementById('profile-phone').value = currentUserData.phone || "";
-                        document.getElementById('profile-email').value = currentUserData.email || user.email;
+                        document.getElementById('profile-phone').value    = currentUserData.phone || "";
+                        document.getElementById('profile-email').value    = currentUserData.email || user.email;
                         await fillAddressToForm(currentUserData);
                     };
                 } else {
-                    currentUserData = {
-                        fullName: "",
-                        phone: "",
-                        email: user.email || "",
-                        address: "",
-                        province: "",
-                        district: "",
-                        ward: "",
-                        role: "customer"
-                    };
-
+                    currentUserData = { fullName:"", phone:"", email: user.email||"", address:"", province:"", district:"", ward:"", role:"customer" };
                     await setDoc(userRef, currentUserData);
-
                     authSection.innerHTML = `
-                        <span class="text-white me-2">Chào, 
-                            <b id="user-name-link" class="text-warning" data-bs-toggle="modal" data-bs-target="#profileModal">
-                                ${user.email}
+                        <span style="font-family:var(--font-main); font-size:13px; color:#f5f5f5;">Chào,
+                            <b id="user-name-link" style="color:var(--gold); cursor:pointer;"
+                               data-bs-toggle="modal" data-bs-target="#profileModal">
+                               ${user.email}
                             </b>
                         </span>
-                        <button id="logout-btn" class="btn btn-outline-danger btn-sm">Thoát</button>
-                    `;
-
+                        <button id="logout-btn" class="btn btn-sm">Thoát</button>`;
                     document.getElementById('user-name-link').onclick = async () => {
-                        document.getElementById('profile-fullname').value = "";
-                        document.getElementById('profile-phone').value = "";
                         document.getElementById('profile-email').value = user.email || "";
                         await fillAddressToForm(currentUserData);
                     };
                 }
 
-                document.getElementById('logout-btn')?.addEventListener('click', () => {
-                    signOut(auth).then(() => location.reload());
-                });
-
+                document.getElementById('logout-btn')?.addEventListener('click', () => signOut(auth).then(() => location.reload()));
                 updateCartIcon();
             }
-
             updateWishlistBadge();
         });
 
+        /* ── PROFILE SAVE ── */
         document.getElementById('profile-form').onsubmit = async (e) => {
             e.preventDefault();
-
-            if (!userUID) {
-                alert("Bạn chưa đăng nhập!");
-                return;
-            }
-
-            const saveBtn = document.getElementById('btn-save-profile');
-            saveBtn.disabled = true;
-            saveBtn.innerText = "Đang lưu...";
-
+            if (!userUID) { alert("Bạn chưa đăng nhập!"); return; }
+            const btn = document.getElementById('btn-save-profile');
+            btn.disabled = true; btn.innerText = "Đang lưu...";
             const fullName = document.getElementById('profile-fullname').value.trim();
-            const phone = document.getElementById('profile-phone').value.trim();
-            const email = document.getElementById('profile-email').value.trim();
-            const addressDetail = document.getElementById('address-detail').value.trim();
-
-            const province = citis.value;
-            const district = districts.value;
-            const ward = wards.value;
-
-            if (!fullName || !phone || !email) {
-                alert("Vui lòng nhập đầy đủ họ tên, số điện thoại và email.");
-                saveBtn.disabled = false;
-                saveBtn.innerText = "Lưu thay đổi";
-                return;
-            }
-
-            if (!province || !district || !ward) {
-                alert("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện và Phường/Xã.");
-                saveBtn.disabled = false;
-                saveBtn.innerText = "Lưu thay đổi";
-                return;
-            }
-
+            const phone    = document.getElementById('profile-phone').value.trim();
+            const email    = document.getElementById('profile-email').value.trim();
+            const province = citis.value; const district = districts.value; const ward = wards.value;
+            const address  = document.getElementById('address-detail').value.trim();
+            if (!fullName || !phone || !email) { alert("Vui lòng nhập đầy đủ thông tin."); btn.disabled = false; btn.innerText = "Lưu thay đổi"; return; }
+            if (!province || !district || !ward) { alert("Vui lòng chọn đầy đủ địa chỉ."); btn.disabled = false; btn.innerText = "Lưu thay đổi"; return; }
             try {
-                const userRef = doc(db, "users", userUID);
-
-                const updatedData = {
-                    ...(currentUserData || {}),
-                    fullName,
-                    phone,
-                    email,
-                    address: addressDetail,
-                    province,
-                    district,
-                    ward
-                };
-
-                await setDoc(userRef, updatedData, { merge: true });
-                currentUserData = updatedData;
-
-                alert("Đã lưu thông tin cá nhân thành công!");
-
+                const updated = { ...(currentUserData||{}), fullName, phone, email, address, province, district, ward };
+                await setDoc(doc(db,"users",userUID), updated, { merge: true });
+                currentUserData = updated;
                 const nameLink = document.getElementById('user-name-link');
-                if (nameLink) {
-                    nameLink.innerText = fullName || email;
-                }
-
-                const modalEl = document.getElementById('profileModal');
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                if (modal) modal.hide();
-
-            } catch (err) {
-                console.error("Lỗi cập nhật profile:", err);
-                alert("Lỗi khi cập nhật hồ sơ.");
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.innerText = "Lưu thay đổi";
-            }
+                if (nameLink) nameLink.innerText = fullName || email;
+                bootstrap.Modal.getInstance(document.getElementById('profileModal'))?.hide();
+                alert("Đã lưu thông tin thành công!");
+            } catch (err) { console.error(err); alert("Lỗi cập nhật hồ sơ."); }
+            finally { btn.disabled = false; btn.innerText = "Lưu thay đổi"; }
         };
 
+        /* ── CATEGORIES ── */
         async function loadCategoriesMenu() {
-            const dynamicContainer = document.getElementById('dynamic-categories');
-
+            const el = document.getElementById('dynamic-categories');
             try {
-                const categoryCache = getCache(CACHE_KEYS.categories);
-                if (categoryCache) {
-                    let html = '';
-                    categoryCache.forEach(item => {
-                        html += `<div class="list-group-item" onclick="loadProductsByCategory('${item.id}', '${item.name}')">${item.name}</div>`;
-                    });
-                    dynamicContainer.innerHTML = html;
-                }
-
+                const cached = getCache(CACHE_KEYS.categories);
+                if (cached) el.innerHTML = cached.map(c => `<div class="list-group-item" onclick="loadProductsByCategory('${c.id}','${c.name}')">${c.name}</div>`).join('');
                 const snap = await getDocs(collection(db, "categories"));
-                let html = '';
-                const categoryList = [];
-
-                snap.forEach(d => {
-                    const name = d.data().name;
-                    categoryList.push({ id: d.id, name });
-                    html += `<div class="list-group-item" onclick="loadProductsByCategory('${d.id}', '${name}')">${name}</div>`;
-                });
-
-                setCache(CACHE_KEYS.categories, categoryList, 30);
-                dynamicContainer.innerHTML = html;
-            } catch (err) {
-                console.error(err);
-                if (!dynamicContainer.innerHTML.trim()) {
-                    dynamicContainer.innerHTML = '<div class="list-group-item text-danger">Lỗi tải danh mục</div>';
-                }
-            }
+                let html = ''; const list = [];
+                snap.forEach(d => { const n = d.data().name; list.push({id:d.id,name:n}); html += `<div class="list-group-item" onclick="loadProductsByCategory('${d.id}','${n}')">${n}</div>`; });
+                setCache(CACHE_KEYS.categories, list, 30);
+                el.innerHTML = html;
+            } catch (err) { console.error(err); if (!el.innerHTML.trim()) el.innerHTML = '<div class="list-group-item text-danger">Lỗi tải danh mục</div>'; }
         }
 
+        /* ── LOAD PRODUCTS ── */
         window.loadProductsByCategory = async (categoryId = null, categoryName = null) => {
             const container = document.getElementById('product-list');
-            document.getElementById('category-title').innerText = categoryName || "Tất cả sản phẩm";
+            const titleEl   = document.getElementById('category-title');
+            if (titleEl) titleEl.innerText = categoryName || "Tất cả sản phẩm";
 
             if (!categoryId) {
-                const productCache = getCache(CACHE_KEYS.products_all);
-                if (productCache) {
-                    container.innerHTML = renderProductsHTML(productCache, false);
-                    productCache.slice(0, 6).forEach(p => preloadImage(p.img));
+                const cached = getCache(CACHE_KEYS.products_all);
+                if (cached) {
+                    container.innerHTML = renderProductsHTML(cached, false);
+                    cached.slice(0,6).forEach(p => preloadImage(p.img));
                 } else {
-                    container.innerHTML = `
-                        <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
-                        <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
-                        <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
-                        <div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:18px;"></div><div class="skeleton-box mt-2" style="height:18px; width:60%;"></div><div class="skeleton-box mt-3" style="height:36px;"></div></div></div>
-                    `;
+                    container.innerHTML = skeletonHTML();
                 }
             } else {
-                container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+                container.innerHTML = `<div class="col-12 text-center py-5"><div class="spinner-border" style="color:var(--gold);"></div></div>`;
             }
 
             try {
                 let q = collection(db, "products");
-
-                if (categoryId) {
-                    q = query(collection(db, "products"), where("categoryId", "==", categoryId));
-                }
-
+                if (categoryId) q = query(collection(db,"products"), where("categoryId","==",categoryId));
                 const snap = await getDocs(q);
-                let products = [];
-
-                snap.forEach(d => {
-                    const p = d.data();
-                    products.push({
-                        id: d.id,
-                        data: p
-                    });
-                });
-
-                products.slice(0, 8).forEach(item => preloadImage(item.data.img));
-
+                const products = [];
+                snap.forEach(d => products.push({ id: d.id, data: d.data() }));
+                products.slice(0,8).forEach(i => preloadImage(i.data.img));
                 container.innerHTML = renderProductsHTML(products, true);
-
                 if (!categoryId) {
-                    const cacheProducts = products.map(item => ({
-                        docId: item.id,
-                        ...item.data
-                    }));
-                    setCache(CACHE_KEYS.products_all, cacheProducts, 10);
+                    setCache(CACHE_KEYS.products_all, products.map(i => ({ docId:i.id, ...i.data })), 10);
                 }
-
-            } catch (err) {
-                console.error(err);
-                if (!container.innerHTML.trim()) {
-                    container.innerHTML = '<div class="alert alert-danger">Lỗi tải dữ liệu.</div>';
-                }
-            }
+            } catch (err) { console.error(err); if (!container.innerHTML.trim()) container.innerHTML = '<div class="alert alert-danger">Lỗi tải dữ liệu.</div>'; }
         };
 
+        function skeletonHTML() {
+            const s = `<div class="col-md-3 mb-4"><div class="skeleton-card"><div class="skeleton-box" style="height:180px;"></div><div class="skeleton-box mt-3" style="height:16px;"></div><div class="skeleton-box mt-2" style="height:16px; width:55%;"></div><div class="skeleton-box mt-3" style="height:34px;"></div></div></div>`;
+            return s.repeat(4);
+        }
+
+        /* ── CART ── */
         window.addToCart = async (id, name, price, img) => {
             if (!userUID) return alert("Vui lòng đăng nhập!");
-
-            const cartRef = doc(db, "carts", userUID);
+            const cartRef = doc(db,"carts",userUID);
             const snap = await getDoc(cartRef);
             let items = snap.exists() ? snap.data().items : [];
-
             const exist = items.find(i => i.id === id);
-
             if (exist) exist.quantity += 1;
             else items.push({ id, name, price, img, quantity: 1 });
-
             await setDoc(cartRef, { items });
             alert("Đã thêm vào giỏ!");
             updateCartIcon();
@@ -611,22 +804,15 @@
 
         async function updateCartIcon() {
             if (!userUID) return;
-            const snap = await getDoc(doc(db, "carts", userUID));
-            if (snap.exists()) {
-                const count = snap.data().items.reduce((s, i) => s + i.quantity, 0);
-                document.getElementById('cart-count').innerText = count;
-            } else {
-                document.getElementById('cart-count').innerText = 0;
-            }
+            const snap = await getDoc(doc(db,"carts",userUID));
+            const el = document.getElementById('cart-count');
+            if (el) el.innerText = snap.exists() ? snap.data().items.reduce((s,i) => s+i.quantity, 0) : 0;
         }
 
+        /* ── WISHLIST ── */
         window.addToWishlist = (id, name, price, img) => {
             let list = JSON.parse(localStorage.getItem('wishlist')) || [];
-
-            if (list.find(i => i.id === id)) {
-                return alert("Đã có trong danh sách!");
-            }
-
+            if (list.find(i => i.id === id)) return alert("Đã có trong danh sách!");
             list.push({ id, name, price, img });
             localStorage.setItem('wishlist', JSON.stringify(list));
             updateWishlistBadge();
@@ -639,77 +825,24 @@
             if (el) el.innerText = list.length;
         }
 
-        // =========================
-        // CHẠY SONG SONG ĐỂ NHANH HƠN
-        // =========================
-        // =========================
-        // NHẬN KEYWORD TỪ URL (?search=...)
-        // =========================
+        /* ── INIT ── */
         const urlParams = new URLSearchParams(window.location.search);
         const keywordFromUrl = urlParams.get("search");
-        await Promise.allSettled([
-    loadProvinceData(),
-    loadCategoriesMenu(),
-    loadProductsByCategory(null)
-]);
 
-if (keywordFromUrl && typeof window.loadProductsByCategory === "function") {
-    setTimeout(() => {
-        const input = document.getElementById("header-search-input");
-        if (input) input.value = keywordFromUrl;
+        await Promise.allSettled([loadProvinceData(), loadCategoriesMenu(), loadProductsByCategory(null)]);
 
-        const cachedProducts =
-            JSON.parse(localStorage.getItem("fonestore_products_all_cache") || "null")?.data || [];
-
-        const container = document.getElementById("product-list");
-        const title = document.getElementById("category-title");
-
-        if (title) title.innerText = `Kết quả tìm kiếm: ${keywordFromUrl}`;
-
-        const matched = cachedProducts.filter(p =>
-            (p.name || "").toLowerCase().includes(keywordFromUrl.toLowerCase())
-        );
-
-        if (container) {
-            if (!matched.length) {
-                container.innerHTML = `
-                    <div class="col-12 text-center py-5">
-                        <i class="bi bi-search fs-1 text-muted"></i>
-                        <h5 class="mt-3">Không tìm thấy sản phẩm phù hợp</h5>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = matched.map(p => {
-                    const isOutOfStock = (p.stock <= 0 || p.stock === undefined);
-
-                    return `
-                        <div class="col-md-3 mb-4">
-                            <div class="card h-100 product-card shadow-sm">
-                                ${isOutOfStock ? '<span class="badge bg-secondary out-of-stock-label">HẾT HÀNG</span>' : ''}
-                                <a href="pages/product-detail.html?id=${p.docId}">
-                                    <img loading="lazy" src="${p.img}" class="card-img-top p-4 ${isOutOfStock ? 'img-out-of-stock' : ''}" style="height:200px; object-fit:contain">
-                                </a>
-                                <div class="card-body text-center">
-                                    <h6 class="fw-bold">${p.name}</h6>
-                                    <p class="text-danger fw-bold">${Number(p.price).toLocaleString()}đ</p>
-                                    <div class="d-grid gap-2">
-                                        <button class="btn ${isOutOfStock ? 'btn-secondary disabled' : 'btn-dark'} btn-sm" 
-                                            ${isOutOfStock ? 'disabled' : `onclick="addToCart('${p.docId}', '${p.name}', ${p.price}, '${p.img}')"`}>
-                                            ${isOutOfStock ? 'Tạm hết hàng' : 'Thêm vào giỏ'}
-                                        </button>
-                                        <button class="btn btn-outline-danger btn-sm" onclick="addToWishlist('${p.docId}', '${p.name}', ${p.price}, '${p.img}')">
-                                            <i class="bi bi-heart"></i> Yêu thích
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join("");
-            }
+        if (keywordFromUrl) {
+            setTimeout(() => {
+                const input = document.getElementById("header-search-input");
+                if (input) input.value = keywordFromUrl;
+                const cached = JSON.parse(localStorage.getItem("fonestore_products_all_cache") || "null")?.data || [];
+                const container = document.getElementById("product-list");
+                const title     = document.getElementById("category-title");
+                if (title) title.innerText = `Kết quả: "${keywordFromUrl}"`;
+                const matched = cached.filter(p => (p.name||"").toLowerCase().includes(keywordFromUrl.toLowerCase()));
+                if (container) container.innerHTML = matched.length ? renderProductsHTML(matched, false) : `<div class="col-12 text-center py-5"><i class="bi bi-search fs-1 text-muted"></i><h5 class="mt-3">Không tìm thấy sản phẩm phù hợp</h5></div>`;
+            }, 200);
         }
-    }, 200);
-}
     </script>
 </body>
 </html>
