@@ -30,39 +30,48 @@
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
         import { doc, getDoc, collection, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-        // BẢO VỆ TRANG
         onAuthStateChanged(auth, async (user) => {
             if (!user) { window.location.href = "../login.html"; return; }
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (!userDoc.exists() || userDoc.data().role !== "admin") { window.location.href = "../../index.html"; }
         });
 
-        // TẢI ĐƠN HÀNG
         async function loadOrders() {
-            const snapshot = await getDocs(collection(db, "orders"));
-            let html = '<table class="table table-hover bg-white border shadow-sm">';
-            html += '<thead class="table-light"><tr><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Trạng thái</th><th>Hành động</th></tr></thead><tbody>';
-            
-            snapshot.forEach(oDoc => {
-                const o = oDoc.data();
-                const itemNames = o.items.map(i => i.name).join(', ');
+            try {
+                const snapshot = await getDocs(collection(db, "orders"));
+                let html = '<table class="table table-hover bg-white border shadow-sm">';
+                html += '<thead class="table-light"><tr><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Trạng thái</th><th>Hành động</th></tr></thead><tbody>';
                 
-                const listStatus = ["Chờ xác nhận", "Đang xử lý", "Đang giao", "Hoàn thành", "Hủy"];
-                let selectHtml = `<select class="form-select form-select-sm" onchange="updateStatus('${oDoc.id}', this.value)">`;
-                listStatus.forEach(s => {
-                    selectHtml += `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s}</option>`;
-                });
-                selectHtml += `</select>`;
+                snapshot.forEach(oDoc => {
+                    const o = oDoc.data();
+                    const itemNames = (o.items || []).map(i => i.name).join(', ') || 'Không có SP';
+                    const email = o.userEmail || o.userId || 'Không rõ';
+                    
+                    // CHỐNG SẬP: Tìm tiền trong mọi biến, nếu không có thì bằng 0
+                    const safePrice = Number(o.totalPrice || o.amount || o.totalAmount || 0);
 
-                html += `<tr>
-                    <td><small>${o.userEmail}</small></td>
-                    <td><small>${itemNames}</small></td>
-                    <td><strong class="text-danger">${o.totalPrice.toLocaleString()}đ</strong></td>
-                    <td>${selectHtml}</td>
-                    <td><span class="badge ${o.status === 'Hoàn thành' ? 'bg-success' : 'bg-warning'}">${o.status}</span></td>
-                </tr>`;
-            });
-            document.getElementById('order-list').innerHTML = html + '</tbody></table>';
+                    const listStatus = ["pending_payment", "Chờ xác nhận", "Đang xử lý", "Đang giao", "Hoàn thành", "Hủy"];
+                    let selectHtml = `<select class="form-select form-select-sm" onchange="updateStatus('${oDoc.id}', this.value)">`;
+                    listStatus.forEach(s => {
+                        selectHtml += `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s}</option>`;
+                    });
+                    selectHtml += `</select>`;
+
+                    html += `<tr>
+                        <td><small>${email}</small></td>
+                        <td><small>${itemNames}</small></td>
+                        <td><strong class="text-danger">${safePrice.toLocaleString()}đ</strong></td>
+                        <td>${selectHtml}</td>
+                        <td><span class="badge ${o.status === 'Hoàn thành' ? 'bg-success' : 'bg-warning'}">${o.status || 'N/A'}</span></td>
+                    </tr>`;
+                });
+                
+                if(snapshot.empty) html += '<tr><td colspan="5" class="text-center">Chưa có đơn hàng nào</td></tr>';
+                document.getElementById('order-list').innerHTML = html + '</tbody></table>';
+            } catch (err) {
+                console.error("Lỗi:", err);
+                document.getElementById('order-list').innerHTML = '<p class="text-danger">Lỗi khi tải đơn hàng.</p>';
+            }
         }
 
         window.updateStatus = async (id, newStatus) => {
