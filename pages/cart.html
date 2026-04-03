@@ -38,8 +38,12 @@
         import { auth, db } from '../js/config.js';
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
         import { doc, getDoc, updateDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        // BỔ SUNG: Import Firebase Functions
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js";
 
         let userUID = null;
+        const functions = getFunctions();
+        const createMoMoPayment = httpsCallable(functions, 'createMoMoPayment');
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -89,7 +93,7 @@
             document.getElementById('total-price').innerText = total.toLocaleString() + "đ";
         }
 
-        // --- GIỮ NGUYÊN LOGIC CỘNG/TRỪ KHO ---
+        // --- GIỮ NGUYÊN LOGIC CỘNG/TRỪ KHO VÀ XÓA SẢN PHẨM ---
         window.updateQty = async (index, change) => {
             const cartRef = doc(db, "carts", userUID);
             try {
@@ -115,7 +119,6 @@
             } catch (e) { alert(e); }
         };
 
-        // --- GIỮ NGUYÊN LOGIC XÓA SẢN PHẨM ---
         window.removeItem = async (index) => {
             if (!confirm("Bạn muốn xóa sản phẩm này?")) return;
             const cartRef = doc(db, "carts", userUID);
@@ -137,7 +140,7 @@
             } catch (e) { console.error(e); }
         };
 
-        // --- BỔ SUNG LOGIC THANH TOÁN MOMO ---
+        // --- BỔ SUNG LOGIC THANH TOÁN DÙNG FIREBASE FUNCTIONS ---
         async function startMoMoPayment() {
             if (!userUID) return alert("Vui lòng đăng nhập!");
 
@@ -147,58 +150,43 @@
             btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Đang kết nối MoMo...`;
 
             try {
-                // 1. Lấy thông tin Profile để gán địa chỉ
                 const userDoc = await getDoc(doc(db, "users", userUID));
                 if (!userDoc.exists()) throw "Bạn cần cập nhật hồ sơ địa chỉ trước khi thanh toán!";
                 const userData = userDoc.data();
 
-                // 2. Lấy dữ liệu giỏ hàng chính xác từ DB
                 const cartSnap = await getDoc(doc(db, "carts", userUID));
                 const cartItems = cartSnap.data().items || [];
                 
                 if (cartItems.length === 0) throw "Giỏ hàng trống!";
 
                 const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                const orderId = "FSTORE_" + Date.now();
+                const orderDescription = `Thanh toán FStore - Đơn hàng của ${userData.fullName || "Khách hàng"}`;
 
-                const userInfo = {
-                    uid: userUID,
-                    fullName: userData.fullName || "Khách hàng",
-                    phone: userData.phone || "",
-                    address: `${userData.homeAddress || ""}, ${userData.ward || ""}, ${userData.district || ""}, ${userData.province || ""}`
-                };
-
-                // 3. Gọi Backend MoMo (Node.js)
-                const response = await fetch('https://fonestore.pages.dev/create-payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        amount: totalAmount, 
-                        orderId: orderId,
-                        userInfo: userInfo 
-                    })
+                // Gọi Firebase Function thay vì dùng fetch POST
+                const result = await createMoMoPayment({
+                    amount: totalAmount,
+                    orderInfo: orderDescription
                 });
 
-                const data = await response.json();
+                const data = result.data;
 
-                if (data.payUrl) {
-                    // Lưu giỏ hàng tạm để phục vụ việc tạo record 'orders' khi quay lại
+                if (data.success && data.payUrl) {
                     localStorage.setItem('pending_items', JSON.stringify(cartItems));
+                    // Chuyển hướng sang MoMo
                     window.location.href = data.payUrl;
                 } else {
-                    throw "Không thể tạo liên kết thanh toán. Thử lại sau!";
+                    throw (data.message || "Không thể tạo liên kết thanh toán. Thử lại sau!");
                 }
 
             } catch (e) {
-                alert("Lỗi: " + e);
+                console.error(e);
+                alert("Lỗi: " + (e.message || e));
                 btn.disabled = false;
                 btn.innerHTML = originalText;
             }
         }
 
-        // Gán sự kiện click cho nút
         document.getElementById('btn-checkout').addEventListener('click', startMoMoPayment);
-
     </script>
 </body>
 </html>

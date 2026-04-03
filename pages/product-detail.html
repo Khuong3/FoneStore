@@ -37,11 +37,17 @@
         import { auth, db } from '../js/config.js';
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
         import { doc, getDoc, setDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        // BỔ SUNG: Import Firebase Functions
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js";
 
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
         let userUID = null;
         let productData = null;
+
+        // Khởi tạo Functions
+        const functions = getFunctions();
+        const createMoMoPayment = httpsCallable(functions, 'createMoMoPayment');
 
         onAuthStateChanged(auth, (user) => {
             userUID = user ? user.uid : null;
@@ -61,7 +67,7 @@
                 if (docSnap.exists()) {
                     productData = docSnap.data();
                     const p = productData;
-                    const s = p.specs || {}; // Toàn bộ field trong map specs
+                    const s = p.specs || {}; 
                     
                     const isOutOfStock = (p.stock === undefined || p.stock <= 0);
                     const imgList = (p.images && p.images.length > 0) ? p.images : [p.img];
@@ -153,7 +159,7 @@
             }
         }
 
-        // Logic thêm vào giỏ (Giữ nguyên logic transaction của bạn)
+        // --- GIỮ NGUYÊN LOGIC THÊM VÀO GIỎ ---
         async function addToCart() {
             if (!userUID) return alert("Vui lòng đăng nhập!");
             const btn = document.getElementById('btn-add-to-cart');
@@ -182,36 +188,44 @@
             } catch (e) { alert(e); btn.disabled = false; }
         }
 
-        // Logic Mua ngay qua MoMo
+        // --- BỔ SUNG LOGIC MUA NGAY DÙNG FIREBASE FUNCTIONS ---
         async function buyNowMoMo() {
             if (!userUID) return alert("Vui lòng đăng nhập!");
             const btn = document.getElementById('btn-buy-now');
-            btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Đang kết nối...`;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Đang kết nối MoMo...`;
             btn.disabled = true;
 
             try {
                 const userDoc = await getDoc(doc(db, "users", userUID));
-                const userData = userDoc.data() || {};
+                const userData = userDoc.exists() ? userDoc.data() : {};
                 
-                const response = await fetch('http://127.0.0.1:3000/create-payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        amount: productData.price,
-                        orderId: "FS_BUY_" + Date.now(),
-                        userInfo: { uid: userUID, fullName: userData.fullName || "Khách", phone: userData.phone || "", address: userData.homeAddress || "" }
-                    })
+                // Chuẩn bị thông tin đơn hàng
+                const orderDescription = `Mua nhanh - ${productData.name}`;
+
+                // Gọi Cloud Function thay vì fetch tới localhost:3000
+                const result = await createMoMoPayment({
+                    amount: productData.price,
+                    orderInfo: orderDescription
                 });
 
-                const data = await response.json();
-                if (data.payUrl) {
+                const data = result.data;
+
+                if (data.success && data.payUrl) {
                     // Lưu sản phẩm đơn lẻ vào pending để xử lý sau khi thanh toán xong
                     localStorage.setItem('pending_items', JSON.stringify([{ ...productData, id: productId, quantity: 1 }]));
                     window.location.href = data.payUrl;
-                } else { throw "Lỗi tạo link thanh toán!"; }
-            } catch (e) { alert(e); btn.innerHTML = '<i class="bi bi-wallet2"></i> MUA NGAY QUA MOMO'; btn.disabled = false; }
+                } else { 
+                    throw (data.message || "Lỗi tạo link thanh toán!"); 
+                }
+            } catch (e) { 
+                console.error("Lỗi mua ngay qua MoMo:", e);
+                alert("Lỗi: " + (e.message || e)); 
+                btn.innerHTML = '<i class="bi bi-wallet2"></i> MUA NGAY QUA MOMO'; 
+                btn.disabled = false; 
+            }
         }
 
+        // --- GIỮ NGUYÊN LOGIC WISHLIST ---
         function addToWishlist() {
             let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
             if(!wishlist.find(i => i.id === productId)) {
