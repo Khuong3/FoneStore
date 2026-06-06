@@ -5,76 +5,355 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng ký - FoneStore</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; }
-        .card { border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        :root {
+            --gold:        #d4af37;
+            --gold-light:  #f5d76e;
+            --gold-soft:   rgba(212, 175, 55, 0.08);
+            --gold-border: rgba(212, 175, 55, 0.25);
+            --black:       #0a0a0a;
+            --dark:        #111111;
+            --dark2:       #181818;
+            --text:        #f0f0f0;
+            --muted:       #888;
+            --font-main:   'Montserrat', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-main);
+            background: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Ambient background glow */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -20%;
+            left: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 65%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -20%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(212,175,55,0.04) 0%, transparent 65%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .auth-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 500px;
+            padding: 24px 16px;
+        }
+
+        /* Brand bar top */
+        .brand-bar {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .brand-bar .logo-text {
+            font-family: var(--font-main);
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .brand-bar .tagline {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* Card */
+        .auth-card {
+            background: #161616;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            padding: 36px 40px;
+            box-shadow:
+                0 0 0 1px rgba(212,175,55,0.07),
+                0 24px 60px rgba(0,0,0,0.5);
+        }
+
+        .auth-card h4 {
+            font-family: var(--font-main);
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        .auth-card .subtitle {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 28px;
+        }
+
+        /* Divider label */
+        .section-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0 18px;
+        }
+        .section-divider span {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+        .section-divider::before,
+        .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.07);
+        }
+
+        /* Form labels */
+        .form-label {
+            font-family: var(--font-main);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: #aaa;
+            margin-bottom: 7px;
+        }
+
+        /* Inputs */
+        .form-control {
+            background: rgba(255,255,255,0.04) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-radius: 12px !important;
+            color: #f0f0f0 !important;
+            font-family: var(--font-main);
+            font-size: 13px;
+            font-weight: 500;
+            padding: 12px 16px !important;
+            transition: border-color 0.25s, box-shadow 0.25s;
+        }
+        .form-control::placeholder {
+            color: rgba(255,255,255,0.2) !important;
+            font-weight: 400;
+        }
+        .form-control:focus {
+            border-color: var(--gold-border) !important;
+            box-shadow: 0 0 0 3px rgba(212,175,55,0.1) !important;
+            background: rgba(212,175,55,0.03) !important;
+        }
+
+        /* Input with icon */
+        .input-group-text {
+            background: rgba(255,255,255,0.04) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-right: none !important;
+            border-radius: 12px 0 0 12px !important;
+            color: var(--muted) !important;
+            padding: 12px 14px !important;
+        }
+        .input-group .form-control {
+            border-left: none !important;
+            border-radius: 0 12px 12px 0 !important;
+        }
+        .input-group:focus-within .input-group-text {
+            border-color: var(--gold-border) !important;
+            color: var(--gold) !important;
+        }
+        .input-group:focus-within .form-control {
+            border-color: var(--gold-border) !important;
+        }
+
+        /* Submit button */
+        .btn-register {
+            font-family: var(--font-main);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 14px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #111;
+            border: none;
+            width: 100%;
+            transition: all 0.28s ease;
+            box-shadow: 0 6px 20px rgba(212,175,55,0.25);
+            position: relative;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .btn-register::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        .btn-register:hover::before { left: 100%; }
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(212,175,55,0.35);
+            color: #111;
+        }
+        .btn-register:active { transform: scale(0.98); }
+        .btn-register:disabled {
+            background: #333;
+            color: #666;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Login link */
+        .login-link {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .login-link a {
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 700;
+            transition: color 0.2s;
+        }
+        .login-link a:hover { color: var(--gold-light); }
+
+        /* Back to home */
+        .back-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            text-decoration: none;
+            letter-spacing: 0.5px;
+            transition: color 0.2s;
+            margin-bottom: 16px;
+        }
+        .back-home:hover { color: var(--gold); }
+
+        @media (max-width: 576px) {
+            .auth-card { padding: 28px 20px; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card p-4">
-                <div class="text-center mb-4">
-                    <h3 class="fw-bold text-primary">FoneStore</h3>
-                    <p class="text-muted">Tạo tài khoản mới</p>
+<div class="auth-wrapper">
+    <div class="brand-bar">
+        <a href="/index.html" class="back-home">
+            <i class="bi bi-arrow-left"></i> Về trang chủ
+        </a>
+        <div class="logo-text">FoneStore</div>
+        <div class="tagline">Thế giới công nghệ</div>
+    </div>
+
+    <div class="auth-card">
+        <h4>Tạo tài khoản</h4>
+        <p class="subtitle">Điền thông tin bên dưới để bắt đầu mua sắm</p>
+
+        <form id="registerForm">
+            <!-- Thông tin cá nhân -->
+            <div class="mb-3">
+                <label class="form-label">Họ và tên</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <input type="text" id="fullName" class="form-control" placeholder="Nguyễn Văn A" required>
                 </div>
-
-                <form id="registerForm">
-                    <div class="mb-3">
-                        <label class="form-label">Họ và tên</label>
-                        <input type="text" id="fullName" class="form-control" placeholder="Nguyễn Văn A" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Số điện thoại</label>
-                        <input type="tel" id="phone" class="form-control" placeholder="090xxxxxxx" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Địa chỉ</label>
-                        <input type="text" id="address" class="form-control" placeholder="Số nhà, tên đường..." required>
-                    </div>
-
-                    <hr>
-
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" id="email" class="form-control" placeholder="name@example.com" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Mật khẩu</label>
-                        <input type="password" id="password" class="form-control" placeholder="Tối thiểu 6 ký tự" required>
-                    </div>
-
-                    <button type="submit" id="btnSubmit" class="btn btn-primary w-100 py-2 fw-bold">ĐĂNG KÝ NGAY</button>
-                    
-                    <div class="text-center mt-3">
-                        <span>Đã có tài khoản? <a href="login.html" class="text-decoration-none">Đăng nhập</a></span>
-                    </div>
-                </form>
             </div>
+
+            <div class="mb-3">
+                <label class="form-label">Số điện thoại</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                    <input type="tel" id="phone" class="form-control" placeholder="090xxxxxxx" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Địa chỉ</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                    <input type="text" id="address" class="form-control" placeholder="Số nhà, tên đường..." required>
+                </div>
+            </div>
+
+            <div class="section-divider">
+                <span>Thông tin đăng nhập</span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input type="email" id="email" class="form-control" placeholder="name@example.com" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Mật khẩu</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input type="password" id="password" class="form-control" placeholder="Tối thiểu 6 ký tự" required>
+                </div>
+            </div>
+
+            <button type="submit" id="btnSubmit" class="btn-register">
+                Đăng ký ngay
+            </button>
+        </form>
+
+        <div class="login-link">
+            Đã có tài khoản? <a href="login.html">Đăng nhập</a>
         </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module">
-    // Quan trọng: Phải đúng đường dẫn tới file auth.js
     import { handleRegister } from '../js/auth.js';
 
     const registerForm = document.getElementById('registerForm');
     const btnSubmit = document.getElementById('btnSubmit');
 
     registerForm.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Chặn load lại trang
-
-        // Vô hiệu hóa nút để tránh bấm nhiều lần
+        e.preventDefault();
         btnSubmit.disabled = true;
         btnSubmit.innerText = "Đang xử lý...";
 
-        // Thu thập dữ liệu
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const info = {
@@ -83,14 +362,11 @@
             address: document.getElementById('address').value
         };
 
-        // Gọi hàm từ auth.js
         await handleRegister(email, password, info);
 
-        // Kích hoạt lại nút nếu có lỗi (nếu thành công trang sẽ tự chuyển đi)
         btnSubmit.disabled = false;
-        btnSubmit.innerText = "ĐĂNG KÝ NGAY";
+        btnSubmit.innerText = "Đăng ký ngay";
     });
 </script>
-
 </body>
 </html>

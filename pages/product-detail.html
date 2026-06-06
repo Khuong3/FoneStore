@@ -6,88 +6,549 @@
     <title>Thông tin sản phẩm - FoneStore</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        .spec-label { width: 40%; font-weight: 600; color: #555; background-color: #f8f9fa; }
-        .carousel-item img { height: 450px; object-fit: contain; background-color: #fff; }
-        .carousel-indicators [data-bs-target] { background-color: #000; width: 10px; height: 10px; border-radius: 50%; }
-        .carousel-control-prev-icon, .carousel-control-next-icon { filter: invert(1); }
-        .sticky-md-top { top: 20px; }
-        .table-specs td { padding: 12px; font-size: 14px; border-bottom: 1px solid #eee; }
-        .img-out-of-stock { opacity: 0.5; filter: grayscale(1); }
+        :root {
+            --gold:        #d4af37;
+            --gold-light:  #f5d76e;
+            --gold-soft:   rgba(212, 175, 55, 0.08);
+            --gold-border: rgba(212, 175, 55, 0.25);
+            --dark:        #111111;
+            --text:        #1a1a1a;
+            --muted:       #6b7280;
+            --font-main:   'Montserrat', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-main);
+            background: #f7f7f5;
+            color: var(--text);
+        }
+
+        /* ── PAGE WRAPPER ── */
+        .page-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 36px 20px 60px;
+        }
+
+        /* Header fixed height = 68px */
+        body { padding-top: 68px; }
+
+        /* ── BREADCRUMB ── */
+        .breadcrumb-row {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .breadcrumb-row a { color: var(--muted); text-decoration: none; transition: 0.2s; }
+        .breadcrumb-row a:hover { color: var(--gold); }
+        .breadcrumb-row .sep { opacity: 0.4; }
+        .breadcrumb-row .current { color: var(--text); }
+
+        /* ── MAIN CARD ── */
+        .product-card {
+            background: #fff;
+            border-radius: 24px;
+            border: 1px solid #ececec;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        /* ── IMAGE PANEL ── */
+        .image-panel {
+            padding: 32px;
+            background: #fafafa;
+            border-right: 1px solid #f0f0f0;
+            position: relative;
+        }
+
+        /* Carousel */
+        #productCarousel {
+            border-radius: 16px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+        }
+        #productCarousel .carousel-item img {
+            height: 400px;
+            object-fit: contain;
+            background: #fff;
+            padding: 20px;
+        }
+
+        .carousel-indicators [data-bs-target] {
+            background-color: var(--gold);
+            border-radius: 999px;
+            width: 22px;
+            height: 3px;
+            opacity: 0.35;
+            border: none;
+        }
+        .carousel-indicators .active { opacity: 1; width: 34px; }
+
+        .carousel-control-prev-icon,
+        .carousel-control-next-icon {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 50%;
+            padding: 18px;
+            background-size: 55%;
+        }
+
+        .out-of-stock-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            font-family: var(--font-main);
+            font-weight: 800;
+            font-size: 13px;
+            letter-spacing: 3px;
+            padding: 10px 24px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+        .img-out-of-stock { opacity: 0.5; filter: grayscale(0.6); }
+
+        /* Thumbnail strip */
+        .thumb-strip {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .thumb-strip .thumb {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            object-fit: contain;
+            border: 2px solid transparent;
+            background: #fff;
+            padding: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        .thumb-strip .thumb:hover,
+        .thumb-strip .thumb.active {
+            border-color: var(--gold);
+            box-shadow: 0 2px 12px rgba(212,175,55,0.25);
+        }
+
+        /* ── INFO PANEL ── */
+        .info-panel {
+            padding: 36px 36px 36px 32px;
+        }
+
+        /* Category tag */
+        .category-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--gold);
+            background: var(--gold-soft);
+            border: 1px solid var(--gold-border);
+            padding: 5px 12px;
+            border-radius: 999px;
+            margin-bottom: 14px;
+        }
+
+        .product-name {
+            font-weight: 800;
+            font-size: 22px;
+            color: var(--dark);
+            line-height: 1.3;
+            margin-bottom: 16px;
+            letter-spacing: -0.3px;
+        }
+
+        /* Price row */
+        .price-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .price-main {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--gold);
+            letter-spacing: -0.5px;
+        }
+        .stock-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 999px;
+            border: 1px solid #e8e8e8;
+            color: var(--muted);
+            background: #fafafa;
+        }
+        .stock-badge.in-stock { border-color: rgba(34,197,94,0.3); color: #16a34a; background: rgba(34,197,94,0.05); }
+        .stock-badge.out { border-color: rgba(239,68,68,0.3); color: #dc2626; background: rgba(239,68,68,0.05); }
+
+        /* Description */
+        .section-block {
+            margin-bottom: 24px;
+        }
+        .section-block .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--dark);
+            margin-bottom: 12px;
+        }
+        .section-block .section-title i {
+            color: var(--gold);
+            font-size: 14px;
+        }
+        .section-block .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #f0f0f0;
+        }
+
+        .desc-text {
+            font-size: 13.5px;
+            color: var(--muted);
+            line-height: 1.8;
+            white-space: pre-line;
+        }
+
+        /* Specs table */
+        .specs-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .specs-table tr {
+            border-bottom: 1px solid #f5f5f5;
+            transition: background 0.15s;
+        }
+        .specs-table tr:last-child { border-bottom: none; }
+        .specs-table tr:hover { background: var(--gold-soft); }
+        .specs-table td {
+            padding: 10px 12px;
+            font-size: 13px;
+        }
+        .specs-table .spec-label {
+            font-weight: 700;
+            color: #555;
+            width: 42%;
+            background: transparent;
+        }
+        .specs-table .spec-value {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* ── ACTIONS ── */
+        .actions-block {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .btn-cart {
+            font-family: var(--font-main);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 15px 24px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #111;
+            border: none;
+            cursor: pointer;
+            transition: all 0.28s ease;
+            box-shadow: 0 6px 20px rgba(212,175,55,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-cart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(212,175,55,0.4);
+        }
+        .btn-cart:active { transform: scale(0.99); }
+        .btn-cart:disabled {
+            background: #e5e5e5;
+            color: #999;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-momo {
+            font-family: var(--font-main);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 15px 24px;
+            border-radius: 14px;
+            background: #ae2070;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: all 0.28s ease;
+            box-shadow: 0 6px 20px rgba(174,32,112,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-momo:hover {
+            background: #c42680;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(174,32,112,0.35);
+        }
+        .btn-momo:active { transform: scale(0.99); }
+        .btn-momo:disabled {
+            background: #e5e5e5;
+            color: #999;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-wish {
+            font-family: var(--font-main);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 13px 24px;
+            border-radius: 14px;
+            background: transparent;
+            color: #e63946;
+            border: 1.5px solid rgba(230,57,70,0.25);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-wish:hover {
+            background: rgba(230,57,70,0.05);
+            border-color: rgba(230,57,70,0.5);
+        }
+
+        /* ── LOADING ── */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            gap: 16px;
+            background: #fff;
+            border-radius: 24px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(212,175,55,0.2);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-state p {
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 767px) {
+            .image-panel { border-right: none; border-bottom: 1px solid #f0f0f0; padding: 24px 20px; }
+            .info-panel { padding: 24px 20px; }
+            #productCarousel .carousel-item img { height: 280px; }
+            .product-name { font-size: 18px; }
+            .price-main { font-size: 22px; }
+        }
     </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark mb-4 shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="../home.html"><i class="bi bi-arrow-left"></i> FoneStore</a>
-        </div>
-    </nav>
+<body>
 
-    <div class="container pb-5">
-        <div id="product-detail-container" class="bg-white p-4 shadow-sm rounded">
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status"></div>
-                <p class="mt-2 text-muted">Đang tải thông tin sản phẩm...</p>
+    <!-- HEADER -->
+    <div id="header-container"></div>
+
+    <div class="page-wrapper">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb-row" id="breadcrumb">
+            <a href="../home.html">Trang chủ</a>
+            <span class="sep">/</span>
+            <span class="current">Đang tải...</span>
+        </div>
+
+        <!-- Main container -->
+        <div id="product-detail-container">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Đang tải thông tin sản phẩm...</p>
             </div>
         </div>
     </div>
 
+    <!-- FOOTER -->
+    <div id="footer-container"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module">
+        import { loadLayout } from '../js/layout.js';
         import { auth, db } from '../js/config.js';
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
         import { doc, getDoc, setDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-        // BỔ SUNG: Import Firebase Functions
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js";
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const productId = urlParams.get('id');
-        let userUID = null;
-        let productData = null;
+        await loadLayout();
 
-        // Khởi tạo Functions
-        const functions = getFunctions();
+        const urlParams  = new URLSearchParams(window.location.search);
+        const productId  = urlParams.get('id');
+        let userUID      = null;
+        let productData  = null;
+
+        const functions         = getFunctions();
         const createMoMoPayment = httpsCallable(functions, 'createMoMoPayment');
 
-        onAuthStateChanged(auth, (user) => {
-            userUID = user ? user.uid : null;
+        onAuthStateChanged(auth, async (user) => {
+            const authSection = document.getElementById('auth-section');
+            const adminBtn    = document.getElementById('admin-link');
+
+            // Wishlist badge
+            const wl  = JSON.parse(localStorage.getItem('wishlist')) || [];
+            const wel = document.getElementById('wishlist-count');
+            if (wel) wel.textContent = wl.length;
+
+            if (user) {
+                userUID = user.uid;
+                const userRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userRef);
+                let userData  = {};
+
+                if (userDoc.exists()) {
+                    userData = userDoc.data();
+                    if (userData.role === 'admin' && adminBtn) adminBtn.style.display = 'inline-block';
+                } else {
+                    userData = { fullName: '', phone: '', email: user.email || '', address: '', province: '', district: '', ward: '', role: 'customer' };
+                    await setDoc(userRef, userData);
+                }
+
+                if (authSection) {
+                    authSection.innerHTML = `
+                        <span style="font-family:var(--font-main,sans-serif); font-size:13px; color:#f5f5f5;">Chào,
+                            <b style="color:#d4af37;">${userData.fullName || user.email}</b>
+                        </span>
+                        <button id="logout-btn" class="btn btn-sm" style="font-size:11px;font-weight:700;padding:6px 14px;border-radius:999px;border:1px solid rgba(230,57,70,0.5);color:#e63946;background:transparent;">Thoát</button>`;
+                    document.getElementById('logout-btn')?.addEventListener('click', () => signOut(auth).then(() => location.reload()));
+                }
+
+                // Cart badge
+                const cartSnap = await getDoc(doc(db, "carts", user.uid));
+                const cartEl   = document.getElementById('cart-count');
+                if (cartEl) cartEl.textContent = cartSnap.exists()
+                    ? cartSnap.data().items.reduce((s, i) => s + i.quantity, 0)
+                    : 0;
+            } else {
+                userUID = null;
+            }
         });
 
         async function fetchDetail() {
             const container = document.getElementById('product-detail-container');
             if (!productId) {
-                container.innerHTML = `<div class="alert alert-warning text-center">Lỗi: Không tìm thấy ID sản phẩm.</div>`;
+                container.innerHTML = `<div class="alert alert-warning text-center m-4">Lỗi: Không tìm thấy ID sản phẩm.</div>`;
                 return;
             }
 
             try {
-                const docRef = doc(db, "products", productId);
-                const docSnap = await getDoc(docRef);
+                const docSnap = await getDoc(doc(db, "products", productId));
 
                 if (docSnap.exists()) {
                     productData = docSnap.data();
                     const p = productData;
-                    const s = p.specs || {}; 
-                    
-                    const isOutOfStock = (p.stock === undefined || p.stock <= 0);
-                    const imgList = (p.images && p.images.length > 0) ? p.images : [p.img];
+                    const s = p.specs || {};
 
-                    const indicatorsHtml = imgList.map((_, index) => 
-                        `<button type="button" data-bs-target="#productCarousel" data-bs-slide-to="${index}" class="${index === 0 ? 'active' : ''}"></button>`
+                    const isOutOfStock = (p.stock === undefined || p.stock <= 0);
+                    const imgList      = (p.images && p.images.length > 0) ? p.images : [p.img];
+
+                    // Update breadcrumb
+                    document.getElementById('breadcrumb').innerHTML = `
+                        <a href="../home.html">Trang chủ</a>
+                        <span class="sep">/</span>
+                        <a href="../home.html">Sản phẩm</a>
+                        <span class="sep">/</span>
+                        <span class="current">${p.name}</span>`;
+
+                    const indicatorsHtml = imgList.map((_, i) =>
+                        `<button type="button" data-bs-target="#productCarousel" data-bs-slide-to="${i}" ${i===0?'class="active"':''}></button>`
                     ).join('');
 
-                    const slidesHtml = imgList.map((url, index) => 
-                        `<div class="carousel-item ${index === 0 ? 'active' : ''}">
-                            <img src="${url}" class="d-block w-100 ${isOutOfStock ? 'img-out-of-stock' : ''}" alt="Slide ${index + 1}">
+                    const slidesHtml = imgList.map((url, i) =>
+                        `<div class="carousel-item ${i===0?'active':''}">
+                            <img src="${url}" class="d-block w-100 ${isOutOfStock?'img-out-of-stock':''}" alt="Ảnh ${i+1}">
                         </div>`
                     ).join('');
 
+                    const thumbsHtml = imgList.map((url, i) =>
+                        `<img src="${url}" class="thumb ${i===0?'active':''}" alt="thumb" onclick="slideTo(${i}, this)">`
+                    ).join('');
+
+                    const specRows = [
+                        ['Hệ điều hành', s.os],
+                        ['Chip (CPU)',   s.cpu],
+                        ['RAM',          s.ram],
+                        ['Bộ nhớ trong', s.rom],
+                        ['Màn hình',     s.screen],
+                        ['Camera sau',   s.backCam],
+                        ['Camera trước', s.frontCam],
+                        ['Thẻ nhớ',      s.microSD],
+                        ['GPU',          s.gpu],
+                        ['Pin',          s.battery],
+                    ].map(([label, val]) => `
+                        <tr>
+                            <td class="spec-label">${label}</td>
+                            <td class="spec-value">${val || '<span style="color:#ccc">---</span>'}</td>
+                        </tr>`).join('');
+
                     container.innerHTML = `
-                        <div class="row g-5">
-                            <div class="col-md-6">
-                                <div class="sticky-md-top">
+                        <div class="product-card">
+                            <div class="row g-0">
+                                <!-- Image panel -->
+                                <div class="col-md-5 image-panel">
                                     <div class="position-relative">
-                                        <div id="productCarousel" class="carousel slide border rounded shadow-sm" data-bs-ride="carousel">
+                                        <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
                                             <div class="carousel-indicators">${indicatorsHtml}</div>
                                             <div class="carousel-inner">${slidesHtml}</div>
                                             <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
@@ -97,141 +558,152 @@
                                                 <span class="carousel-control-next-icon"></span>
                                             </button>
                                         </div>
-                                        ${isOutOfStock ? '<div class="position-absolute top-50 start-50 translate-middle badge bg-danger fs-4 shadow">HẾT HÀNG</div>' : ''}
+                                        ${isOutOfStock ? '<div class="out-of-stock-overlay">Hết hàng</div>' : ''}
                                     </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <h1 class="fw-bold mb-2">${p.name}</h1>
-                                <div class="d-flex align-items-center mb-3">
-                                    <h2 class="text-danger fw-bold m-0">${Number(p.price).toLocaleString()}đ</h2>
-                                    <span class="ms-3 badge bg-light text-dark border">Kho còn: ${p.stock || 0}</span>
-                                </div>
-                                
-                                <div class="mb-4">
-                                    <h5 class="fw-bold border-bottom pb-2 text-primary"><i class="bi bi-info-circle"></i> Mô tả</h5>
-                                    <p class="text-muted" style="white-space: pre-line;">${p.description || "Đang cập nhật..."}</p>
+                                    ${imgList.length > 1 ? `<div class="thumb-strip">${thumbsHtml}</div>` : ''}
                                 </div>
 
-                                <div class="mb-4">
-                                    <h5 class="fw-bold border-bottom pb-2 text-primary"><i class="bi bi-cpu"></i> Thông số kỹ thuật</h5>
-                                    <div class="table-responsive">
-                                        <table class="table table-specs mb-0">
-                                            <tr><td class="spec-label">Hệ điều hành:</td><td>${s.os || '---'}</td></tr>
-                                            <tr><td class="spec-label">Chip (CPU):</td><td>${s.cpu || '---'}</td></tr>
-                                            <tr><td class="spec-label">RAM:</td><td>${s.ram || '---'}</td></tr>
-                                            <tr><td class="spec-label">Bộ nhớ:</td><td>${s.rom || '---'}</td></tr>
-                                            <tr><td class="spec-label">Màn hình:</td><td>${s.screen || '---'}</td></tr>
-                                            <tr><td class="spec-label">Camera sau:</td><td>${s.backCam || '---'}</td></tr>
-                                            <tr><td class="spec-label">Camera trước:</td><td>${s.frontCam || '---'}</td></tr>
-                                            <tr><td class="spec-label">Thẻ nhớ:</td><td>${s.microSD || '---'}</td></tr>
-                                            <tr><td class="spec-label">GPU:</td><td>${s.gpu || '---'}</td></tr>
-                                            <tr><td class="spec-label">Pin:</td><td>${s.battery || '---'}</td></tr>
+                                <!-- Info panel -->
+                                <div class="col-md-7 info-panel">
+                                    <div class="category-tag">
+                                        <i class="bi bi-tag"></i>${p.category || 'Điện thoại'}
+                                    </div>
+
+                                    <h1 class="product-name">${p.name}</h1>
+
+                                    <div class="price-row">
+                                        <span class="price-main">${Number(p.price).toLocaleString()}đ</span>
+                                        ${isOutOfStock
+                                            ? `<span class="stock-badge out"><i class="bi bi-x-circle"></i>Hết hàng</span>`
+                                            : `<span class="stock-badge in-stock"><i class="bi bi-check-circle"></i>Còn ${p.stock} sản phẩm</span>`
+                                        }
+                                    </div>
+
+                                    <!-- Mô tả -->
+                                    <div class="section-block">
+                                        <div class="section-title"><i class="bi bi-info-circle"></i>Mô tả sản phẩm</div>
+                                        <p class="desc-text">${p.description || 'Đang cập nhật thông tin sản phẩm...'}</p>
+                                    </div>
+
+                                    <!-- Thông số -->
+                                    <div class="section-block">
+                                        <div class="section-title"><i class="bi bi-cpu"></i>Thông số kỹ thuật</div>
+                                        <table class="specs-table">
+                                            ${specRows}
                                         </table>
                                     </div>
-                                </div>
 
-                                <div class="d-grid gap-2 pt-3">
-                                    <button id="btn-add-to-cart" class="btn ${isOutOfStock ? 'btn-secondary disabled' : 'btn-success'} btn-lg fw-bold">
-                                        <i class="bi bi-cart-plus"></i> THÊM VÀO GIỎ HÀNG
-                                    </button>
-                                    <button id="btn-buy-now" class="btn ${isOutOfStock ? 'btn-secondary disabled' : 'btn-primary'} btn-lg fw-bold">
-                                        <i class="bi bi-wallet2"></i> MUA NGAY QUA MOMO
-                                    </button>
-                                    <button id="btn-wishlist" class="btn btn-outline-danger btn-lg">
-                                        <i class="bi bi-heart"></i> Lưu vào yêu thích
-                                    </button>
+                                    <!-- Actions -->
+                                    <div class="actions-block">
+                                        <button id="btn-add-to-cart" class="btn-cart" ${isOutOfStock?'disabled':''}>
+                                            <i class="bi bi-cart-plus"></i>Thêm vào giỏ hàng
+                                        </button>
+                                        <button id="btn-buy-now" class="btn-momo" ${isOutOfStock?'disabled':''}>
+                                            <i class="bi bi-wallet2"></i>Mua ngay qua MoMo
+                                        </button>
+                                        <button id="btn-wishlist" class="btn-wish">
+                                            <i class="bi bi-heart"></i>Lưu vào yêu thích
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
 
                     document.getElementById('btn-add-to-cart').onclick = addToCart;
-                    document.getElementById('btn-buy-now').onclick = buyNowMoMo;
-                    document.getElementById('btn-wishlist').onclick = addToWishlist;
+                    document.getElementById('btn-buy-now').onclick      = buyNowMoMo;
+                    document.getElementById('btn-wishlist').onclick     = addToWishlist;
+
+                    // Sync thumbnails with carousel
+                    const carousel = document.getElementById('productCarousel');
+                    if (carousel) {
+                        carousel.addEventListener('slid.bs.carousel', (e) => {
+                            document.querySelectorAll('.thumb').forEach((t, i) => t.classList.toggle('active', i === e.to));
+                        });
+                    }
 
                 } else {
-                    container.innerHTML = `<div class="alert alert-danger text-center">Sản phẩm không tồn tại.</div>`;
+                    container.innerHTML = `<div class="alert alert-danger text-center m-4">Sản phẩm không tồn tại.</div>`;
                 }
             } catch (error) {
-                container.innerHTML = `<div class="alert alert-danger text-center">Lỗi: ${error.message}</div>`;
+                container.innerHTML = `<div class="alert alert-danger text-center m-4">Lỗi: ${error.message}</div>`;
             }
         }
 
-        // --- GIỮ NGUYÊN LOGIC THÊM VÀO GIỎ ---
+        // Expose for inline onclick
+        window.slideTo = (index, el) => {
+            const carousel = bootstrap.Carousel.getInstance(document.getElementById('productCarousel'));
+            if (carousel) carousel.to(index);
+            document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        };
+
         async function addToCart() {
             if (!userUID) return alert("Vui lòng đăng nhập!");
             const btn = document.getElementById('btn-add-to-cart');
             btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>Đang thêm...';
 
             try {
                 await runTransaction(db, async (transaction) => {
                     const productRef = doc(db, "products", productId);
-                    const cartRef = doc(db, "carts", userUID);
-                    const pSnap = await transaction.get(productRef);
+                    const cartRef    = doc(db, "carts", userUID);
+                    const pSnap      = await transaction.get(productRef);
                     const currentStock = pSnap.data().stock || 0;
-                    if (currentStock <= 0) throw "Hết hàng!";
+                    if (currentStock <= 0) throw "Sản phẩm đã hết hàng!";
 
                     const cSnap = await transaction.get(cartRef);
-                    let items = cSnap.exists() ? cSnap.data().items : [];
+                    let items   = cSnap.exists() ? cSnap.data().items : [];
                     const exist = items.find(i => i.id === productId);
 
                     transaction.update(productRef, { stock: currentStock - 1 });
                     if (exist) exist.quantity += 1;
                     else items.push({ id: productId, name: productData.name, price: productData.price, img: productData.img, quantity: 1 });
-
                     transaction.set(cartRef, { items }, { merge: true });
                 });
-                alert("Đã thêm vào giỏ!");
+                alert("Đã thêm vào giỏ hàng!");
                 fetchDetail();
-            } catch (e) { alert(e); btn.disabled = false; }
-        }
-
-        // --- BỔ SUNG LOGIC MUA NGAY DÙNG FIREBASE FUNCTIONS ---
-        async function buyNowMoMo() {
-            if (!userUID) return alert("Vui lòng đăng nhập!");
-            const btn = document.getElementById('btn-buy-now');
-            btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Đang kết nối MoMo...`;
-            btn.disabled = true;
-
-            try {
-                const userDoc = await getDoc(doc(db, "users", userUID));
-                const userData = userDoc.exists() ? userDoc.data() : {};
-                
-                // Chuẩn bị thông tin đơn hàng
-                const orderDescription = `Mua nhanh - ${productData.name}`;
-
-                // Gọi Cloud Function thay vì fetch tới localhost:3000
-                const result = await createMoMoPayment({
-                    amount: productData.price,
-                    orderInfo: orderDescription
-                });
-
-                const data = result.data;
-
-                if (data.success && data.payUrl) {
-                    // Lưu sản phẩm đơn lẻ vào pending để xử lý sau khi thanh toán xong
-                    localStorage.setItem('pending_items', JSON.stringify([{ ...productData, id: productId, quantity: 1 }]));
-                    window.location.href = data.payUrl;
-                } else { 
-                    throw (data.message || "Lỗi tạo link thanh toán!"); 
-                }
-            } catch (e) { 
-                console.error("Lỗi mua ngay qua MoMo:", e);
-                alert("Lỗi: " + (e.message || e)); 
-                btn.innerHTML = '<i class="bi bi-wallet2"></i> MUA NGAY QUA MOMO'; 
-                btn.disabled = false; 
+            } catch (e) {
+                alert(e);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cart-plus"></i>Thêm vào giỏ hàng';
             }
         }
 
-        // --- GIỮ NGUYÊN LOGIC WISHLIST ---
+        async function buyNowMoMo() {
+            if (!userUID) return alert("Vui lòng đăng nhập!");
+            const btn = document.getElementById('btn-buy-now');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>Đang kết nối MoMo...';
+
+            try {
+                const userDoc  = await getDoc(doc(db, "users", userUID));
+                const result   = await createMoMoPayment({
+                    amount:    productData.price,
+                    orderInfo: `Mua nhanh - ${productData.name}`
+                });
+                const data = result.data;
+                if (data.success && data.payUrl) {
+                    localStorage.setItem('pending_items', JSON.stringify([{ ...productData, id: productId, quantity: 1 }]));
+                    window.location.href = data.payUrl;
+                } else {
+                    throw (data.message || "Lỗi tạo link thanh toán!");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Lỗi: " + (e.message || e));
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-wallet2"></i>Mua ngay qua MoMo';
+            }
+        }
+
         function addToWishlist() {
             let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-            if(!wishlist.find(i => i.id === productId)) {
+            if (!wishlist.find(i => i.id === productId)) {
                 wishlist.push({ id: productId, name: productData.name, price: productData.price, img: productData.img });
                 localStorage.setItem('wishlist', JSON.stringify(wishlist));
-                alert("Đã lưu yêu thích!");
+                alert("Đã lưu vào yêu thích ❤️");
+            } else {
+                alert("Sản phẩm đã có trong danh sách yêu thích!");
             }
         }
 
