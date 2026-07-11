@@ -50,6 +50,9 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-stock" onclick="loadStockManagement()">3. Số lượng tồn kho</button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-addons" onclick="loadAddonsManagement()">4. Sản phẩm mua kèm</button>
+                    </li>
                 </ul>
 
                 <div class="tab-content">
@@ -60,7 +63,12 @@
                                     <h5 id="cat-form-title">Thêm danh mục</h5>
                                     <input type="hidden" id="cat-id">
                                     <div class="mb-3">
-                                        <input type="text" id="cat-name" class="form-control" placeholder="Tên danh mục (VD: iPhone 16)">
+                                        <label class="form-label text-muted small">Tên danh mục</label>
+                                        <input type="text" id="cat-name" class="form-control" placeholder="Tên danh mục (VD: Cà phê hạt rang)" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Màu sắc đại diện</label>
+                                        <input type="color" id="cat-color" class="form-control form-control-color w-100" value="#8B5A2B" title="Chọn màu sắc cho danh mục">
                                     </div>
                                     <button class="btn btn-primary w-100" onclick="saveCategory()">Lưu danh mục</button>
                                 </div>
@@ -84,10 +92,10 @@
                                 
                                 <div class="col-md-3">
                                     <label class="form-label">Danh mục</label>
-                                    <select id="prod-category" class="form-select border-primary" required></select>
+                                    <select id="prod-category" class="form-select border-primary" onchange="toggleSpecsBlock(this.value)" required></select>
                                 </div>
-                                <div class="col-md-4"><label class="form-label">Tên máy</label><input type="text" id="name" class="form-control" required></div>
-                                <div class="col-md-3"><label class="form-label">Giá (đ)</label><input type="number" id="price" class="form-control" required></div>
+                                <div class="col-md-4"><label class="form-label">Tên sản phẩm</label><input type="text" id="name" class="form-control" placeholder="VD: Cà phê Robusta Mộc" required></div>
+                                <div class="col-md-3"><label class="form-label">Giá bán</label><input type="text" id="price" class="form-control border-primary" placeholder="Nhập giá VNĐ" required></div>
                                 <div class="col-md-2"><label class="form-label text-success">Số lượng kho</label><input type="number" id="prod-stock" class="form-control border-success" value="0" min="0" required></div>
 
                                 <div class="col-12">
@@ -112,16 +120,75 @@
                                     <input type="text" id="img4" class="form-control form-control-sm" placeholder="URL ảnh 4">
                                 </div>
 
-                                <div class="col-md-2"><label class="form-label text-muted small">Hệ điều hành</label><input type="text" id="os" class="form-control form-control-sm"></div>
-                                <div class="col-md-2"><label class="form-label text-muted small">CPU</label><input type="text" id="cpu" class="form-control form-control-sm"></div>
-                                <div class="col-md-2"><label class="form-label text-muted small">RAM</label><input type="text" id="ram" class="form-control form-control-sm"></div>
-                                <div class="col-md-2"><label class="form-label text-muted small">ROM</label><input type="text" id="rom" class="form-control form-control-sm"></div>
-                                <div class="col-md-2"><label class="form-label text-muted small">Pin & Sạc</label><input type="text" id="battery" class="form-control form-control-sm"></div>
-                                <div class="col-md-2"><label class="form-label text-muted small">GPU</label><input type="text" id="gpu" class="form-control form-control-sm"></div>
-                                <div class="col-md-3"><label class="form-label text-muted small">Màn hình</label><input type="text" id="screen" class="form-control form-control-sm"></div>
-                                <div class="col-md-3"><label class="form-label text-muted small">Camera sau</label><input type="text" id="backCam" class="form-control form-control-sm"></div>
-                                <div class="col-md-3"><label class="form-label text-muted small">Camera trước</label><input type="text" id="frontCam" class="form-control form-control-sm"></div>
-                                <div class="col-md-3"><label class="form-label text-muted small">Thẻ nhớ/Khác</label><input type="text" id="microSD" class="form-control form-control-sm"></div>
+                                <!-- Khối thông số Cà phê -->
+                                <div id="specs-coffee-block" class="row g-3 col-12 p-0 m-0">
+                                    <div class="col-md-4">
+                                        <label class="form-label text-muted small">Xuất xứ / Nguồn gốc</label>
+                                        <input type="text" id="origin" class="form-control form-control-sm" placeholder="VD: Cầu Đất, Lâm Đồng">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-muted small">Mức độ rang</label>
+                                        <select id="roastLevel" class="form-select form-select-sm">
+                                            <option value="">-- Chọn mức độ rang --</option>
+                                            <option value="Light">Light</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="Dark roast">Dark roast</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-muted small">Phân loại</label>
+                                        <select id="coffee-type" class="form-select form-select-sm">
+                                            <option value="">-- Chọn phân loại --</option>
+                                            <option value="Instant coffee">Instant coffee</option>
+                                            <option value="Bean">Bean</option>
+                                            <option value="Powder">Powder</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted small">Hương vị nổi bật</label>
+                                        <input type="text" id="flavor" class="form-control form-control-sm" placeholder="VD: Socola, Caramel, Trái cây">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted small">Khối lượng đóng gói</label>
+                                        <input type="text" id="weight" class="form-control form-control-sm" placeholder="VD: Bịch 250g, 500g">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label text-primary fw-bold small">Tỷ lệ phối trộn hạt (%)</label>
+                                        <div class="row g-2 bg-light p-2 rounded border">
+                                            <div class="col-md-3">
+                                                <label class="form-label text-muted small d-flex justify-content-between">
+                                                    <span>Robusta:</span> <span id="val-robusta" class="fw-bold text-success">0%</span>
+                                                </label>
+                                                <input type="range" id="blend-robusta" class="form-range" min="0" max="100" step="5" value="0" oninput="document.getElementById('val-robusta').textContent = this.value + '%'">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label text-muted small d-flex justify-content-between">
+                                                    <span>Arabica:</span> <span id="val-arabica" class="fw-bold text-success">0%</span>
+                                                </label>
+                                                <input type="range" id="blend-arabica" class="form-range" min="0" max="100" step="5" value="0" oninput="document.getElementById('val-arabica').textContent = this.value + '%'">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label text-muted small d-flex justify-content-between">
+                                                    <span>Liberica:</span> <span id="val-liberica" class="fw-bold text-success">0%</span>
+                                                </label>
+                                                <input type="range" id="blend-liberica" class="form-range" min="0" max="100" step="5" value="0" oninput="document.getElementById('val-liberica').textContent = this.value + '%'">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label text-muted small d-flex justify-content-between">
+                                                    <span>Catimor:</span> <span id="val-catimor" class="fw-bold text-success">0%</span>
+                                                </label>
+                                                <input type="range" id="blend-catimor" class="form-range" min="0" max="100" step="5" value="0" oninput="document.getElementById('val-catimor').textContent = this.value + '%'">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Khối thông số Phụ kiện -->
+                                <div id="specs-accessory-block" class="row g-3 col-12 p-0 m-0 d-none">
+                                    <div class="col-md-4"><label class="form-label text-muted small">Chất liệu</label><input type="text" id="acc-material" class="form-control form-control-sm" placeholder="VD: Sứ, Nhôm, Thủy tinh"></div>
+                                    <div class="col-md-4"><label class="form-label text-muted small">Xuất xứ / Nguồn gốc</label><input type="text" id="acc-origin" class="form-control form-control-sm" placeholder="VD: Việt Nam, Nhật Bản"></div>
+                                    <div class="col-md-4"><label class="form-label text-muted small">Công suất pha (Nếu là máy)</label><input type="text" id="acc-power" class="form-control form-control-sm" placeholder="VD: 1500W, 10-15 ly/giờ"></div>
+                                </div>
 
                                 <div class="col-12 text-end border-top pt-3">
                                     <button type="button" class="btn btn-secondary me-2" onclick="resetProdForm()">Hủy/Làm mới</button>
@@ -129,34 +196,62 @@
                                 </div>
                             </form>
                         </div>
-
-                        <div class="card p-3">
-                            <table class="table align-middle">
-                                <thead class="table-dark">
-                                    <tr><th>Ảnh chính</th><th>Tên sản phẩm</th><th>Danh mục</th><th>Kho</th><th>Giá</th><th class="text-end">Thao tác</th></tr>
-                                </thead>
-                                <tbody id="prod-list-body"></tbody>
-                            </table>
+                        <div id="prod-list-container"></div>
+                    </div>
+ 
+                    <div class="tab-pane fade" id="tab-stock">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5>Điều chỉnh số lượng nhanh</h5>
+                            <button class="btn btn-outline-primary btn-sm" onclick="loadStockManagement()">Làm mới kho</button>
                         </div>
+                        <div id="stock-list-container"></div>
                     </div>
 
-                    <div class="tab-pane fade" id="tab-stock">
+                    <div class="tab-pane fade" id="tab-addons">
                         <div class="card p-3">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5>Điều chỉnh số lượng nhanh</h5>
-                                <button class="btn btn-outline-primary btn-sm" onclick="loadStockManagement()">Làm mới kho</button>
+                                <h5>Thiết lập Sản phẩm mua kèm (Add-ons)</h5>
+                                <button class="btn btn-outline-primary btn-sm" onclick="loadAddonsManagement()">Làm mới trang</button>
                             </div>
-                            <table class="table table-bordered align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Sản phẩm</th>
-                                        <th width="150">Số lượng hiện có</th>
-                                        <th width="200">Cập nhật mới</th>
-                                        <th>Trạng thái</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="stock-list-body"></tbody>
-                            </table>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card p-3 border">
+                                        <h6 class="fw-bold mb-3">Bước 1: Chọn sản phẩm chính</h6>
+                                        <div class="mb-3">
+                                            <select id="addon-main-product" class="form-select border-primary shadow-sm" onchange="selectAddonMainProduct(this.value)">
+                                                <option value="">-- Chọn sản phẩm chính --</option>
+                                            </select>
+                                        </div>
+                                        <div class="alert alert-info py-2 px-3 small shadow-sm">
+                                            Chọn một sản phẩm chính (như Cà phê bột, Cà phê hạt) để thiết lập danh sách các sản phẩm phụ sẽ gợi ý mua kèm khi xem chi tiết.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="card p-3 border">
+                                        <h6 class="fw-bold mb-3">Bước 2: Chọn các sản phẩm mua kèm gợi ý</h6>
+                                        
+                                        <h6 class="fw-bold text-primary mb-2 small"><i class="bi bi-cpu"></i> 1. Chọn Máy pha cà phê</h6>
+                                        <div class="border rounded p-3 bg-light mb-3" style="max-height: 150px; overflow-y: auto;">
+                                            <div class="row row-cols-1 row-cols-md-2 g-2" id="addon-machine-grid">
+                                                <div class="col text-muted small">Hãy chọn sản phẩm chính trước.</div>
+                                            </div>
+                                        </div>
+
+                                        <h6 class="fw-bold text-success mb-2 small"><i class="bi bi-tools"></i> 2. Chọn Phụ kiện đi kèm</h6>
+                                        <div class="border rounded p-3 bg-light mb-3" style="max-height: 150px; overflow-y: auto;">
+                                            <div class="row row-cols-1 row-cols-md-2 g-2" id="addon-accessory-grid">
+                                                <div class="col text-muted small">Hãy chọn sản phẩm chính trước.</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="text-end">
+                                            <button class="btn btn-success px-4" id="btn-save-addons" onclick="saveAddonRelations()" disabled>Lưu thiết lập mua kèm</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -184,37 +279,103 @@
         window.saveCategory = async () => {
             const id = document.getElementById('cat-id').value;
             const name = document.getElementById('cat-name').value;
+            const color = document.getElementById('cat-color').value || '#8B5A2B';
             if(!name) return alert("Vui lòng nhập tên danh mục!");
-            if(id) await updateDoc(doc(db, "categories", id), { name });
-            else await addDoc(collection(db, "categories"), { name });
+            if(id) await updateDoc(doc(db, "categories", id), { name, color });
+            else await addDoc(collection(db, "categories"), { name, color });
             document.getElementById('cat-name').value = '';
             document.getElementById('cat-id').value = '';
+            document.getElementById('cat-color').value = '#8B5A2B';
             document.getElementById('cat-form-title').innerText = "Thêm danh mục";
             loadCategories();
         };
 
+        let categoryMap = {};
+
         async function loadCategories() {
             const snap = await getDocs(collection(db, "categories"));
             let html = '', options = '<option value="">-- Chọn danh mục --</option>';
+            categoryMap = {};
+            let hasAccessoriesCat = false;
+            let hasMachineCat = false;
+
             snap.forEach(d => {
                 const c = d.data();
-                html += `<tr><td><b>${c.name}</b></td><td class="text-end">
-                    <button class="btn btn-sm btn-warning me-1" onclick="editCat('${d.id}','${c.name}')"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteCat('${d.id}')"><i class="bi bi-trash"></i></button>
-                </td></tr>`;
+                categoryMap[d.id] = c.name;
+                const normalized = c.name.trim().toLowerCase();
+                if (normalized === "phụ kiện") {
+                    hasAccessoriesCat = true;
+                }
+                if (normalized === "máy pha cà phê") {
+                    hasMachineCat = true;
+                }
+            });
+
+            // Nếu chưa có danh mục "Phụ kiện" cố định, tự động thêm mới với màu sắc đặc trưng
+            if (!hasAccessoriesCat) {
+                try {
+                    const newCatRef = await addDoc(collection(db, "categories"), { name: "Phụ kiện", color: "#7f5539" });
+                    categoryMap[newCatRef.id] = "Phụ kiện";
+                    loadCategories();
+                    return;
+                } catch(err) {
+                    console.error("Lỗi tự động tạo danh mục Phụ kiện:", err);
+                }
+            }
+
+            // Nếu chưa có danh mục "Máy pha cà phê" cố định, tự động thêm mới với màu sắc đặc trưng
+            if (!hasMachineCat) {
+                try {
+                    const newCatRef = await addDoc(collection(db, "categories"), { name: "Máy pha cà phê", color: "#8B5A2B" });
+                    categoryMap[newCatRef.id] = "Máy pha cà phê";
+                    loadCategories();
+                    return;
+                } catch(err) {
+                    console.error("Lỗi tự động tạo danh mục Máy pha cà phê:", err);
+                }
+            }
+
+            snap.forEach(d => {
+                const c = d.data();
+                const normalized = c.name.trim().toLowerCase();
+                const isFixed = normalized === "phụ kiện" || normalized === "máy pha cà phê";
+                html += `<tr>
+                    <td>
+                        <span class="badge" style="background-color: ${c.color || '#8B5A2B'}; width: 15px; height: 15px; display: inline-block; vertical-align: middle; margin-right: 8px; border-radius: 50%;"></span>
+                        <b>${c.name}</b>
+                    </td>
+                    <td class="text-end">
+                        ${isFixed 
+                            ? `<span class="badge bg-primary py-2 px-3 small shadow-sm"><i class="bi bi-pin-angle-fill me-1"></i>Mặc định</span>` 
+                            : `<button class="btn btn-sm btn-warning me-1" onclick="editCat('${d.id}','${c.name}','${c.color || '#8B5A2B'}')"><i class="bi bi-pencil"></i></button>
+                               <button class="btn btn-sm btn-danger" onclick="deleteCat('${d.id}')"><i class="bi bi-trash"></i></button>`
+                        }
+                    </td>
+                </tr>`;
                 options += `<option value="${d.id}">${c.name}</option>`;
             });
             document.getElementById('cat-list-body').innerHTML = html;
             document.getElementById('prod-category').innerHTML = options;
         }
 
-        window.editCat = (id, name) => { 
+        window.editCat = (id, name, color) => { 
             document.getElementById('cat-id').value = id; 
             document.getElementById('cat-name').value = name;
+            document.getElementById('cat-color').value = color || "#8B5A2B";
             document.getElementById('cat-form-title').innerText = "Sửa danh mục";
         };
         
-        window.deleteCat = async (id) => { if(confirm("Xóa danh mục này?")) { await deleteDoc(doc(db, "categories", id)); loadCategories(); } };
+        window.deleteCat = async (id) => { 
+            const name = categoryMap[id] || "";
+            const normalized = name.trim().toLowerCase();
+            if (normalized === "phụ kiện" || normalized === "máy pha cà phê") {
+                return alert("Không thể xóa danh mục mặc định!");
+            }
+            if(confirm("Xóa danh mục này?")) { 
+                await deleteDoc(doc(db, "categories", id)); 
+                loadCategories(); 
+            } 
+        };
 
         // 3. QUẢN LÝ SẢN PHẨM
         const prodForm = document.getElementById('productForm');
@@ -229,21 +390,54 @@
                 document.getElementById('img4').value
             ].filter(url => url.trim() !== "");
 
+            const categoryId = document.getElementById('prod-category').value;
+            const catName = categoryMap[categoryId] || "";
+            const rawPrice = document.getElementById('price').value.replace(/\D/g, "");
+            
+            let specsData = {};
+            const normalized = catName.trim().toLowerCase();
+            if (normalized === "phụ kiện" || normalized === "máy pha cà phê") {
+                specsData = {
+                    material: document.getElementById('acc-material').value,
+                    origin: document.getElementById('acc-origin').value,
+                    power: document.getElementById('acc-power').value
+                };
+            } else {
+                const r = Number(document.getElementById('blend-robusta').value);
+                const a = Number(document.getElementById('blend-arabica').value);
+                const l = Number(document.getElementById('blend-liberica').value);
+                const c = Number(document.getElementById('blend-catimor').value);
+                
+                let blendParts = [];
+                if (r > 0) blendParts.push(`${r}% Robusta`);
+                if (a > 0) blendParts.push(`${a}% Arabica`);
+                if (l > 0) blendParts.push(`${l}% Liberica`);
+                if (c > 0) blendParts.push(`${c}% Catimor`);
+                const blendRatioStr = blendParts.join(', ') || '0%';
+
+                specsData = {
+                    origin: document.getElementById('origin').value,
+                    roastLevel: document.getElementById('roastLevel').value,
+                    coffeeType: document.getElementById('coffee-type').value,
+                    blendRobusta: r,
+                    blendArabica: a,
+                    blendLiberica: l,
+                    blendCatimor: c,
+                    blendRatio: blendRatioStr,
+                    flavor: document.getElementById('flavor').value,
+                    weight: document.getElementById('weight').value
+                };
+            }
+
             const data = {
-                categoryId: document.getElementById('prod-category').value,
+                categoryId: categoryId,
                 name: document.getElementById('name').value,
-                price: Number(document.getElementById('price').value),
-                stock: Number(document.getElementById('prod-stock').value || 0), // Thêm stock
+                price: Number(rawPrice),
+                stock: Number(document.getElementById('prod-stock').value || 0),
                 img: imgList[0] || "",
                 images: imgList,
                 description: document.getElementById('description').value,
-                specs: {
-                    os: document.getElementById('os').value, cpu: document.getElementById('cpu').value,
-                    ram: document.getElementById('ram').value, rom: document.getElementById('rom').value,
-                    battery: document.getElementById('battery').value, gpu: document.getElementById('gpu').value,
-                    screen: document.getElementById('screen').value, backCam: document.getElementById('backCam').value,
-                    frontCam: document.getElementById('frontCam').value, microSD: document.getElementById('microSD').value
-                }
+                specs: specsData
             };
 
             try {
@@ -258,50 +452,224 @@
         async function loadProducts() {
             const prodSnap = await getDocs(collection(db, "products"));
             const catSnap = await getDocs(collection(db, "categories"));
-            const cats = {}; catSnap.forEach(d => cats[d.id] = d.data().name);
+            
+            const cats = {};
+            catSnap.forEach(d => {
+                const c = d.data();
+                cats[d.id] = { name: c.name, color: c.color || '#8B5A2B' };
+            });
 
-            let html = '';
+            const grouped = {};
             prodSnap.forEach(d => {
                 const p = d.data();
-                const isOutOfStock = p.stock <= 0;
-                // Render dải xám nếu hết hàng
-                html += `<tr class="${isOutOfStock ? 'stock-out' : ''}">
-                    <td><img src="${p.img}" width="45" class="rounded border"></td>
-                    <td>
-                        <b>${p.name}</b>
-                        ${isOutOfStock ? '<span class="out-of-stock-label">HẾT HÀNG</span>' : ''}
-                    </td>
-                    <td><span class="badge bg-secondary">${cats[p.categoryId] || 'N/A'}</span></td>
-                    <td><span class="fw-bold ${isOutOfStock ? 'text-danger' : 'text-primary'}">${p.stock || 0}</span></td>
-                    <td class="text-danger fw-bold">${p.price.toLocaleString()}đ</td>
-                    <td class="text-end">
-                        <button class="btn btn-sm btn-outline-warning me-1" onclick="editProd('${d.id}')">Sửa</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteProd('${d.id}')">Xóa</button>
-                    </td>
-                </tr>`;
+                const catId = p.categoryId || 'uncategorized';
+                if (!grouped[catId]) grouped[catId] = [];
+                grouped[catId].push({ id: d.id, ...p });
             });
-            document.getElementById('prod-list-body').innerHTML = html;
+
+            let html = '';
+            for (const catId in cats) {
+                const cat = cats[catId];
+                const prods = grouped[catId] || [];
+                if (prods.length === 0) continue;
+
+                html += `
+                    <div class="card mb-4 border-0 shadow-sm overflow-hidden" style="border-left: 5px solid ${cat.color} !important;">
+                        <div class="card-header bg-white d-flex align-items-center justify-content-between border-0 py-2">
+                            <h6 class="mb-0 fw-bold" style="color: ${cat.color};"><i class="bi bi-tag-fill me-2"></i>${cat.name}</h6>
+                            <span class="badge text-white" style="background-color: ${cat.color};">${prods.length} sản phẩm</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr><th>Ảnh</th><th>Tên sản phẩm</th><th>Kho</th><th>Giá</th><th class="text-end">Thao tác</th></tr>
+                                </thead>
+                                <tbody>
+                `;
+
+                prods.forEach(p => {
+                    const isOutOfStock = p.stock <= 0;
+                    html += `
+                        <tr class="${isOutOfStock ? 'stock-out' : ''}">
+                            <td><img src="${p.img}" width="40" class="rounded border"></td>
+                            <td>
+                                <b>${p.name}</b>
+                                ${isOutOfStock ? '<span class="out-of-stock-label">HẾT HÀNG</span>' : ''}
+                            </td>
+                            <td><span class="fw-bold ${isOutOfStock ? 'text-danger' : 'text-primary'}">${p.stock || 0}</span></td>
+                            <td class="text-danger fw-bold">${p.price.toLocaleString()}đ</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-warning me-1" onclick="editProd('${p.id}')">Sửa</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteProd('${p.id}')">Xóa</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const uncategorized = grouped['uncategorized'] || [];
+            if (uncategorized.length > 0) {
+                html += `
+                    <div class="card mb-4 border-0 shadow-sm overflow-hidden" style="border-left: 5px solid #6c757d !important;">
+                        <div class="card-header bg-white d-flex align-items-center justify-content-between border-0 py-2">
+                            <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-question-circle-fill me-2"></i>Khác</h6>
+                            <span class="badge bg-secondary text-white">${uncategorized.length} sản phẩm</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr><th>Ảnh</th><th>Tên sản phẩm</th><th>Kho</th><th>Giá</th><th class="text-end">Thao tác</th></tr>
+                                </thead>
+                                <tbody>
+                `;
+                uncategorized.forEach(p => {
+                    const isOutOfStock = p.stock <= 0;
+                    html += `
+                        <tr class="${isOutOfStock ? 'stock-out' : ''}">
+                            <td><img src="${p.img}" width="40" class="rounded border"></td>
+                            <td>
+                                <b>${p.name}</b>
+                                ${isOutOfStock ? '<span class="out-of-stock-label">HẾT HÀNG</span>' : ''}
+                            </td>
+                            <td><span class="fw-bold ${isOutOfStock ? 'text-danger' : 'text-primary'}">${p.stock || 0}</span></td>
+                            <td class="text-danger fw-bold">${p.price.toLocaleString()}đ</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-warning me-1" onclick="editProd('${p.id}')">Sửa</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteProd('${p.id}')">Xóa</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('prod-list-container').innerHTML = html || `<div class="text-center text-muted p-4">Chưa có sản phẩm nào.</div>`;
         }
 
         // 4. QUẢN LÝ TỒN KHO RIÊNG BIỆT
         window.loadStockManagement = async () => {
-            const snap = await getDocs(collection(db, "products"));
-            let html = '';
-            snap.forEach(d => {
-                const p = d.data();
-                html += `<tr>
-                    <td>${p.name}</td>
-                    <td class="text-center"><span class="badge ${p.stock > 0 ? 'bg-success' : 'bg-danger'}">${p.stock || 0}</span></td>
-                    <td>
-                        <div class="input-group input-group-sm">
-                            <input type="number" id="quick-stock-${d.id}" class="form-control" value="${p.stock || 0}">
-                            <button class="btn btn-primary" onclick="quickUpdateStock('${d.id}')">Cập nhật</button>
-                        </div>
-                    </td>
-                    <td>${p.stock > 0 ? '✅ Còn hàng' : '❌ Hết hàng'}</td>
-                </tr>`;
+            const prodSnap = await getDocs(collection(db, "products"));
+            const catSnap = await getDocs(collection(db, "categories"));
+            
+            const cats = {};
+            catSnap.forEach(d => {
+                const c = d.data();
+                cats[d.id] = { name: c.name, color: c.color || '#8B5A2B' };
             });
-            document.getElementById('stock-list-body').innerHTML = html;
+
+            const grouped = {};
+            prodSnap.forEach(d => {
+                const p = d.data();
+                const catId = p.categoryId || 'uncategorized';
+                if (!grouped[catId]) grouped[catId] = [];
+                grouped[catId].push({ id: d.id, ...p });
+            });
+
+            let html = '';
+            for (const catId in cats) {
+                const cat = cats[catId];
+                const prods = grouped[catId] || [];
+                if (prods.length === 0) continue;
+
+                html += `
+                    <div class="card mb-4 border-0 shadow-sm overflow-hidden" style="border-left: 5px solid ${cat.color} !important;">
+                        <div class="card-header bg-white d-flex align-items-center justify-content-between border-0 py-2">
+                            <h6 class="mb-0 fw-bold" style="color: ${cat.color};"><i class="bi bi-archive-fill me-2"></i>Tồn kho: ${cat.name}</h6>
+                            <span class="badge text-white" style="background-color: ${cat.color};">${prods.length} dòng</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th width="150" class="text-center">Số lượng</th>
+                                        <th width="220">Cập nhật nhanh</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+
+                prods.forEach(p => {
+                    html += `
+                        <tr>
+                            <td><b>${p.name}</b></td>
+                            <td class="text-center"><span class="badge ${p.stock > 0 ? 'bg-success' : 'bg-danger'}">${p.stock || 0}</span></td>
+                            <td>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" id="quick-stock-${p.id}" class="form-control" value="${p.stock || 0}">
+                                    <button class="btn btn-primary" onclick="quickUpdateStock('${p.id}')">Cập nhật</button>
+                                </div>
+                            </td>
+                            <td>${p.stock > 0 ? '✅ Còn hàng' : '❌ Hết hàng'}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const uncategorized = grouped['uncategorized'] || [];
+            if (uncategorized.length > 0) {
+                html += `
+                    <div class="card mb-4 border-0 shadow-sm overflow-hidden" style="border-left: 5px solid #6c757d !important;">
+                        <div class="card-header bg-white d-flex align-items-center justify-content-between border-0 py-2">
+                            <h6 class="mb-0 fw-bold text-secondary"><i class="bi bi-question-circle-fill me-2"></i>Khác</h6>
+                            <span class="badge bg-secondary text-white">${uncategorized.length} dòng</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th width="150" class="text-center">Số lượng</th>
+                                        <th width="220">Cập nhật nhanh</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                uncategorized.forEach(p => {
+                    html += `
+                        <tr>
+                            <td><b>${p.name}</b></td>
+                            <td class="text-center"><span class="badge ${p.stock > 0 ? 'bg-success' : 'bg-danger'}">${p.stock || 0}</span></td>
+                            <td>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" id="quick-stock-${p.id}" class="form-control" value="${p.stock || 0}">
+                                    <button class="btn btn-primary" onclick="quickUpdateStock('${p.id}')">Cập nhật</button>
+                                </div>
+                            </td>
+                            <td>${p.stock > 0 ? '✅ Còn hàng' : '❌ Hết hàng'}</td>
+                        </tr>
+                    `;
+                });
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('stock-list-container').innerHTML = html || `<div class="text-center text-muted p-4">Chưa có sản phẩm nào.</div>`;
         };
 
         window.quickUpdateStock = async (id) => {
@@ -317,8 +685,10 @@
             const p = d.data();
             document.getElementById('prod-id').value = id;
             document.getElementById('prod-category').value = p.categoryId;
+            toggleSpecsBlock(p.categoryId); // Chuyển đổi khối nhập thông số
+ 
             document.getElementById('name').value = p.name;
-            document.getElementById('price').value = p.price;
+            document.getElementById('price').value = p.price ? Number(p.price).toLocaleString('vi-VN') + ' VNĐ' : '';
             document.getElementById('prod-stock').value = p.stock || 0; // Đổ stock vào form
             document.getElementById('description').value = p.description || "";
             if(p.images) {
@@ -327,10 +697,38 @@
                 document.getElementById('img3').value = p.images[2] || "";
                 document.getElementById('img4').value = p.images[3] || "";
             }
+ 
+            resetSpecsInputs();
+ 
             if(p.specs) {
-                for(let key in p.specs) {
-                    const el = document.getElementById(key);
-                    if(el) el.value = p.specs[key];
+                const catName = categoryMap[p.categoryId] || "";
+                const normalized = catName.trim().toLowerCase();
+                if (normalized === "phụ kiện" || normalized === "máy pha cà phê") {
+                    document.getElementById('acc-material').value = p.specs.material || "";
+                    document.getElementById('acc-origin').value = p.specs.origin || "";
+                    document.getElementById('acc-power').value = p.specs.power || "";
+                } else {
+                    document.getElementById('origin').value = p.specs.origin || "";
+                    document.getElementById('roastLevel').value = p.specs.roastLevel || "";
+                    document.getElementById('coffee-type').value = p.specs.coffeeType || "";
+                    
+                    const r = p.specs.blendRobusta || 0;
+                    const a = p.specs.blendArabica || 0;
+                    const l = p.specs.blendLiberica || 0;
+                    const c = p.specs.blendCatimor || 0;
+                    
+                    document.getElementById('blend-robusta').value = r;
+                    document.getElementById('blend-arabica').value = a;
+                    document.getElementById('blend-liberica').value = l;
+                    document.getElementById('blend-catimor').value = c;
+                    
+                    document.getElementById('val-robusta').textContent = r + "%";
+                    document.getElementById('val-arabica').textContent = a + "%";
+                    document.getElementById('val-liberica').textContent = l + "%";
+                    document.getElementById('val-catimor').textContent = c + "%";
+                    
+                    document.getElementById('flavor').value = p.specs.flavor || "";
+                    document.getElementById('weight').value = p.specs.weight || "";
                 }
             }
             document.getElementById('prod-form-title').innerText = "Đang sửa: " + p.name;
@@ -340,12 +738,179 @@
         window.resetProdForm = () => { 
             prodForm.reset(); 
             document.getElementById('prod-id').value = ''; 
-            document.getElementById('prod-form-title').innerText = "Thêm sản phẩm mới"; 
+            document.getElementById('prod-form-title').innerText = "Thêm sản phẩm mới";
+            resetSpecsInputs();
+            toggleSpecsBlock(""); // Mặc định là Cà phê
         };
 
         window.deleteProd = async (id) => { 
             if(confirm("Xóa sản phẩm này?")) { await deleteDoc(doc(db, "products", id)); loadProducts(); } 
         };
+
+        // 5. QUẢN LÝ SẢN PHẨM MUA KÈM (ADD-ONS)
+        let addonsCachedProducts = [];
+
+        window.loadAddonsManagement = async () => {
+            const snap = await getDocs(collection(db, "products"));
+            addonsCachedProducts = [];
+            let options = '<option value="">-- Chọn sản phẩm chính --</option>';
+            snap.forEach(d => {
+                const p = d.data();
+                addonsCachedProducts.push({ id: d.id, ...p });
+                
+                // Chỉ hiển thị sản phẩm chính là các danh mục KHÔNG PHẢI "Phụ kiện" hay "Máy pha cà phê"
+                const catName = categoryMap[p.categoryId] || "";
+                const norm = catName.trim().toLowerCase();
+                if (norm !== "phụ kiện" && norm !== "máy pha cà phê") {
+                    options += `<option value="${d.id}">${p.name} (${p.price.toLocaleString()}đ)</option>`;
+                }
+            });
+            document.getElementById('addon-main-product').innerHTML = options;
+            const placeholder = `<div class="col text-muted small">Hãy chọn sản phẩm chính trước.</div>`;
+            document.getElementById('addon-machine-grid').innerHTML = placeholder;
+            document.getElementById('addon-accessory-grid').innerHTML = placeholder;
+            document.getElementById('btn-save-addons').disabled = true;
+        };
+
+        window.selectAddonMainProduct = async (mainProductId) => {
+            const machineGrid = document.getElementById('addon-machine-grid');
+            const accGrid = document.getElementById('addon-accessory-grid');
+            const saveBtn = document.getElementById('btn-save-addons');
+            
+            if (!mainProductId) {
+                const placeholder = `<div class="col text-muted small">Hãy chọn sản phẩm chính trước.</div>`;
+                machineGrid.innerHTML = placeholder;
+                accGrid.innerHTML = placeholder;
+                saveBtn.disabled = true;
+                return;
+            }
+
+            saveBtn.disabled = false;
+
+            // Lấy thông tin sản phẩm chính để xem mảng addons cũ
+            const mainProd = addonsCachedProducts.find(p => p.id === mainProductId);
+            const currentAddons = mainProd ? (mainProd.addons || []) : [];
+
+            // Lọc ra các sản phẩm khác thuộc danh mục "Máy pha cà phê"
+            const machineProducts = addonsCachedProducts.filter(p => 
+                p.id !== mainProductId && 
+                categoryMap[p.categoryId] && 
+                categoryMap[p.categoryId].trim().toLowerCase() === "máy pha cà phê"
+            );
+
+            // Lọc ra các sản phẩm khác thuộc danh mục "Phụ kiện"
+            const accessoryProducts = addonsCachedProducts.filter(p => 
+                p.id !== mainProductId && 
+                categoryMap[p.categoryId] && 
+                categoryMap[p.categoryId].trim().toLowerCase() === "phụ kiện"
+            );
+
+            // Render Máy pha cà phê
+            if (machineProducts.length === 0) {
+                machineGrid.innerHTML = `<div class="col text-muted small">Chưa có sản phẩm máy pha cà phê nào trong hệ thống.</div>`;
+            } else {
+                machineGrid.innerHTML = machineProducts.map(p => {
+                    const isChecked = currentAddons.includes(p.id) ? 'checked' : '';
+                    return `
+                        <div class="col">
+                            <div class="form-check p-2 border rounded bg-white shadow-sm h-100 d-flex align-items-center">
+                                <input class="form-check-input ms-1 me-2 addon-rel-checkbox" type="checkbox" value="${p.id}" id="addon-rel-${p.id}" ${isChecked}>
+                                <label class="form-check-label small w-100" for="addon-rel-${p.id}">
+                                    <strong style="color: #000 !important;">${p.name}</strong><br>
+                                    <span class="text-danger fw-bold">${p.price.toLocaleString()}đ</span>
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Render Phụ kiện
+            if (accessoryProducts.length === 0) {
+                accGrid.innerHTML = `<div class="col text-muted small">Chưa có sản phẩm phụ kiện nào khác trong hệ thống.</div>`;
+            } else {
+                accGrid.innerHTML = accessoryProducts.map(p => {
+                    const isChecked = currentAddons.includes(p.id) ? 'checked' : '';
+                    return `
+                        <div class="col">
+                            <div class="form-check p-2 border rounded bg-white shadow-sm h-100 d-flex align-items-center">
+                                <input class="form-check-input ms-1 me-2 addon-rel-checkbox" type="checkbox" value="${p.id}" id="addon-rel-${p.id}" ${isChecked}>
+                                <label class="form-check-label small w-100" for="addon-rel-${p.id}">
+                                    <strong style="color: #000 !important;">${p.name}</strong><br>
+                                    <span class="text-danger fw-bold">${p.price.toLocaleString()}đ</span>
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        };
+
+        window.saveAddonRelations = async () => {
+            const mainProductId = document.getElementById('addon-main-product').value;
+            if (!mainProductId) return alert("Vui lòng chọn sản phẩm chính!");
+
+            const selectedAddonIds = Array.from(document.querySelectorAll('.addon-rel-checkbox:checked')).map(cb => cb.value);
+
+            try {
+                await updateDoc(doc(db, "products", mainProductId), {
+                    addons: selectedAddonIds
+                });
+                alert("Đã lưu liên kết sản phẩm mua kèm thành công!");
+                
+                // Cập nhật lại cache tại chỗ để tránh load lại DB nếu không cần
+                const idx = addonsCachedProducts.findIndex(p => p.id === mainProductId);
+                if (idx !== -1) {
+                    addonsCachedProducts[idx].addons = selectedAddonIds;
+                }
+                
+            } catch (err) {
+                alert("Lỗi khi lưu: " + err.message);
+            }
+        };
+
+        window.toggleSpecsBlock = (categoryId) => {
+            const coffeeBlock = document.getElementById('specs-coffee-block');
+            const accBlock = document.getElementById('specs-accessory-block');
+            if (!coffeeBlock || !accBlock) return;
+
+            const catName = categoryMap[categoryId] || "";
+            const normalized = catName.trim().toLowerCase();
+            if (normalized === "phụ kiện" || normalized === "máy pha cà phê") {
+                coffeeBlock.classList.add('d-none');
+                accBlock.classList.remove('d-none');
+            } else {
+                coffeeBlock.classList.remove('d-none');
+                accBlock.classList.add('d-none');
+            }
+        };
+
+        function resetSpecsInputs() {
+            const ids = ['origin', 'roastLevel', 'coffee-type', 'flavor', 'weight', 'acc-material', 'acc-origin', 'acc-power'];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = "";
+            });
+            const blendIds = ['blend-robusta', 'blend-arabica', 'blend-liberica', 'blend-catimor'];
+            blendIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = 0;
+            });
+            ['val-robusta', 'val-arabica', 'val-liberica', 'val-catimor'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = "0%";
+            });
+        }
+
+        // Định dạng tiền tệ VNĐ trực tiếp khi gõ
+        document.getElementById('price').addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, "");
+            if (value) {
+                e.target.value = Number(value).toLocaleString('vi-VN') + ' VNĐ';
+            } else {
+                e.target.value = '';
+            }
+        });
 
         loadCategories();
         loadProducts();

@@ -3,380 +3,341 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FoneStore Welcome</title>
+    <title>FoneStore Coffee — Specialty Coffee Experience</title>
+    <meta name="description" content="FoneStore Coffee - Trải nghiệm cà phê specialty đẳng cấp. Rang xay thủ công, hạt cà phê chọn lọc từ cao nguyên Việt Nam.">
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
+        /* ══════════════════════════════════════════
+           DESIGN TOKENS
+        ══════════════════════════════════════════ */
         :root {
-            --gold: #d4af37;
-            --gold-light: #f5d76e;
-            --gold-soft: rgba(212, 175, 55, 0.12);
-            --black: #0a0a0a;
-            --dark: #111111;
-            --dark-2: #161616;
-            --text: #f5f5f5;
-            --muted: #b8b8b8;
+            --coffee-deep:   #1a0e0a;
+            --coffee-dark:   #2c1810;
+            --coffee-rich:   #3e2215;
+            --coffee-warm:   #6f4e37;
+            --coffee-light:  #c4a882;
+            --cream:         #f5e6d3;
+            --cream-soft:    #faf3eb;
+            --gold:          #d4a76a;
+            --gold-light:    #e8c89e;
+            --gold-glow:     rgba(212, 167, 106, 0.15);
+            --accent:        #c45e3a;
+            --accent-soft:   rgba(196, 94, 58, 0.12);
+            --text-light:    #f8f0e5;
+            --text-muted:    #b8a89a;
+            --font-display:  'Playfair Display', Georgia, serif;
+            --font-body:     'Inter', 'Montserrat', sans-serif;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
             scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background: linear-gradient(to bottom, #050505, #0d0d0d, #121212);
-            color: var(--text);
             overflow-x: hidden;
         }
 
-        a {
-            text-decoration: none;
+        body {
+            font-family: var(--font-body);
+            background: var(--coffee-deep);
+            color: var(--text-light);
+            overflow-x: hidden;
         }
 
-        /* ===== NAV ===== */
-        .premium-navbar {
+        a { text-decoration: none; color: inherit; }
+
+        ::selection {
+            background: var(--gold);
+            color: var(--coffee-deep);
+        }
+
+        /* ══════════════════════════════════════════
+           NAVBAR
+        ══════════════════════════════════════════ */
+        .coffee-nav {
             position: fixed;
             top: 0;
             width: 100%;
-            z-index: 999;
-            background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(14px);
-            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-            transition: all 0.4s ease;
+            z-index: 1000;
+            padding: 18px 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .navbar-brand {
-            color: var(--gold) !important;
+        .coffee-nav.scrolled {
+            padding: 10px 0;
+            background: rgba(26, 14, 10, 0.92);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(212, 167, 106, 0.1);
+        }
+
+        .nav-brand {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
             font-weight: 800;
-            letter-spacing: 2px;
-            font-size: 1.3rem;
+            color: var(--gold) !important;
+            letter-spacing: 3px;
         }
 
-        .nav-link {
-            color: #f1f1f1 !important;
+        .nav-brand i {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+
+        .coffee-nav .nav-link {
+            color: var(--text-muted) !important;
+            font-family: var(--font-body);
             font-weight: 500;
-            margin-left: 14px;
-            transition: 0.3s;
+            font-size: 13px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 8px 16px !important;
+            transition: all 0.3s ease;
+            position: relative;
         }
 
-        .nav-link:hover {
+        .coffee-nav .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--gold);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .coffee-nav .nav-link:hover {
             color: var(--gold) !important;
         }
 
-        .btn-gold {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            color: #111;
+        .coffee-nav .nav-link:hover::after {
+            width: 60%;
+        }
+
+        .btn-nav-cta {
+            font-family: var(--font-body);
+            font-size: 12px;
             font-weight: 700;
-            border: none;
+            letter-spacing: 2px;
+            text-transform: uppercase;
             padding: 12px 28px;
             border-radius: 999px;
-            transition: all 0.35s ease;
-            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.25);
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--coffee-deep);
+            border: none;
+            transition: all 0.4s ease;
+            box-shadow: 0 8px 30px rgba(212, 167, 106, 0.25);
         }
 
-        .btn-gold:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 15px 35px rgba(212, 175, 55, 0.35);
-            color: #111;
-        }
-
-        .btn-outline-gold {
-            border: 1px solid var(--gold);
-            color: var(--gold);
-            padding: 11px 24px;
-            border-radius: 999px;
-            font-weight: 600;
-            transition: 0.3s;
-            background: transparent;
-        }
-
-        .btn-outline-gold:hover {
-            background: var(--gold);
-            color: #111;
+        .btn-nav-cta:hover {
             transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(212, 167, 106, 0.4);
+            color: var(--coffee-deep);
         }
 
-        /* ===== SECTION BASE ===== */
-        .section {
-            position: relative;
-            padding: 110px 0;
-        }
-
-        .section-title {
-            font-size: 2.4rem;
-            font-weight: 800;
-            color: var(--gold);
-            margin-bottom: 18px;
-            letter-spacing: 1px;
-        }
-
-        .section-subtitle {
-            color: var(--muted);
-            font-size: 1.05rem;
-            line-height: 1.9;
-            max-width: 720px;
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(212, 175, 55, 0.15);
-            border-radius: 26px;
-            backdrop-filter: blur(14px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-        }
-
-        /* ===== HERO ===== */
+        /* ══════════════════════════════════════════
+           HERO SECTION — Fullscreen Immersive
+        ══════════════════════════════════════════ */
         .hero {
             min-height: 100vh;
             display: flex;
             align-items: center;
+            justify-content: center;
             position: relative;
             overflow: hidden;
             background:
-                radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.15), transparent 35%),
-                radial-gradient(circle at 80% 30%, rgba(212, 175, 55, 0.08), transparent 30%),
-                linear-gradient(135deg, #050505 0%, #0b0b0b 40%, #131313 100%);
+                radial-gradient(ellipse at 25% 0%, rgba(212, 167, 106, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 75% 100%, rgba(196, 94, 58, 0.06) 0%, transparent 50%),
+                linear-gradient(180deg, var(--coffee-deep) 0%, #120a07 50%, var(--coffee-dark) 100%);
         }
 
-        .hero::before {
-            content: "";
+        .hero-bg-image {
             position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(212,175,55,0.15), transparent 70%);
-            top: -120px;
-            right: -150px;
-            filter: blur(60px);
-            animation: floatGlow 8s ease-in-out infinite alternate;
+            inset: 0;
+            background-image: url('https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.2;
+            filter: saturate(0.5);
+            transition: transform 0.5s ease;
         }
 
-        .hero::after {
-            content: "";
+        .hero-overlay {
             position: absolute;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(212,175,55,0.08), transparent 70%);
-            bottom: -80px;
-            left: -120px;
-            filter: blur(50px);
-            animation: floatGlow 10s ease-in-out infinite alternate-reverse;
+            inset: 0;
+            background: linear-gradient(
+                180deg,
+                rgba(26, 14, 10, 0.6) 0%,
+                rgba(26, 14, 10, 0.3) 40%,
+                rgba(26, 14, 10, 0.7) 80%,
+                var(--coffee-deep) 100%
+            );
         }
 
-        @keyframes floatGlow {
-            from { transform: translateY(0px) translateX(0px) scale(1); }
-            to { transform: translateY(30px) translateX(20px) scale(1.05); }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 900px;
+            padding: 0 20px;
         }
 
-        .hero-badge {
+        .hero-tag {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 10px 18px;
+            gap: 10px;
+            padding: 10px 24px;
             border-radius: 999px;
-            background: rgba(212, 175, 55, 0.12);
-            border: 1px solid rgba(212, 175, 55, 0.25);
+            background: rgba(212, 167, 106, 0.1);
+            border: 1px solid rgba(212, 167, 106, 0.2);
             color: var(--gold-light);
-            font-size: 0.9rem;
-            margin-bottom: 24px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 32px;
+            animation: fadeInDown 1s 0.3s both;
         }
 
         .hero-title {
-            font-size: 4rem;
-            font-weight: 800;
-            line-height: 1.15;
-            margin-bottom: 18px;
-        }
-
-        .hero-title span {
-            color: var(--gold);
-            text-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
-        }
-
-        .hero-desc {
-            font-size: 1.08rem;
-            color: #d5d5d5;
-            line-height: 1.9;
-            max-width: 620px;
-            margin-bottom: 34px;
-        }
-
-        .hero-video-box {
-            position: relative;
-            border-radius: 28px;
-            overflow: hidden;
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
-            transform: perspective(1200px) rotateY(-8deg) rotateX(4deg);
-            transition: 0.5s ease;
-        }
-
-        .hero-video-box:hover {
-            transform: perspective(1200px) rotateY(-2deg) rotateX(2deg) scale(1.01);
-        }
-
-        .hero-video-box video {
-            width: 100%;
-            height: 520px;
-            object-fit: cover;
-            display: block;
-            background: #000;
-        }
-
-        .video-label {
-            position: absolute;
-            top: 18px;
-            left: 18px;
-            background: rgba(0,0,0,0.55);
-            border: 1px solid rgba(212, 175, 55, 0.25);
-            color: var(--gold-light);
-            padding: 10px 16px;
-            border-radius: 999px;
-            font-size: 0.9rem;
-            backdrop-filter: blur(10px);
-        }
-
-        /* ===== FEATURE CARDS ===== */
-        .feature-card {
-            padding: 32px 28px;
-            height: 100%;
-            transition: all 0.35s ease;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(212, 175, 55, 0.35);
-            box-shadow: 0 25px 55px rgba(212, 175, 55, 0.08);
-        }
-
-        .feature-icon {
-            width: 62px;
-            height: 62px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 18px;
-            background: var(--gold-soft);
-            color: var(--gold);
-            font-size: 1.6rem;
-            margin-bottom: 22px;
-        }
-
-        .feature-card h5 {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 8vw, 6rem);
             font-weight: 700;
-            margin-bottom: 12px;
+            line-height: 1.05;
+            margin-bottom: 28px;
+            animation: fadeInUp 1.2s 0.5s both;
         }
 
-        .feature-card p {
-            color: var(--muted);
-            line-height: 1.8;
-            margin-bottom: 0;
-        }
-
-        /* ===== SHOWCASE ===== */
-        .showcase-box {
-            padding: 30px;
-        }
-
-        .product-shot {
-            border-radius: 28px;
-            overflow: hidden;
-            border: 1px solid rgba(212,175,55,0.15);
-            box-shadow: 0 25px 60px rgba(0,0,0,0.35);
-        }
-
-        .product-shot img {
-            width: 100%;
-            height: 560px;
-            object-fit: cover;
-            display: block;
-        }
-
-        .spec-list li {
-            list-style: none;
-            margin-bottom: 16px;
-            color: #e5e5e5;
-            font-size: 1rem;
-        }
-
-        .spec-list li i {
+        .hero-title .accent {
             color: var(--gold);
-            margin-right: 10px;
+            font-style: italic;
+            text-shadow: 0 0 60px rgba(212, 167, 106, 0.3);
         }
 
-        /* ===== PREMIUM STRIP ===== */
-        .premium-strip {
-            padding: 80px 0;
-            background:
-                linear-gradient(90deg, rgba(212,175,55,0.06), rgba(255,255,255,0.01), rgba(212,175,55,0.06));
-            border-top: 1px solid rgba(212,175,55,0.08);
-            border-bottom: 1px solid rgba(212,175,55,0.08);
-        }
-
-        .stat-box {
-            text-align: center;
-            padding: 24px;
-        }
-
-        .stat-number {
-            font-size: 2.4rem;
-            font-weight: 800;
-            color: var(--gold);
-            margin-bottom: 10px;
-        }
-
-        .stat-label {
-            color: #d2d2d2;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-        }
-
-        /* ===== CTA ===== */
-        .cta-box {
-            padding: 60px 40px;
-            text-align: center;
-        }
-
-        .cta-box h2 {
-            font-size: 2.6rem;
-            font-weight: 800;
-            margin-bottom: 16px;
-            color: var(--gold);
-        }
-
-        .cta-box p {
-            max-width: 760px;
-            margin: auto;
-            color: var(--muted);
+        .hero-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-muted);
             line-height: 1.9;
-            margin-bottom: 30px;
+            max-width: 640px;
+            margin: 0 auto 40px;
+            animation: fadeInUp 1.2s 0.7s both;
         }
 
-        /* ===== FOOTER ===== */
-        .footer-mini {
-            padding: 28px 0;
-            border-top: 1px solid rgba(212,175,55,0.08);
-            color: #8e8e8e;
-            text-align: center;
-            font-size: 0.95rem;
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 1.2s 0.9s both;
         }
 
-        /* ===== SCROLL ANIMATION ===== */
+        .btn-hero {
+            font-family: var(--font-body);
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 16px 40px;
+            border-radius: 999px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-hero-primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--coffee-deep);
+            border: none;
+            box-shadow: 0 12px 40px rgba(212, 167, 106, 0.3);
+        }
+
+        .btn-hero-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 18px 50px rgba(212, 167, 106, 0.45);
+            color: var(--coffee-deep);
+        }
+
+        .btn-hero-outline {
+            background: transparent;
+            color: var(--gold);
+            border: 1.5px solid rgba(212, 167, 106, 0.4);
+        }
+
+        .btn-hero-outline:hover {
+            background: rgba(212, 167, 106, 0.1);
+            border-color: var(--gold);
+            color: var(--gold-light);
+            transform: translateY(-2px);
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            animation: bounce 2s infinite;
+        }
+
+        .scroll-indicator span {
+            display: block;
+            width: 24px;
+            height: 38px;
+            border: 2px solid rgba(212, 167, 106, 0.4);
+            border-radius: 999px;
+            position: relative;
+        }
+
+        .scroll-indicator span::after {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 8px;
+            background: var(--gold);
+            border-radius: 999px;
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: scrollDot 2s infinite;
+        }
+
+        @keyframes scrollDot {
+            0%   { opacity: 1; top: 6px; }
+            100% { opacity: 0; top: 20px; }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50%      { transform: translateX(-50%) translateY(8px); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ══════════════════════════════════════════
+           SCROLL REVEAL BASE
+        ══════════════════════════════════════════ */
         .reveal {
             opacity: 0;
-            transform: translateY(50px);
-            transition: all 0.9s ease;
+            transform: translateY(60px);
+            transition: all 0.9s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .reveal.active {
@@ -384,325 +345,1183 @@
             transform: translateY(0);
         }
 
-        /* ===== FLOATING BUTTON ===== */
-        .floating-enter {
-            position: fixed;
-            bottom: 28px;
-            right: 28px;
-            z-index: 999;
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-60px);
+            transition: all 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reveal-left.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(60px);
+            transition: all 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reveal-right.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.85);
+            transition: all 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reveal-scale.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* ══════════════════════════════════════════
+           SECTION BASE
+        ══════════════════════════════════════════ */
+        .section {
+            padding: 120px 0;
+            position: relative;
+        }
+
+        .section-label {
+            font-family: var(--font-body);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-label::before {
+            content: '';
+            width: 40px;
+            height: 1px;
+            background: var(--gold);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            color: var(--cream);
+        }
+
+        .section-desc {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            line-height: 1.9;
+            max-width: 560px;
+        }
+
+        /* ══════════════════════════════════════════
+           MARQUEE STRIP
+        ══════════════════════════════════════════ */
+        .marquee-strip {
+            padding: 20px 0;
+            background: rgba(212, 167, 106, 0.06);
+            border-top: 1px solid rgba(212, 167, 106, 0.08);
+            border-bottom: 1px solid rgba(212, 167, 106, 0.08);
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .marquee-content {
+            display: inline-flex;
+            animation: marquee 30s linear infinite;
+        }
+
+        .marquee-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 40px;
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .marquee-item .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--gold);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        @keyframes marquee {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* ══════════════════════════════════════════
+           ABOUT / STORY SECTION
+        ══════════════════════════════════════════ */
+        .story-section {
+            background:
+                radial-gradient(circle at 80% 20%, rgba(212, 167, 106, 0.04) 0%, transparent 40%),
+                var(--coffee-deep);
+        }
+
+        .story-image-wrapper {
+            position: relative;
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        .story-image-wrapper img {
+            width: 100%;
+            height: 520px;
+            object-fit: cover;
+            display: block;
+            border-radius: 24px;
+            transition: transform 0.6s ease;
+        }
+
+        .story-image-wrapper:hover img {
+            transform: scale(1.03);
+        }
+
+        .story-image-wrapper::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            border: 1px solid rgba(212, 167, 106, 0.15);
+            pointer-events: none;
+        }
+
+        .story-badge {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
+            padding: 14px 22px;
+            background: rgba(26, 14, 10, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(212, 167, 106, 0.2);
+            border-radius: 16px;
+            color: var(--gold-light);
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .story-badge i {
+            color: var(--gold);
+            margin-right: 8px;
+        }
+
+        /* ══════════════════════════════════════════
+           FEATURE CARDS
+        ══════════════════════════════════════════ */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
+        }
+
+        .feature-card {
+            padding: 36px 30px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(212, 167, 106, 0.1);
+            backdrop-filter: blur(8px);
+            transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(212, 167, 106, 0.3);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon-box {
             width: 58px;
             height: 58px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            color: #111;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 18px 40px rgba(212,175,55,0.28);
-            font-size: 1.3rem;
-            transition: 0.3s;
+            border-radius: 16px;
+            background: var(--gold-glow);
+            color: var(--gold);
+            font-size: 1.4rem;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
         }
 
-        .floating-enter:hover {
-            transform: translateY(-4px) scale(1.04);
-            color: #111;
+        .feature-card:hover .feature-icon-box {
+            background: rgba(212, 167, 106, 0.2);
+            transform: scale(1.08);
         }
 
-        /* ===== RESPONSIVE ===== */
+        .feature-card h4 {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--cream);
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            line-height: 1.75;
+            margin: 0;
+        }
+
+        /* ══════════════════════════════════════════
+           PRODUCT SHOWCASE — Horizontal Scroll
+        ══════════════════════════════════════════ */
+        .showcase-section {
+            background: linear-gradient(180deg, var(--coffee-deep) 0%, #0f0806 50%, var(--coffee-deep) 100%);
+        }
+
+        .showcase-scroll {
+            display: flex;
+            gap: 28px;
+            padding: 20px 0 40px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .showcase-scroll::-webkit-scrollbar { display: none; }
+
+        .showcase-card {
+            flex: 0 0 340px;
+            scroll-snap-align: start;
+            border-radius: 24px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(212, 167, 106, 0.1);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .showcase-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(212, 167, 106, 0.3);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
+        }
+
+        .showcase-card-img {
+            height: 260px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .showcase-card-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .showcase-card:hover .showcase-card-img img {
+            transform: scale(1.08);
+        }
+
+        .showcase-card-img .card-badge {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            padding: 6px 14px;
+            background: rgba(26, 14, 10, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 167, 106, 0.2);
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gold-light);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .showcase-card-body {
+            padding: 24px;
+        }
+
+        .showcase-card-body h5 {
+            font-family: var(--font-display);
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--cream);
+        }
+
+        .showcase-card-body p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        .showcase-card-body .price-tag {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--gold);
+        }
+
+        /* ══════════════════════════════════════════
+           PARALLAX IMAGE SECTION
+        ══════════════════════════════════════════ */
+        .parallax-section {
+            height: 65vh;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .parallax-bg {
+            position: absolute;
+            inset: -20%;
+            background-image: url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            filter: saturate(0.6) brightness(0.4);
+        }
+
+        .parallax-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .parallax-content h2 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #fff;
+        }
+
+        .parallax-content h2 span {
+            color: var(--gold);
+            font-style: italic;
+        }
+
+        .parallax-content p {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        /* ══════════════════════════════════════════
+           PROCESS / HOW IT WORKS
+        ══════════════════════════════════════════ */
+        .process-section {
+            background:
+                radial-gradient(circle at 20% 80%, rgba(212, 167, 106, 0.04) 0%, transparent 40%),
+                var(--coffee-deep);
+        }
+
+        .process-step {
+            text-align: center;
+            padding: 30px 20px;
+            position: relative;
+        }
+
+        .process-number {
+            font-family: var(--font-display);
+            font-size: 4rem;
+            font-weight: 800;
+            color: rgba(212, 167, 106, 0.1);
+            line-height: 1;
+            margin-bottom: 16px;
+        }
+
+        .process-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold-glow), rgba(212, 167, 106, 0.08));
+            border: 1px solid rgba(212, 167, 106, 0.2);
+            color: var(--gold);
+            font-size: 1.5rem;
+            transition: all 0.4s ease;
+        }
+
+        .process-step:hover .process-icon {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 15px 40px rgba(212, 167, 106, 0.15);
+        }
+
+        .process-step h5 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--cream);
+        }
+
+        .process-step p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .process-connector {
+            position: absolute;
+            top: 90px;
+            right: -30px;
+            width: 60px;
+            height: 1px;
+            background: linear-gradient(90deg, var(--gold), transparent);
+        }
+
+        /* ══════════════════════════════════════════
+           STATS STRIP
+        ══════════════════════════════════════════ */
+        .stats-strip {
+            padding: 80px 0;
+            background: rgba(212, 167, 106, 0.03);
+            border-top: 1px solid rgba(212, 167, 106, 0.06);
+            border-bottom: 1px solid rgba(212, 167, 106, 0.06);
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .stat-number {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--gold);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        /* ══════════════════════════════════════════
+           CTA SECTION
+        ══════════════════════════════════════════ */
+        .cta-section {
+            padding: 140px 0;
+            background:
+                radial-gradient(ellipse at center, rgba(212, 167, 106, 0.06) 0%, transparent 60%),
+                var(--coffee-deep);
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-family: var(--font-display);
+            font-size: clamp(2.2rem, 5vw, 3.2rem);
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--cream);
+        }
+
+        .cta-section h2 span {
+            color: var(--gold);
+            font-style: italic;
+        }
+
+        .cta-section p {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.8;
+        }
+
+        /* ══════════════════════════════════════════
+           FOOTER
+        ══════════════════════════════════════════ */
+        .coffee-footer {
+            padding: 60px 0 30px;
+            background: #0a0604;
+            border-top: 1px solid rgba(212, 167, 106, 0.08);
+        }
+
+        .footer-brand {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 16px;
+        }
+
+        .footer-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.8;
+            max-width: 320px;
+        }
+
+        .footer-heading {
+            font-family: var(--font-body);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--gold);
+            padding-left: 6px;
+        }
+
+        .footer-social a {
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1px solid rgba(212, 167, 106, 0.2);
+            color: var(--text-muted);
+            margin-right: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .footer-social a:hover {
+            background: var(--gold);
+            color: var(--coffee-deep);
+            border-color: var(--gold);
+            transform: translateY(-3px);
+        }
+
+        .footer-bottom {
+            margin-top: 40px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.85rem;
+        }
+
+        /* ══════════════════════════════════════════
+           FLOATING BEAN PARTICLES
+        ══════════════════════════════════════════ */
+        .particles {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(212, 167, 106, 0.15);
+            border-radius: 50%;
+            animation: float-particle linear infinite;
+        }
+
+        @keyframes float-particle {
+            0%   { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* ══════════════════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════════════════ */
         @media (max-width: 991px) {
-            .hero-title {
-                font-size: 2.8rem;
+            .feature-grid {
+                grid-template-columns: 1fr;
             }
 
-            .hero-video-box {
-                margin-top: 30px;
-                transform: none;
+            .story-image-wrapper img {
+                height: 350px;
             }
 
-            .hero-video-box video {
-                height: 320px;
+            .showcase-card {
+                flex: 0 0 280px;
             }
 
-            .product-shot img {
-                height: 360px;
+            .parallax-bg {
+                background-attachment: scroll;
             }
 
-            .section-title {
-                font-size: 2rem;
+            .process-connector {
+                display: none;
             }
         }
 
         @media (max-width: 576px) {
-            .hero-title {
-                font-size: 2.2rem;
-            }
-
-            .hero-desc {
-                font-size: 0.98rem;
-            }
-
-            .cta-box h2 {
-                font-size: 2rem;
-            }
+            .section { padding: 80px 0; }
+            .hero-actions { flex-direction: column; align-items: center; }
+            .btn-hero { width: 100%; max-width: 280px; text-align: center; }
         }
     </style>
 </head>
 <body>
 
-    <!-- NAV -->
-    <nav class="navbar navbar-expand-lg premium-navbar">
+    <!-- FLOATING PARTICLES -->
+    <div class="particles" id="particles"></div>
+
+    <!-- ═══════════ NAVBAR ═══════════ -->
+    <nav class="navbar navbar-expand-lg coffee-nav" id="mainNav">
         <div class="container">
-            <a class="navbar-brand" href="#">FONESTORE</a>
-            <button class="navbar-toggler bg-warning" type="button" data-bs-toggle="collapse" data-bs-target="#welcomeNav">
-                <span class="navbar-toggler-icon"></span>
+            <a class="navbar-brand nav-brand" href="#">
+                <i class="bi bi-cup-hot-fill"></i>FSTORE COFFEE
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <i class="bi bi-list fs-4" style="color: var(--gold);"></i>
             </button>
-            <div class="collapse navbar-collapse justify-content-end" id="welcomeNav">
-                <ul class="navbar-nav align-items-lg-center">
-                    <li class="nav-item"><a class="nav-link" href="#hero">Trang đầu</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#features">Điểm nổi bật</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#showcase">Sản phẩm mới</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#experience">Trải nghiệm</a></li>
+            <div class="collapse navbar-collapse justify-content-end" id="navContent">
+                <ul class="navbar-nav align-items-lg-center gap-1">
+                    <li class="nav-item"><a class="nav-link" href="#story">Câu chuyện</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#features">Đặc biệt</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#collection">Bộ sưu tập</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#process">Quy trình</a></li>
                     <li class="nav-item ms-lg-3 mt-3 mt-lg-0">
-                        <a href="home.html" class="btn btn-gold">Khám phá thêm</a>
+                        <a href="home.html" class="btn btn-nav-cta">Mua ngay</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- SECTION 1: HERO -->
-    <section id="hero" class="hero section">
+    <!-- ═══════════ HERO ═══════════ -->
+    <section class="hero" id="hero">
+        <div class="hero-bg-image" id="heroBg"></div>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+                <!-- <div class="hero-tag">
+                    <i class="bi bi-star-fill" style="font-size: 10px;"></i>
+                    Specialty Coffee — Cao nguyên Việt Nam
+                </div> -->
+
+            <h1 class="hero-title">
+                Hương Vị<br>
+                <span class="accent">Đặc Biệt</span><br>
+                Từng Giọt Tinh Hoa
+            </h1>
+
+            <p class="hero-subtitle">
+                Mỗi hạt cà phê được chọn lọc kỹ lưỡng từ những vùng trồng cao nguyên Việt Nam, rang xay thủ công theo phương pháp truyền thống để giữ trọn hương vị tinh túy nhất.
+            </p>
+
+            <div class="hero-actions">
+                <a href="home.html" class="btn btn-hero btn-hero-primary">
+                    <i class="bi bi-bag-heart-fill me-2"></i>Khám Phá Ngay
+                </a>
+                <a href="#story" class="btn btn-hero btn-hero-outline">
+                    <i class="bi bi-play-circle me-2"></i>Câu Chuyện
+                </a>
+            </div>
+        </div>
+
+        <div class="scroll-indicator">
+            
+        </div>
+    </section>
+
+    <!-- ═══════════ MARQUEE STRIP ═══════════ -->
+    <div class="marquee-strip">
+        <div class="marquee-content">
+            <div class="marquee-item"><span class="dot"></span>Specialty Grade</div>
+            <div class="marquee-item"><span class="dot"></span>Single Origin</div>
+            <div class="marquee-item"><span class="dot"></span>Handcrafted Roast</div>
+            <div class="marquee-item"><span class="dot"></span>Cao Nguyên Việt Nam</div>
+            <div class="marquee-item"><span class="dot"></span>Arabica & Robusta</div>
+            <div class="marquee-item"><span class="dot"></span>Farm to Cup</div>
+            <div class="marquee-item"><span class="dot"></span>Sustainable Sourcing</div>
+            <div class="marquee-item"><span class="dot"></span>Premium Quality</div>
+            <!-- Duplicate for seamless loop -->
+            <div class="marquee-item"><span class="dot"></span>Specialty Grade</div>
+            <div class="marquee-item"><span class="dot"></span>Single Origin</div>
+            <div class="marquee-item"><span class="dot"></span>Handcrafted Roast</div>
+            <div class="marquee-item"><span class="dot"></span>Cao Nguyên Việt Nam</div>
+            <div class="marquee-item"><span class="dot"></span>Arabica & Robusta</div>
+            <div class="marquee-item"><span class="dot"></span>Farm to Cup</div>
+            <div class="marquee-item"><span class="dot"></span>Sustainable Sourcing</div>
+            <div class="marquee-item"><span class="dot"></span>Premium Quality</div>
+        </div>
+    </div>
+
+    <!-- ═══════════ STORY SECTION ═══════════ -->
+    <section id="story" class="section story-section">
         <div class="container">
             <div class="row align-items-center gy-5">
-                <div class="col-lg-6 reveal">
-                    <div class="hero-badge">
-                        <i class="bi bi-stars"></i>
-                        Bộ sưu tập công nghệ cao cấp 2026
-                    </div>
-                    <h1 class="hero-title">
-                        Chạm <span>"điểm G"</span>, khiến đàn ông mê mẩn, đàn bà sung sướng
-                    </h1>
-                    <p class="hero-desc">
-                        Với kinh nghiệm hơn 20 năm thực chiến qua các công ty công nghệ đỉnh cao. Nay, tôi chính thức mang đến cho tất cả mọi người Shop bán điện thoại đẳng cấp nhất Việt Nam.
-                    </p>
-
-                    <div class="d-flex flex-wrap gap-3">
-                        <a href="home.html" class="btn btn-gold">
-                            <i class="bi bi-arrow-right-circle me-2"></i>Khám phá thêm
-                        </a>
-                        <a href="#showcase" class="btn btn-outline-gold">
-                            <i class="bi bi-play-circle me-2"></i>Xem sản phẩm mới
-                        </a>
+                <div class="col-lg-6 reveal-left">
+                    <div class="story-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1511920170033-f8396924c348?w=800&q=80"
+                            alt="Coffee Farm Vietnam" loading="lazy">
+                        <div class="story-badge">
+                            <i class="bi bi-geo-alt-fill"></i>
+                            Đắk Lắk, Việt Nam
+                        </div>
                     </div>
                 </div>
-
-                <div class="col-lg-6 reveal">
-                    <div class="hero-video-box">
-                        
-                        <video autoplay muted loop playsinline preload="auto" poster="assets/video/poster.jpg">
-                                <source src="assets/video/quangcaoSamsung.mp4" type="video/mp4">
-                                Trình duyệt của bạn không hỗ trợ video.
-                        </video>
+                <div class="col-lg-6 reveal-right">
+                    <div class="ps-lg-4">
+                        <div class="section-label">Câu chuyện của chúng tôi</div>
+                        <h2 class="section-title">
+                            Từ Đồi Cao Nguyên<br>Đến Tách Cà Phê Của Bạn
+                        </h2>
+                        <p class="section-desc mb-4">
+                            Chúng tôi tin rằng một tách cà phê hoàn hảo bắt đầu từ sự tôn trọng — tôn trọng đất, tôn trọng người trồng và tôn trọng từng hạt cà phê. Hạt specialty của FStore được thu hoạch thủ công, chọn lọc kỹ lưỡng và rang theo mẻ nhỏ để giữ trọn hương vị tự nhiên.
+                        </p>
+                        <div class="d-flex gap-4 mb-4">
+                            <div>
+                                <div style="font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--gold);">100%</div>
+                                <div style="font-size: 0.82rem; color: var(--text-muted);">Hạt chọn lọc</div>
+                            </div>
+                            <div>
+                                <div style="font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--gold);">48h</div>
+                                <div style="font-size: 0.82rem; color: var(--text-muted);">Rang & giao</div>
+                            </div>
+                            <div>
+                                <div style="font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--gold);">5★</div>
+                                <div style="font-size: 0.82rem; color: var(--text-muted);">Đánh giá</div>
+                            </div>
+                        </div>
+                        <a href="home.html" class="btn btn-hero btn-hero-primary" style="padding: 14px 32px;">
+                            Khám phá sản phẩm <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- SECTION 2: FEATURES -->
+    <!-- ═══════════ FEATURES ═══════════ -->
     <section id="features" class="section">
         <div class="container">
             <div class="text-center mb-5 reveal">
-                <h2 class="section-title">Điểm nổi bật tại FoneStore</h2>
-                <p class="section-subtitle mx-auto">
-                    Không chỉ là nơi bán sản phẩm công nghệ, FoneStore được xây dựng như một không gian trải nghiệm đậm chất premium,
-                    nơi thiết kế, hiệu năng và dịch vụ cùng hội tụ trong một hệ sinh thái hiện đại.
+                <div class="section-label justify-content-center" style="justify-content:center;">
+                    <span></span>Điều đặc biệt
+                </div>
+                <h2 class="section-title mx-auto" style="max-width: 600px;">
+                    Tại Sao Chọn Cà Phê Của Chúng Tôi?
+                </h2>
+                <p class="section-desc mx-auto">
+                    Mỗi sản phẩm đều là kết tinh của đam mê, chất lượng và cam kết bền vững.
                 </p>
             </div>
 
+            <div class="feature-grid">
+                <div class="feature-card reveal">
+                    <div class="feature-icon-box"><i class="bi bi-flower1"></i></div>
+                    <h4>Nguồn Gốc Thuần Khiết</h4>
+                    <p>Hạt cà phê được trồng hữu cơ trên cao nguyên Đắk Lắk, Lâm Đồng — nơi có độ cao và khí hậu hoàn hảo cho specialty coffee.</p>
+                </div>
+                <div class="feature-card reveal" style="transition-delay: 0.15s;">
+                    <div class="feature-icon-box"><i class="bi bi-fire"></i></div>
+                    <h4>Rang Thủ Công Artisan</h4>
+                    <p>Từng mẻ rang được kiểm soát nhiệt độ chính xác bởi nghệ nhân giàu kinh nghiệm, đảm bảo profile hương vị nhất quán và tinh tế.</p>
+                </div>
+                <div class="feature-card reveal" style="transition-delay: 0.3s;">
+                    <div class="feature-icon-box"><i class="bi bi-heart-pulse"></i></div>
+                    <h4>Tươi Mới Mỗi Ngày</h4>
+                    <p>Rang xay theo đơn, giao hàng trong vòng 48 giờ để bạn nhận được cà phê tươi nhất với hương thơm nguyên bản.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ PARALLAX QUOTE ═══════════ -->
+    <section class="parallax-section">
+        <div class="parallax-bg"></div>
+        <div class="parallax-content reveal-scale">
+            <h2>"Cà phê tốt không cần <span>nói nhiều</span>,<br>hãy để hương vị tự <span>kể chuyện</span>"</h2>
+            <p>— Triết lý FStore Coffee —</p>
+        </div>
+    </section>
+
+    <!-- ═══════════ SHOWCASE COLLECTION ═══════════ -->
+    <section id="collection" class="section showcase-section">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3 reveal">
+                <div>
+                    <div class="section-label">Bộ sưu tập</div>
+                    <h2 class="section-title mb-0">Specialty Coffee Picks</h2>
+                </div>
+                <a href="home.html" class="btn btn-hero-outline btn-hero" style="padding: 12px 28px;">
+                    Xem tất cả <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+            </div>
+
+            <div class="showcase-scroll reveal" id="showcase-products">
+                <!-- Skeleton loading -->
+                <div class="showcase-card skeleton-showcase"><div style="height:260px;background:rgba(255,255,255,0.04);border-radius:16px 16px 0 0;"></div><div style="padding:24px;"><div style="height:18px;width:70%;background:rgba(255,255,255,0.06);border-radius:8px;margin-bottom:12px;"></div><div style="height:14px;width:100%;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:8px;"></div><div style="height:14px;width:60%;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:16px;"></div><div style="height:20px;width:40%;background:rgba(212,167,106,0.15);border-radius:8px;"></div></div></div>
+                <div class="showcase-card skeleton-showcase"><div style="height:260px;background:rgba(255,255,255,0.04);border-radius:16px 16px 0 0;"></div><div style="padding:24px;"><div style="height:18px;width:70%;background:rgba(255,255,255,0.06);border-radius:8px;margin-bottom:12px;"></div><div style="height:14px;width:100%;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:8px;"></div><div style="height:14px;width:60%;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:16px;"></div><div style="height:20px;width:40%;background:rgba(212,167,106,0.15);border-radius:8px;"></div></div></div>
+                <div class="showcase-card skeleton-showcase"><div style="height:260px;background:rgba(255,255,255,0.04);border-radius:16px 16px 0 0;"></div><div style="padding:24px;"><div style="height:18px;width:70%;background:rgba(255,255,255,0.06);border-radius:8px;margin-bottom:12px;"></div><div style="height:14px;width:100%;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:8px;"></div><div style="height:14px;width:60%;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:16px;"></div><div style="height:20px;width:40%;background:rgba(212,167,106,0.15);border-radius:8px;"></div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════ PROCESS ═══════════ -->
+    <section id="process" class="section process-section">
+        <div class="container">
+            <div class="text-center mb-5 reveal">
+                <div class="section-label justify-content-center" style="justify-content:center;">
+                    <span></span>Quy trình
+                </div>
+                <h2 class="section-title">Từ Hạt Đến Tách</h2>
+                <p class="section-desc mx-auto">Hành trình 4 bước để mỗi giọt cà phê đạt chuẩn specialty.</p>
+            </div>
+
             <div class="row g-4">
-                <div class="col-md-6 col-lg-3 reveal">
-                    <div class="glass-card feature-card">
-                        <div class="feature-icon"><i class="bi bi-phone"></i></div>
-                        <h5>Thiết bị cao cấp</h5>
-                        <p>Các dòng điện thoại và phụ kiện được tuyển chọn với thiết kế sang trọng, cấu hình mạnh và độ hoàn thiện cao.</p>
+                <div class="col-md-3 reveal">
+                    <div class="process-step">
+                        <div class="process-number">01</div>
+                        <div class="process-icon"><i class="bi bi-tree"></i></div>
+                        <h5>Thu Hoạch</h5>
+                        <p>Hái tay chọn lọc quả chín đỏ trên những sườn đồi cao nguyên 1.500m.</p>
+                        <div class="process-connector d-none d-md-block"></div>
                     </div>
                 </div>
-
-                <div class="col-md-6 col-lg-3 reveal">
-                    <div class="glass-card feature-card">
-                        <div class="feature-icon"><i class="bi bi-lightning-charge"></i></div>
-                        <h5>Hiệu năng vượt trội</h5>
-                        <p>Trải nghiệm tốc độ, xử lý mượt mà và tối ưu cho nhu cầu học tập, làm việc, giải trí và sáng tạo nội dung.</p>
+                <div class="col-md-3 reveal" style="transition-delay: 0.15s;">
+                    <div class="process-step">
+                        <div class="process-number">02</div>
+                        <div class="process-icon"><i class="bi bi-droplet-half"></i></div>
+                        <h5>Sơ Chế</h5>
+                        <p>Chế biến ướt hoặc honey process, phơi khô tự nhiên dưới nắng cao nguyên.</p>
+                        <div class="process-connector d-none d-md-block"></div>
                     </div>
                 </div>
-
-                <div class="col-md-6 col-lg-3 reveal">
-                    <div class="glass-card feature-card">
-                        <div class="feature-icon"><i class="bi bi-shield-check"></i></div>
-                        <h5>Chính hãng & bảo hành</h5>
-                        <p>Cam kết chất lượng sản phẩm, minh bạch thông tin và hỗ trợ khách hàng theo phong cách chuyên nghiệp.</p>
+                <div class="col-md-3 reveal" style="transition-delay: 0.3s;">
+                    <div class="process-step">
+                        <div class="process-number">03</div>
+                        <div class="process-icon"><i class="bi bi-fire"></i></div>
+                        <h5>Rang Artisan</h5>
+                        <p>Rang mẻ nhỏ, kiểm soát nhiệt chính xác từng giây để đạt profile hoàn hảo.</p>
+                        <div class="process-connector d-none d-md-block"></div>
                     </div>
                 </div>
-
-                <div class="col-md-6 col-lg-3 reveal">
-                    <div class="glass-card feature-card">
-                        <div class="feature-icon"><i class="bi bi-gem"></i></div>
-                        <h5>Phong cách đẳng cấp</h5>
-                        <p>Giao diện, trải nghiệm và dịch vụ được thiết kế để mang lại cảm giác mua sắm công nghệ sang trọng hơn.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- SECTION 3: SHOWCASE -->
-    <section id="showcase" class="section">
-        <div class="container">
-            <div class="row align-items-center gy-5">
-                <div class="col-lg-6 reveal">
-                    <div class="product-shot">
-                        <video autoplay muted loop playsinline preload="auto" poster="assets/video/poster.jpg">
-                                <source src="assets/video/quangcaoApple.mp4" type="video/mp4">
-                                Trình duyệt của bạn không hỗ trợ video.
-                        </video>
-                    </div>
-                </div>
-
-                <div class="col-lg-6 reveal">
-                    <div class="glass-card showcase-box">
-                        <p class="text-uppercase mb-2" style="letter-spacing: 2px; color: var(--gold-light); font-weight: 600;">New Arrival 2026</p>
-                        <h2 class="section-title mb-3">Biểu tượng mới của hiệu năng và thẩm mỹ</h2>
-                        <p class="section-subtitle mb-4">
-                            Sản phẩm thế hệ mới được định hình bởi ngôn ngữ thiết kế tối giản nhưng mạnh mẽ,
-                            khung viền tinh xảo, camera sắc nét và trải nghiệm mượt mà trong từng thao tác.
-                        </p>
-
-                        <ul class="spec-list ps-0 mb-4">
-                            <li><i class="bi bi-check-circle-fill"></i>Thiết kế nguyên khối sang trọng, cảm giác cầm nắm cao cấp</li>
-                            <li><i class="bi bi-check-circle-fill"></i>Màn hình sắc nét, hiển thị chân thực và sống động</li>
-                            <li><i class="bi bi-check-circle-fill"></i>Hiệu năng mạnh mẽ cho công việc và giải trí</li>
-                            <li><i class="bi bi-check-circle-fill"></i>Camera chất lượng cao cho hình ảnh chuyên nghiệp</li>
-                        </ul>
-
-                        <a href="home.html" class="btn btn-gold">
-                            Xem bộ sưu tập <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
+                <div class="col-md-3 reveal" style="transition-delay: 0.45s;">
+                    <div class="process-step">
+                        <div class="process-number">04</div>
+                        <div class="process-icon"><i class="bi bi-cup-hot"></i></div>
+                        <h5>Giao Tận Nơi</h5>
+                        <p>Đóng gói chân không ngay sau rang, ship trong 48h để bạn nhận hạt tươi nhất.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- SECTION 4: PREMIUM STRIP -->
-    <section id="experience" class="premium-strip">
+    <!-- ═══════════ STATS STRIP ═══════════ -->
+    <section class="stats-strip">
         <div class="container">
             <div class="row g-4">
-                <div class="col-md-4 reveal">
-                    <div class="glass-card stat-box">
-                        <div class="stat-number">Kiến Thức</div>
-                        <div class="stat-label">Thiết kế xu hướng mới</div>
+                <div class="col-6 col-md-3 reveal">
+                    <div class="stat-item">
+                        <div class="stat-number" data-count="12">0</div>
+                        <div class="stat-label">Vùng nguyên liệu</div>
                     </div>
                 </div>
-                <div class="col-md-4 reveal">
-                    <div class="glass-card stat-box">
-                        <div class="stat-number">Kinh Nghiệm</div>
-                        <div class="stat-label">Trải nghiệm cao cấp</div>
+                <div class="col-6 col-md-3 reveal" style="transition-delay: 0.1s;">
+                    <div class="stat-item">
+                        <div class="stat-number" data-count="5000">0</div>
+                        <div class="stat-label">Khách hàng tin dùng</div>
                     </div>
                 </div>
-                <div class="col-md-4 reveal">
-                    <div class="glass-card stat-box">
-                        <div class="stat-number">Trải Nghiệm</div>
-                        <div class="stat-label">Chuyển động mượt mà</div>
+                <div class="col-6 col-md-3 reveal" style="transition-delay: 0.2s;">
+                    <div class="stat-item">
+                        <div class="stat-number" data-count="100">0</div>
+                        <div class="stat-label">% Hạt specialty</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 reveal" style="transition-delay: 0.3s;">
+                    <div class="stat-item">
+                        <div class="stat-number" data-count="48">0</div>
+                        <div class="stat-label">Giờ rang & giao</div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- SECTION 5: CTA -->
-    <section class="section">
-        <div class="container">
-            <div class="glass-card cta-box reveal">
-                <h2>Sẵn sàng bước vào thế giới công nghệ sang trọng?</h2>
-                <p>
-                    Từ những thiết bị nổi bật nhất đến trải nghiệm mua sắm trực quan và hiện đại,
-                    FoneStore được thiết kế để mang lại cho bạn cảm giác chuyên nghiệp ngay từ lần chạm đầu tiên.
-                </p>
-                <a href="home.html" class="btn btn-gold btn-lg px-5">
-                    <i class="bi bi-box-arrow-in-right me-2"></i>Vào trang chính
+    <!-- ═══════════ CTA ═══════════ -->
+    <section class="cta-section">
+        <div class="container reveal-scale">
+            <div class="section-label justify-content-center" style="justify-content: center;">
+                <span></span>Bắt đầu trải nghiệm
+            </div>
+            <h2>Sẵn Sàng Thưởng Thức<br><span>Cà Phê Đẳng Cấp?</span></h2>
+            <p>
+                Từ đồi cao nguyên đến tách cà phê của bạn — chỉ cách nhau một cú click.
+                Hãy để hương vị specialty coffee thay đổi cách bạn bắt đầu mỗi ngày.
+            </p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="home.html" class="btn btn-hero btn-hero-primary">
+                    <i class="bi bi-bag-heart-fill me-2"></i>Mua Ngay
+                </a>
+                <a href="home.html" class="btn btn-hero btn-hero-outline">
+                    <i class="bi bi-cup-hot me-2"></i>Xem Menu
                 </a>
             </div>
         </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer id="mainFooter" class="mt-5">
-        <div class="container py-4">
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <h5 class="fw-bold text-warning">FSTORE</h5>
-                    <p class="small">
-                        Nền tảng thương mại điện tử uy tín hàng đầu Việt Nam,
-                        chuyên cung cấp các sản phẩm điện thoại chính hãng,
-                        giá tốt và dịch vụ khách hàng tận tâm.
+    <!-- ═══════════ FOOTER ═══════════ -->
+    <footer class="coffee-footer">
+        <div class="container">
+            <div class="row gy-4">
+                <div class="col-lg-4">
+                    <div class="footer-brand"><i class="bi bi-cup-hot-fill me-2"></i>FStore Coffee</div>
+                    <p class="footer-desc">
+                        Specialty coffee Việt Nam — rang xay thủ công, nguồn gốc minh bạch, giao hàng tận nơi trong 48 giờ. Mỗi tách cà phê là một câu chuyện.
                     </p>
+                    <div class="footer-social mt-3">
+                        <a href="https://www.facebook.com/huflit.edu.vn" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://www.instagram.com/huflit.uni/" target="_blank"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.tiktok.com/@huflit.official" target="_blank"><i class="fab fa-tiktok"></i></a>
+                    </div>
                 </div>
-
-                <div class="col-md-4 mb-3">
-                    <h6 class="fw-bold text-warning">Liên kết nhanh</h6>
-                    <ul class="list-unstyled small">
+                <div class="col-6 col-lg-2 offset-lg-2">
+                    <div class="footer-heading">Liên kết</div>
+                    <ul class="list-unstyled footer-links">
                         <li><a href="home.html">Trang chủ</a></li>
-                        <li><a href="#">Sản phẩm</a></li>
-                        <li><a href="#">Diễn đàn</a></li>
-                        <li><a href="#">Chính sách bảo mật</a></li>
+                        <li><a href="#collection">Sản phẩm</a></li>
+                        <li><a href="#story">Câu chuyện</a></li>
+                        <li><a href="#process">Quy trình</a></li>
                     </ul>
                 </div>
-
-                <div class="col-md-4 mb-3">
-                    <h6 class="fw-bold text-warning">Liên hệ</h6>
-                    <p class="small mb-1"><i class="fas fa-map-marker-alt me-2"></i> 828 Sư Vạn Hạnh, Phường Hòa Hưng, Quận 10, TP. HCM</p>
-                    <p class="small mb-1"><i class="fas fa-phone me-2"></i> 028 3863 2052</p>
-                    <p class="small mb-2"><i class="fas fa-envelope me-2"></i> support@st.huflit.edu.vn</p>
-
-                    <div class="mt-3">
-                        <a href="https://www.facebook.com/huflit.edu.vn" target="_blank" class="me-2 text-warning"><i class="fab fa-facebook fa-lg"></i></a>
-                        <a href="https://www.instagram.com/huflit.uni/" target="_blank" class="me-2 text-warning"><i class="fab fa-instagram fa-lg"></i></a>
-                        <a href="https://www.tiktok.com/@huflit.official" target="_blank" class="text-warning"><i class="fab fa-tiktok fa-lg"></i></a>
-                    </div>
+                <div class="col-6 col-lg-2">
+                    <div class="footer-heading">Hỗ trợ</div>
+                    <ul class="list-unstyled footer-links">
+                        <li><a href="#">Hướng dẫn mua hàng</a></li>
+                        <li><a href="#">Chính sách đổi trả</a></li>
+                        <li><a href="#">Vận chuyển</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2">
+                    <div class="footer-heading">Liên hệ</div>
+                    <ul class="list-unstyled footer-links">
+                        <li><a href="#"><i class="bi bi-geo-alt me-2"></i>828 SVH, Q10, HCM</a></li>
+                        <li><a href="#"><i class="bi bi-telephone me-2"></i>028 3863 2052</a></li>
+                        <li><a href="#"><i class="bi bi-envelope me-2"></i>support@fstore.vn</a></li>
+                    </ul>
                 </div>
             </div>
 
-            <hr class="border-light opacity-50" />
-
-            <div class="text-center small opacity-75">
-                Công ty TNHH Thương Mại và Dịch Vụ Kỹ Thuật FriendShipStore - GPĐKKD: 0999999999 cấp tại Sở KH & ĐT TP. HCM. <br />
-                Địa chỉ văn phòng: 828 Sư Vạn Hạnh, Phường Hòa Hưng, Quận 10, TP. HCM. Điện thoại: 028 3863 2052.
+            <div class="footer-bottom">
+                FStore Coffee © 2026. Tất cả quyền được bảo lưu. Specialty Coffee since day one.
             </div>
         </div>
     </footer>
 
-    <!-- Bootstrap -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        // Hiệu ứng hiện khi cuộn
+    <script type="module">
+        import { db } from './js/config.js';
+        import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        // ═══════════ NAVBAR SCROLL EFFECT ═══════════
+        const nav = document.getElementById('mainNav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 60);
+        });
+
+        // ═══════════ SCROLL REVEAL ═══════════
         function revealOnScroll() {
-            const reveals = document.querySelectorAll(".reveal");
-
-            reveals.forEach((el) => {
-                const windowHeight = window.innerHeight;
-                const elementTop = el.getBoundingClientRect().top;
-                const visiblePoint = 120;
-
-                if (elementTop < windowHeight - visiblePoint) {
-                    el.classList.add("active");
+            const selectors = '.reveal, .reveal-left, .reveal-right, .reveal-scale';
+            document.querySelectorAll(selectors).forEach(el => {
+                const top = el.getBoundingClientRect().top;
+                if (top < window.innerHeight - 100) {
+                    el.classList.add('active');
                 }
             });
         }
+        window.addEventListener('scroll', revealOnScroll);
+        window.addEventListener('load', revealOnScroll);
 
-        window.addEventListener("scroll", revealOnScroll);
-        window.addEventListener("load", revealOnScroll);
+        // ═══════════ HERO PARALLAX ═══════════
+        const heroBg = document.getElementById('heroBg');
+        window.addEventListener('scroll', () => {
+            if (heroBg) {
+                const scrolled = window.scrollY;
+                heroBg.style.transform = `translateY(${scrolled * 0.3}px) scale(1.1)`;
+            }
+        });
+
+        // ═══════════ LOAD PRODUCTS FROM FIRESTORE ═══════════
+        async function loadShowcaseProducts() {
+            const container = document.getElementById('showcase-products');
+            if (!container) return;
+
+            try {
+                const snap = await getDocs(collection(db, 'products'));
+                const products = [];
+                snap.forEach(d => {
+                    const p = d.data();
+                    if (p.name && p.price && p.img) {
+                        products.push({ id: d.id, ...p });
+                    }
+                });
+
+                if (products.length === 0) {
+                    container.innerHTML = `<div style="color: var(--text-muted); padding: 40px; text-align: center; width: 100%;">Chưa có sản phẩm nào trong hệ thống.</div>`;
+                    return;
+                }
+
+                // Badge labels dựa vào đặc tính sản phẩm
+                const badgeLabels = ['Best Seller', 'New', 'Signature', 'Popular', 'Premium', 'Limited', 'Hot', 'Classic'];
+
+                let html = '';
+                products.forEach((p, idx) => {
+                    const badge = badgeLabels[idx % badgeLabels.length];
+                    const desc = p.description
+                        ? (p.description.length > 80 ? p.description.substring(0, 80) + '...' : p.description)
+                        : 'Sản phẩm cà phê chất lượng cao từ FStore Coffee.';
+                    const isOutOfStock = p.stock <= 0;
+
+                    html += `
+                        <div class="showcase-card" onclick="location.href='pages/product-detail.html?id=${p.id}'">
+                            <div class="showcase-card-img">
+                                <img src="${p.img}" alt="${p.name}" loading="lazy"
+                                     style="${isOutOfStock ? 'filter: grayscale(0.5); opacity: 0.6;' : ''}">
+                                <span class="card-badge">${isOutOfStock ? 'Hết hàng' : badge}</span>
+                            </div>
+                            <div class="showcase-card-body">
+                                <h5>${p.name}</h5>
+                                <p>${desc}</p>
+                                <div class="price-tag">${Number(p.price).toLocaleString()}đ</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } catch (err) {
+                console.error('Lỗi load showcase products:', err);
+                container.innerHTML = `<div style="color: var(--text-muted); padding: 40px; text-align: center; width: 100%;">Không thể tải sản phẩm. Vui lòng thử lại sau.</div>`;
+            }
+        }
+
+        loadShowcaseProducts();
+
+        // ═══════════ ANIMATED COUNTER ═══════════
+        let counterDone = false;
+        function animateCounters() {
+            if (counterDone) return;
+            const counters = document.querySelectorAll('.stat-number[data-count]');
+            if (!counters.length) return;
+
+            const firstCounter = counters[0];
+            if (firstCounter.getBoundingClientRect().top > window.innerHeight - 100) return;
+
+            counterDone = true;
+            counters.forEach(counter => {
+                const target = parseInt(counter.dataset.count);
+                const duration = 2000;
+                const startTime = performance.now();
+
+                function update(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    const current = Math.floor(eased * target);
+
+                    counter.textContent = current.toLocaleString();
+
+                    if (progress < 1) {
+                        requestAnimationFrame(update);
+                    } else {
+                        counter.textContent = target.toLocaleString();
+                    }
+                }
+                requestAnimationFrame(update);
+            });
+        }
+        window.addEventListener('scroll', animateCounters);
+
+        // ═══════════ FLOATING PARTICLES ═══════════
+        (function createParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            const count = 20;
+
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.classList.add('particle');
+                p.style.left = Math.random() * 100 + '%';
+                p.style.width = p.style.height = (Math.random() * 3 + 2) + 'px';
+                p.style.animationDuration = (Math.random() * 15 + 10) + 's';
+                p.style.animationDelay = (Math.random() * 10) + 's';
+                p.style.opacity = Math.random() * 0.3 + 0.05;
+                container.appendChild(p);
+            }
+        })();
+
+        // ═══════════ SMOOTH ANCHOR SCROLL ═══════════
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Close mobile nav
+                    const navCollapse = document.getElementById('navContent');
+                    if (navCollapse?.classList.contains('show')) {
+                        new bootstrap.Collapse(navCollapse).hide();
+                    }
+                }
+            });
+        });
     </script>
 </body>
 </html>

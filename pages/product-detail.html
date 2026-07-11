@@ -254,6 +254,7 @@
         .specs-table td {
             padding: 10px 12px;
             font-size: 13px;
+            
         }
         .specs-table .spec-label {
             font-weight: 700;
@@ -262,7 +263,7 @@
             background: transparent;
         }
         .specs-table .spec-value {
-            color: var(--text);
+            color: black;
             font-weight: 500;
         }
 
@@ -429,7 +430,7 @@
         import { loadLayout } from '../js/layout.js';
         import { auth, db } from '../js/config.js';
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-        import { doc, getDoc, setDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { doc, getDoc, setDoc, runTransaction, collection, query, where, getDocs, documentId } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js";
 
         await loadLayout();
@@ -471,7 +472,10 @@
                             <b style="color:#d4af37;">${userData.fullName || user.email}</b>
                         </span>
                         <button id="logout-btn" class="btn btn-sm" style="font-size:11px;font-weight:700;padding:6px 14px;border-radius:999px;border:1px solid rgba(230,57,70,0.5);color:#e63946;background:transparent;">Thoát</button>`;
-                    document.getElementById('logout-btn')?.addEventListener('click', () => signOut(auth).then(() => location.reload()));
+                    document.getElementById('logout-btn')?.addEventListener('click', () => {
+                        sessionStorage.removeItem("fonestore_ai_chat_messages");
+                        signOut(auth).then(() => location.reload());
+                    });
                 }
 
                 // Cart badge
@@ -503,6 +507,19 @@
                     const isOutOfStock = (p.stock === undefined || p.stock <= 0);
                     const imgList      = (p.images && p.images.length > 0) ? p.images : [p.img];
 
+                    // Tải tên danh mục thực tế từ Firestore
+                    let categoryName = "Cà phê";
+                    if (p.categoryId) {
+                        try {
+                            const catSnap = await getDoc(doc(db, "categories", p.categoryId));
+                            if (catSnap.exists()) {
+                                categoryName = catSnap.data().name;
+                            }
+                        } catch (err) {
+                            console.error("Lỗi tải danh mục:", err);
+                        }
+                    }
+
                     // Update breadcrumb
                     document.getElementById('breadcrumb').innerHTML = `
                         <a href="../home.html">Trang chủ</a>
@@ -525,22 +542,32 @@
                         `<img src="${url}" class="thumb ${i===0?'active':''}" alt="thumb" onclick="slideTo(${i}, this)">`
                     ).join('');
 
-                    const specRows = [
-                        ['Hệ điều hành', s.os],
-                        ['Chip (CPU)',   s.cpu],
-                        ['RAM',          s.ram],
-                        ['Bộ nhớ trong', s.rom],
-                        ['Màn hình',     s.screen],
-                        ['Camera sau',   s.backCam],
-                        ['Camera trước', s.frontCam],
-                        ['Thẻ nhớ',      s.microSD],
-                        ['GPU',          s.gpu],
-                        ['Pin',          s.battery],
-                    ].map(([label, val]) => `
-                        <tr>
-                            <td class="spec-label">${label}</td>
-                            <td class="spec-value">${val || '<span style="color:#ccc">---</span>'}</td>
-                        </tr>`).join('');
+                    let specRows = '';
+                    const normCat = categoryName.trim().toLowerCase();
+                    if (normCat === "phụ kiện" || normCat === "máy pha cà phê") {
+                        specRows = [
+                            ['Chất liệu',            s.material],
+                            ['Xuất xứ / Nguồn gốc', s.origin],
+                            ['Công suất pha',        s.power],
+                        ].map(([label, val]) => `
+                            <tr>
+                                <td class="spec-label">${label}</td>
+                                <td class="spec-value">${val || '<span style="color:#ccc">---</span>'}</td>
+                            </tr>`).join('');
+                    } else {
+                        specRows = [
+                            ['Xuất xứ / Nguồn gốc', s.origin],
+                            ['Mức độ rang',          s.roastLevel],
+                            ['Phân loại',            s.coffeeType],
+                            ['Tỷ lệ phối trộn',      s.blendRatio],
+                            ['Hương vị nổi bật',     s.flavor],
+                            ['Khối lượng đóng gói',  s.weight],
+                        ].map(([label, val]) => `
+                            <tr>
+                                <td class="spec-label">${label}</td>
+                                <td class="spec-value">${val || '<span style="color:#ccc">---</span>'}</td>
+                            </tr>`).join('');
+                    }
 
                     container.innerHTML = `
                         <div class="product-card">
@@ -566,7 +593,7 @@
                                 <!-- Info panel -->
                                 <div class="col-md-7 info-panel">
                                     <div class="category-tag">
-                                        <i class="bi bi-tag"></i>${p.category || 'Điện thoại'}
+                                        <i class="bi bi-tag"></i>${categoryName}
                                     </div>
 
                                     <h1 class="product-name">${p.name}</h1>
@@ -587,10 +614,20 @@
 
                                     <!-- Thông số -->
                                     <div class="section-block">
-                                        <div class="section-title"><i class="bi bi-cpu"></i>Thông số kỹ thuật</div>
+                                        <div class="section-title"><i class="bi bi-cpu"></i>Đặc tính sản phẩm</div>
                                         <table class="specs-table">
                                             ${specRows}
                                         </table>
+                                    </div>
+
+                                    <!-- Món dùng kèm gợi ý -->
+                                    <div id="addons-section" class="section-block d-none">
+                                        <div class="section-title"><i class="bi bi-plus-circle"></i>Món dùng kèm gợi ý (Mua thêm)</div>
+                                        <div class="border rounded p-3 bg-light">
+                                            <div id="addons-container" class="row row-cols-1 row-cols-md-2 g-2">
+                                                <!-- Add-ons will be dynamically rendered here -->
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <!-- Actions -->
@@ -608,6 +645,50 @@
                                 </div>
                             </div>
                         </div>`;
+
+                    // Nạp sản phẩm mua kèm nếu có
+                    const addonsSection = document.getElementById('addons-section');
+                    const addonsContainer = document.getElementById('addons-container');
+                    
+                    if (p.addons && p.addons.length > 0 && addonsContainer && addonsSection) {
+                        try {
+                            const q = query(collection(db, "products"), where(documentId(), "in", p.addons));
+                            const addonsSnap = await getDocs(q);
+                            let addonsHtml = '';
+                            
+                            addonsSnap.forEach(addonDoc => {
+                                const addon = addonDoc.data();
+                                const isAddonOutOfStock = (addon.stock === undefined || addon.stock <= 0);
+                                if (!isAddonOutOfStock) { // Chỉ gợi ý sản phẩm còn hàng
+                                    addonsHtml += `
+                                        <div class="col">
+                                            <div class="form-check p-2 border rounded bg-white shadow-sm d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center">
+                                                    <input class="form-check-input ms-1 me-2 addon-item-checkbox" type="checkbox" value="${addonDoc.id}" id="addon-item-${addonDoc.id}" data-name="${addon.name}" data-price="${addon.price}" data-img="${addon.img}">
+                                                    <label class="form-check-label small" for="addon-item-${addonDoc.id}">
+                                                        <strong style="color: #000 !important;">${addon.name}</strong><br>
+                                                        <span class="text-danger fw-bold">+${Number(addon.price).toLocaleString()}đ</span>
+                                                    </label>
+                                                </div>
+                                                <img src="${addon.img}" width="40" height="40" class="rounded border object-fit-contain me-1 bg-white" style="max-height:40px">
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+                            });
+                            
+                            if (addonsHtml) {
+                                addonsContainer.innerHTML = addonsHtml;
+                                addonsSection.classList.remove('d-none');
+                            } else {
+                                addonsSection.classList.add('d-none');
+                            }
+                        } catch (err) {
+                            console.error("Lỗi tải sản phẩm mua kèm:", err);
+                        }
+                    } else if (addonsSection) {
+                        addonsSection.classList.add('d-none');
+                    }
 
                     document.getElementById('btn-add-to-cart').onclick = addToCart;
                     document.getElementById('btn-buy-now').onclick      = buyNowMoMo;
@@ -643,24 +724,66 @@
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>Đang thêm...';
 
+            // Thu thập các món mua kèm được tích chọn
+            const checkedAddonElements = Array.from(document.querySelectorAll('.addon-item-checkbox:checked'));
+            const checkedAddons = checkedAddonElements.map(el => ({
+                id: el.value,
+                name: el.getAttribute('data-name'),
+                price: Number(el.getAttribute('data-price')),
+                img: el.getAttribute('data-img')
+            }));
+
             try {
                 await runTransaction(db, async (transaction) => {
+                    // 1. Đọc tồn kho sản phẩm chính
                     const productRef = doc(db, "products", productId);
-                    const cartRef    = doc(db, "carts", userUID);
                     const pSnap      = await transaction.get(productRef);
                     const currentStock = pSnap.data().stock || 0;
-                    if (currentStock <= 0) throw "Sản phẩm đã hết hàng!";
+                    if (currentStock <= 0) throw "Sản phẩm chính đã hết hàng!";
 
+                    // 2. Đọc tồn kho các sản phẩm mua kèm
+                    const addonSnaps = [];
+                    for (const addon of checkedAddons) {
+                        const ref = doc(db, "products", addon.id);
+                        const snap = await transaction.get(ref);
+                        addonSnaps.push({ id: addon.id, ref, snap, name: addon.name });
+                    }
+
+                    // Kiểm tra tồn kho của các sản phẩm mua kèm
+                    for (const ad of addonSnaps) {
+                        const stock = ad.snap.data().stock || 0;
+                        if (stock <= 0) throw `Sản phẩm mua kèm "${ad.name}" đã hết hàng!`;
+                    }
+
+                    // 3. Đọc thông tin giỏ hàng
+                    const cartRef    = doc(db, "carts", userUID);
                     const cSnap = await transaction.get(cartRef);
                     let items   = cSnap.exists() ? cSnap.data().items : [];
-                    const exist = items.find(i => i.id === productId);
 
+                    // 4. Thực hiện trừ kho sản phẩm chính và cập nhật giỏ hàng cho sản phẩm chính
                     transaction.update(productRef, { stock: currentStock - 1 });
-                    if (exist) exist.quantity += 1;
+                    const existMain = items.find(i => i.id === productId);
+                    if (existMain) existMain.quantity += 1;
                     else items.push({ id: productId, name: productData.name, price: productData.price, img: productData.img, quantity: 1 });
+
+                    // 5. Thực hiện trừ kho các sản phẩm mua kèm và cập nhật giỏ hàng
+                    for (const ad of addonSnaps) {
+                        const stock = ad.snap.data().stock || 0;
+                        transaction.update(ad.ref, { stock: stock - 1 });
+                        
+                        const existAddon = items.find(i => i.id === ad.id);
+                        if (existAddon) existAddon.quantity += 1;
+                        else {
+                            const addonMeta = checkedAddons.find(a => a.id === ad.id);
+                            items.push({ id: ad.id, name: addonMeta.name, price: addonMeta.price, img: addonMeta.img, quantity: 1 });
+                        }
+                    }
+
+                    // 6. Ghi đè giỏ hàng mới
                     transaction.set(cartRef, { items }, { merge: true });
                 });
-                alert("Đã thêm vào giỏ hàng!");
+                
+                alert("Đã thêm sản phẩm chính và các món mua kèm vào giỏ hàng!");
                 fetchDetail();
             } catch (e) {
                 alert(e);
@@ -675,15 +798,33 @@
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>Đang kết nối MoMo...';
 
+            const checkedAddonElements = Array.from(document.querySelectorAll('.addon-item-checkbox:checked'));
+            const checkedAddons = checkedAddonElements.map(el => ({
+                id: el.value,
+                name: el.getAttribute('data-name'),
+                price: Number(el.getAttribute('data-price')),
+                img: el.getAttribute('data-img'),
+                quantity: 1
+            }));
+
+            // Tính tổng tiền gồm sản phẩm chính và các món mua kèm
+            let totalAmount = productData.price;
+            const itemsToBuy = [{ ...productData, id: productId, quantity: 1 }];
+            
+            for (const addon of checkedAddons) {
+                totalAmount += addon.price;
+                itemsToBuy.push(addon);
+            }
+
             try {
                 const userDoc  = await getDoc(doc(db, "users", userUID));
                 const result   = await createMoMoPayment({
-                    amount:    productData.price,
-                    orderInfo: `Mua nhanh - ${productData.name}`
+                    amount:    totalAmount,
+                    orderInfo: `Mua nhanh - ${productData.name}` + (checkedAddons.length > 0 ? ` + ${checkedAddons.length} món đi kèm` : '')
                 });
                 const data = result.data;
                 if (data.success && data.payUrl) {
-                    localStorage.setItem('pending_items', JSON.stringify([{ ...productData, id: productId, quantity: 1 }]));
+                    localStorage.setItem('pending_items', JSON.stringify(itemsToBuy));
                     window.location.href = data.payUrl;
                 } else {
                     throw (data.message || "Lỗi tạo link thanh toán!");

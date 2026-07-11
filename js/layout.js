@@ -15,6 +15,7 @@ export async function loadLayout() {
 
         injectLayoutStyles();
         initHeaderSearch();
+        initAIChatbox();
     } catch (error) {
         console.error("Lỗi load layout:", error);
     }
@@ -202,6 +203,110 @@ function injectLayoutStyles() {
                 font-size: 0.9rem;
             }
         }
+
+        /* ── Floating AI Chatbox Styles ── */
+        #ai-chatbox-wrapper {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 999999;
+            font-family: var(--font-main, 'Montserrat', sans-serif);
+        }
+
+        #ai-chatbox-toggle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8B5A2B, #3E2723);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.15);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #ai-chatbox-toggle:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 8px 24px rgba(62, 39, 35, 0.4);
+        }
+
+        #ai-chatbox-window {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 330px;
+            height: 420px;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(0,0,0,0.08);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.18) !important;
+            transition: all 0.3s ease;
+        }
+
+        .text-gold {
+            color: #d4af37 !important;
+        }
+
+        .online-indicator {
+            width: 6px;
+            height: 6px;
+            background-color: #2ec4b6;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #2ec4b6;
+        }
+
+        .message-bubble {
+            max-width: 85%;
+            padding: 8px 12px !important;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            word-wrap: break-word;
+        }
+
+        .message-bubble.assistant {
+            background-color: #ffffff;
+            color: #333333;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .message-bubble.user {
+            background-color: #e5d3c3;
+            color: #3e2723;
+            align-self: flex-end;
+            margin-left: auto;
+            border-bottom-right-radius: 2px;
+        }
+
+        /* Customize Scrollbar for AI Chatbox */
+        #ai-chatbox-messages::-webkit-scrollbar {
+            width: 5px;
+        }
+        #ai-chatbox-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        #ai-chatbox-messages::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        #ai-chatbox-messages::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        .addon-link {
+            color: #8B5A2B;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+        
+        .addon-link:hover {
+            color: #3E2723;
+        }
     `;
     document.head.appendChild(style);
 }
@@ -328,4 +433,233 @@ function initHeaderSearch() {
             renderSuggestions(input.value);
         }
     });
+}
+
+function initAIChatbox() {
+    if (document.getElementById("ai-chatbox-wrapper")) return;
+
+    // Tạo container chatbox
+    const chatboxWrapper = document.createElement("div");
+    chatboxWrapper.id = "ai-chatbox-wrapper";
+    chatboxWrapper.innerHTML = `
+        <button id="ai-chatbox-toggle" class="btn shadow-lg d-flex align-items-center justify-content-center" style="border:none">
+            <i class="bi bi-chat-dots-fill fs-4"></i>
+            <span class="badge bg-danger ms-1 d-none" id="ai-chat-badge">1</span>
+        </button>
+
+        <div id="ai-chatbox-window" class="card shadow-lg d-none border-0">
+            <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between py-2 border-0" style="border-radius: 12px 12px 0 0;">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-robot fs-4 text-warning me-2 animate-bounce"></i>
+                    <div>
+                        <h6 class="mb-0 fw-bold small text-gold" style="font-size:12px">FoneStore AI Assistant</h6>
+                        <span class="text-success small-subtext d-flex align-items-center" style="font-size: 10px;">
+                            <span class="online-indicator me-1"></span>Trực tuyến
+                        </span>
+                    </div>
+                </div>
+                <button class="btn btn-close btn-close-white btn-sm border-0" id="ai-chatbox-close" style="font-size:9px"></button>
+            </div>
+
+            <div class="card-body bg-light" id="ai-chatbox-messages" style="height: 290px; overflow-y: auto; font-size: 13px; line-height: 1.4; display: flex; flex-direction: column; padding: 12px;">
+                <div class="message-bubble assistant shadow-sm">
+                    Chào bạn! Mình là Trợ lý AI của FoneStore ☕. Mình có thể giúp gì cho bạn hôm nay? Bạn cần tư vấn hạt cà phê, máy pha hay hướng dẫn đặt hàng?
+                </div>
+            </div>
+
+            <div class="card-footer bg-white p-2 border-top border-light">
+                <div class="input-group input-group-sm">
+                    <input type="text" id="ai-chatbox-input" class="form-control border-light" placeholder="Nhập câu hỏi tại đây..." style="font-size: 13px; box-shadow: none;">
+                    <button class="btn btn-dark px-3" id="ai-chatbox-send" style="border-radius: 0 4px 4px 0;"><i class="bi bi-send-fill"></i></button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(chatboxWrapper);
+
+    const toggleBtn = document.getElementById("ai-chatbox-toggle");
+    const chatWindow = document.getElementById("ai-chatbox-window");
+    const closeBtn = document.getElementById("ai-chatbox-close");
+    const sendBtn = document.getElementById("ai-chatbox-send");
+    const chatInput = document.getElementById("ai-chatbox-input");
+    const messagesArea = document.getElementById("ai-chatbox-messages");
+    const badge = document.getElementById("ai-chat-badge");
+
+    let chatMessages = [];
+    // Groq API - miễn phí, key vĩnh viễn tại console.groq.com
+    const GROQ_API_KEY = "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";
+    const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+    const GROQ_MODEL   = "llama-3.3-70b-versatile";
+
+    function getProductsContext() {
+        try {
+            const cached = localStorage.getItem("fonestore_products_all_cache");
+            if (!cached) return "Hiện tại không có danh sách sản phẩm nào khả dụng.";
+            
+            const parsed = JSON.parse(cached);
+            const productsList = parsed.data || [];
+            
+            if (productsList.length === 0) return "Cửa hàng đang cập nhật sản phẩm, hiện tại chưa có hàng.";
+            
+            let text = "Dưới đây là danh sách sản phẩm hiện có trong store của chúng tôi. Hãy chỉ gợi ý và giới thiệu các sản phẩm này:\n";
+            productsList.forEach(p => {
+                text += `- Tên: ${p.name}, Giá: ${Number(p.price).toLocaleString('vi-VN')}đ, Tồn kho: ${p.stock || 0}, Mô tả: ${p.desc || p.description || ''}, Xem chi tiết link: /pages/product-detail.html?id=${p.docId}\n`;
+            });
+            return text;
+        } catch (e) {
+            console.error("Lỗi trích xuất context sản phẩm:", e);
+            return "Không thể nạp danh sách sản phẩm.";
+        }
+    }
+
+    // System prompt cho Groq
+    function buildSystemPrompt() {
+        return `Bạn là Trợ lý AI tư vấn và hướng dẫn mua hàng thân thiện của cửa hàng Coffee & Accessories FoneStore.
+Nhiệm vụ của bạn là:
+1. Tư vấn các sản phẩm cà phê, máy pha, phin pha, sữa đặc, phụ kiện,... có trong danh sách sản phẩm của cửa hàng.
+2. Hướng dẫn khách hàng mua hàng (Thêm vào giỏ, thanh toán qua MoMo).
+3. LUÔN LUÔN đính kèm link dạng [Tên sản phẩm](url) khi giới thiệu sản phẩm.
+4. Chỉ giới thiệu sản phẩm có trong danh sách sau:
+${getProductsContext()}
+5. Trả lời ngắn gọn, nhiệt tình bằng Tiếng Việt.`;
+    }
+
+    function formatMarkdown(text) {
+        if (!text) return "";
+        let html = text;
+        html = html.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="addon-link">$1</a>');
+        html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/^\*\s+(.+)$/gm, '<li>$1</li>');
+        html = html.replace(/\n/g, '<br>');
+        return html;
+    }
+
+    function renderMessage(text, role) {
+        const bubble = document.createElement("div");
+        bubble.className = `message-bubble ${role === "user" ? "user" : "assistant"} shadow-sm`;
+        bubble.innerHTML = role === "user" ? text : formatMarkdown(text);
+        messagesArea.appendChild(bubble);
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
+    function loadChatHistory() {
+        try {
+            const stored = sessionStorage.getItem("fonestore_ai_chat_messages");
+            if (stored) {
+                chatMessages = JSON.parse(stored);
+                chatMessages.forEach(msg => {
+                    renderMessage(msg.text, msg.role);
+                });
+            }
+        } catch (e) {
+            console.error("Lỗi nạp lịch sử chat:", e);
+        }
+    }
+
+    function saveChatHistory() {
+        try {
+            sessionStorage.setItem("fonestore_ai_chat_messages", JSON.stringify(chatMessages));
+        } catch (e) {
+            console.error("Lỗi lưu lịch sử chat:", e);
+        }
+    }
+
+    function showLoadingBubble() {
+        const bubble = document.createElement("div");
+        bubble.className = "message-bubble assistant loading shadow-sm";
+        bubble.innerHTML = '<span class="spinner-grow spinner-grow-sm me-1" role="status"></span> Đang trả lời...';
+        messagesArea.appendChild(bubble);
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+        return bubble;
+    }
+
+    function removeLoadingBubble(bubble) {
+        if (bubble && bubble.parentNode) {
+            bubble.parentNode.removeChild(bubble);
+        }
+    }
+
+    async function sendMessage() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+        
+        chatInput.value = "";
+        chatMessages.push({ role: "user", text: text });
+        renderMessage(text, "user");
+        saveChatHistory();
+
+        const loadingBubble = showLoadingBubble();
+
+        try {
+            // Xây dựng messages theo format OpenAI (Groq tương thích hoàn toàn)
+            const messages = [
+                { role: "system", content: buildSystemPrompt() },
+                ...chatMessages.map(msg => ({
+                    role: msg.role === "model" ? "assistant" : "user",
+                    content: msg.text
+                }))
+            ];
+
+            const response = await fetch(GROQ_API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${GROQ_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: GROQ_MODEL,
+                    messages: messages,
+                    max_tokens: 1024,
+                    temperature: 0.7
+                })
+            });
+
+            removeLoadingBubble(loadingBubble);
+
+            if (!response.ok) {
+                const errBody = await response.json().catch(() => ({}));
+                const errDetail = errBody?.error?.message || response.statusText;
+                console.error("Groq API Error:", errDetail);
+                throw new Error(errDetail);
+            }
+
+            const resData = await response.json();
+            const aiText = resData.choices?.[0]?.message?.content || "Xin lỗi, mình gặp lỗi khi xử lý.";
+
+            chatMessages.push({ role: "model", text: aiText });
+            renderMessage(aiText, "model");
+            saveChatHistory();
+        } catch (err) {
+            console.error("Lỗi chatbox:", err);
+            removeLoadingBubble(loadingBubble);
+            const rawMsg = err?.message || String(err) || "Unknown error";
+            renderMessage(`⚠️ Lỗi: ${rawMsg}`, "model");
+        }
+    }
+
+    toggleBtn.addEventListener("click", () => {
+        chatWindow.classList.toggle("d-none");
+        badge.classList.add("d-none");
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    });
+
+    closeBtn.addEventListener("click", () => {
+        chatWindow.classList.add("d-none");
+    });
+
+    sendBtn.addEventListener("click", sendMessage);
+    chatInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sendMessage();
+    });
+
+    // Dọn dẹp lịch sử khi nhấn Thoát (logout-btn)
+    document.addEventListener("click", (e) => {
+        if (e.target && (e.target.id === "logout-btn" || e.target.closest("#logout-btn"))) {
+            sessionStorage.removeItem("fonestore_ai_chat_messages");
+        }
+    });
+
+    loadChatHistory();
 }

@@ -85,6 +85,8 @@ export async function handleRegister(email, password, additionalInfo) {
 export async function handleLogout() {
     try {
         await signOut(auth);
+        // Xóa lịch sử AI Chatbox khi đăng xuất
+        sessionStorage.removeItem("fonestore_ai_chat_messages");
         alert("Đã đăng xuất!");
         window.location.reload();
     } catch (error) {
