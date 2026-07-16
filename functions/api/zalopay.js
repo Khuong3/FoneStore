@@ -9,17 +9,19 @@ export async function onRequestPost({ request }) {
         const KEY1   = "9phuAOYbc5v14336B5be516H155091a2";
         const REDIRECT_URL = "https://fonestore.pages.dev/pages/checkout-success.html";
 
-        // Định dạng app_trans_id: yyMMdd_uniqueId
+        // Định dạng app_trans_id: yyMMdd_uniqueId (chuẩn múi giờ Việt Nam GMT+7)
         const today = new Date();
-        const yy = String(today.getFullYear()).slice(-2);
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
+        const tzOffset = 7 * 60 * 60 * 1000; 
+        const todayVN = new Date(today.getTime() + tzOffset);
+        const yy = String(todayVN.getUTCFullYear()).slice(-2);
+        const mm = String(todayVN.getUTCMonth() + 1).padStart(2, '0');
+        const dd = String(todayVN.getUTCDate()).padStart(2, '0');
         const dateStr = `${yy}${mm}${dd}`;
         const appTransId = `${dateStr}_${Date.now()}`;
 
         const appUser = userId || "FStore_Customer";
         const appTime = Date.now();
-        const amountNum = Number(amount);
+        const amountNum = Math.round(Number(amount)); // Đảm bảo số tiền là số nguyên
         
         // ZaloPay yêu cầu embed_data và item dạng JSON string
         const embedData = JSON.stringify({
@@ -68,6 +70,9 @@ export async function onRequestPost({ request }) {
 
         const zalopayResult = await response.json();
 
+        // Ghi log kết quả để debug
+        console.log("ZaloPay Sandbox API response:", JSON.stringify(zalopayResult));
+
         if (zalopayResult.return_code === 1 && zalopayResult.order_url) {
             // Trả link thanh toán về cho Frontend
             return Response.json({ 
@@ -78,7 +83,7 @@ export async function onRequestPost({ request }) {
         } else {
             return Response.json({ 
                 success: false, 
-                message: zalopayResult.return_message || "Lỗi từ ZaloPay" 
+                message: zalopayResult.return_message || "Giao dịch thất bại" 
             });
         }
 
