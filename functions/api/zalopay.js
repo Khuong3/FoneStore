@@ -27,12 +27,19 @@ export async function onRequestPost({ request }) {
         const amountNum = Math.round(Number(amount)); // Đảm bảo số tiền là số nguyên
         
         // ZaloPay yêu cầu embed_data và item dạng JSON string
-        const embedData = "{}";
-        const item = JSON.stringify([]);
+        // ZaloPay API v2 yêu cầu embed_data và item trong body là Object/Array thực tế
+        // Nhưng khi tính toán MAC, ta phải dùng định dạng stringify của chúng.
+        const embedDataObject = {
+            redirecturl: REDIRECT_URL
+        };
+        const itemArray = [];
+
+        const embedDataStr = JSON.stringify(embedDataObject);
+        const itemStr = JSON.stringify(itemArray);
         const description = orderInfo || `Thanh toán đơn hàng FStore Coffee #${appTransId}`;
 
-        // 1. Tạo chuỗi dữ liệu để tính mã MAC
-        const rawData = `${APP_ID}|${appTransId}|${appUser}|${amountNum}|${appTime}|${embedData}|${item}`;
+        // 1. Tạo chuỗi dữ liệu để tính mã MAC (Dùng chuỗi stringify)
+        const rawData = `${APP_ID}|${appTransId}|${appUser}|${amountNum}|${appTime}|${embedDataStr}|${itemStr}`;
 
         // 2. Mã hóa chữ ký HMAC SHA256 (Dùng Web Crypto API)
         const encoder = new TextEncoder();
@@ -55,8 +62,8 @@ export async function onRequestPost({ request }) {
             app_trans_id: appTransId,
             app_time: appTime,
             amount: amountNum,
-            item: item,
-            embed_data: embedData,
+            item: itemArray,              // Gửi Array thực tế
+            embed_data: embedDataObject,  // Gửi Object thực tế
             description: description,
             bank_code: "",
             mac: mac
