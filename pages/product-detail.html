@@ -309,7 +309,7 @@
             transform: none;
         }
 
-        .btn-momo {
+        .btn-zalopay {
             font-family: var(--font-main);
             font-size: 12px;
             font-weight: 800;
@@ -317,24 +317,24 @@
             text-transform: uppercase;
             padding: 15px 24px;
             border-radius: 14px;
-            background: #ae2070;
+            background: #0068ff;
             color: #fff;
             border: none;
             cursor: pointer;
             transition: all 0.28s ease;
-            box-shadow: 0 6px 20px rgba(174,32,112,0.2);
+            box-shadow: 0 6px 20px rgba(0,104,255,0.2);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
         }
-        .btn-momo:hover {
-            background: #c42680;
+        .btn-zalopay:hover {
+            background: #0056d6;
             transform: translateY(-2px);
-            box-shadow: 0 10px 28px rgba(174,32,112,0.35);
+            box-shadow: 0 10px 28px rgba(0,104,255,0.35);
         }
-        .btn-momo:active { transform: scale(0.99); }
-        .btn-momo:disabled {
+        .btn-zalopay:active { transform: scale(0.99); }
+        .btn-zalopay:disabled {
             background: #e5e5e5;
             color: #999;
             box-shadow: none;
@@ -635,8 +635,8 @@
                                         <button id="btn-add-to-cart" class="btn-cart" ${isOutOfStock?'disabled':''}>
                                             <i class="bi bi-cart-plus"></i>Thêm vào giỏ hàng
                                         </button>
-                                        <button id="btn-buy-now" class="btn-momo" ${isOutOfStock?'disabled':''}>
-                                            <i class="bi bi-wallet2"></i>Mua ngay qua MoMo
+                                        <button id="btn-buy-now" class="btn-zalopay" ${isOutOfStock?'disabled':''}>
+                                            <i class="bi bi-wallet2"></i>Mua ngay qua ZaloPay
                                         </button>
                                         <button id="btn-wishlist" class="btn-wish">
                                             <i class="bi bi-heart"></i>Lưu vào yêu thích
@@ -691,7 +691,7 @@
                     }
 
                     document.getElementById('btn-add-to-cart').onclick = addToCart;
-                    document.getElementById('btn-buy-now').onclick      = buyNowMoMo;
+                    document.getElementById('btn-buy-now').onclick      = buyNowZaloPay;
                     document.getElementById('btn-wishlist').onclick     = addToWishlist;
 
                     // Sync thumbnails with carousel
@@ -719,7 +719,11 @@
         };
 
         async function addToCart() {
-            if (!userUID) return alert("Vui lòng đăng nhập!");
+            if (!userUID) {
+                alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
+                window.location.href = "login.html";
+                return;
+            }
             const btn = document.getElementById('btn-add-to-cart');
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>Đang thêm...';
@@ -792,11 +796,15 @@
             }
         }
 
-        async function buyNowMoMo() {
-            if (!userUID) return alert("Vui lòng đăng nhập!");
+        async function buyNowZaloPay() {
+            if (!userUID) {
+                alert("Vui lòng đăng nhập để thanh toán đơn hàng!");
+                window.location.href = "login.html";
+                return;
+            }
             const btn = document.getElementById('btn-buy-now');
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>Đang kết nối MoMo...';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>Đang kết nối ZaloPay...';
 
             const checkedAddonElements = Array.from(document.querySelectorAll('.addon-item-checkbox:checked'));
             const checkedAddons = checkedAddonElements.map(el => ({
@@ -817,23 +825,29 @@
             }
 
             try {
-                const userDoc  = await getDoc(doc(db, "users", userUID));
-                const result   = await createMoMoPayment({
-                    amount:    totalAmount,
-                    orderInfo: `Mua nhanh - ${productData.name}` + (checkedAddons.length > 0 ? ` + ${checkedAddons.length} món đi kèm` : '')
+                const response = await fetch('/api/zalopay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: totalAmount,
+                        orderInfo: `Mua nhanh - ${productData.name}` + (checkedAddons.length > 0 ? ` + ${checkedAddons.length} món đi kèm` : ''),
+                        cartItems: itemsToBuy,
+                        userId: userUID
+                    })
                 });
-                const data = result.data;
+
+                const data = await response.json();
                 if (data.success && data.payUrl) {
                     localStorage.setItem('pending_items', JSON.stringify(itemsToBuy));
                     window.location.href = data.payUrl;
                 } else {
-                    throw (data.message || "Lỗi tạo link thanh toán!");
+                    throw new Error(data.message || "Lỗi tạo link thanh toán!");
                 }
             } catch (e) {
                 console.error(e);
                 alert("Lỗi: " + (e.message || e));
                 btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-wallet2"></i>Mua ngay qua MoMo';
+                btn.innerHTML = '<i class="bi bi-wallet2"></i>Mua ngay qua ZaloPay';
             }
         }
 

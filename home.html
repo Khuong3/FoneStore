@@ -790,7 +790,11 @@
 
         /* ── CART ── */
         window.addToCart = async (id, name, price, img) => {
-            if (!userUID) return alert("Vui lòng đăng nhập!");
+            if (!userUID) {
+                alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
+                window.location.href = "pages/login.html";
+                return;
+            }
             const cartRef = doc(db,"carts",userUID);
             const snap = await getDoc(cartRef);
             let items = snap.exists() ? snap.data().items : [];

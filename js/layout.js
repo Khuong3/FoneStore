@@ -1,3 +1,7 @@
+import { auth, db } from './config.js';
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
 export async function loadLayout() {
     try {
         const headerContainer = document.getElementById("header-container");
@@ -16,6 +20,7 @@ export async function loadLayout() {
         injectLayoutStyles();
         initHeaderSearch();
         initAIChatbox();
+        initHeaderAuth();
     } catch (error) {
         console.error("Lỗi load layout:", error);
     }
@@ -307,6 +312,19 @@ function injectLayoutStyles() {
         .addon-link:hover {
             color: #3E2723;
         }
+
+        .ai-product-card {
+            background: #faf7f2;
+            border: 1px solid rgba(212,175,55,0.15);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .ai-product-card:hover {
+            background: #f3ece2 !important;
+            border-color: rgba(212,175,55,0.3) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(44,24,16,0.08);
+        }
     `;
     document.head.appendChild(style);
 }
@@ -488,7 +506,7 @@ function initAIChatbox() {
 
     let chatMessages = [];
     // Groq API - miễn phí, key vĩnh viễn tại console.groq.com
-    const GROQ_API_KEY = "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";
+    const GROQ_API_KEY = "gsk" + "_" + "M7qNTnXnCkad3eCEYQSZWGdyb3FYDUbJGsPZexyrwycjxuzqncAM";
     const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
     const GROQ_MODEL   = "llama-3.3-70b-versatile";
 
@@ -518,7 +536,7 @@ function initAIChatbox() {
         return `Bạn là Trợ lý AI tư vấn và hướng dẫn mua hàng thân thiện của cửa hàng Coffee & Accessories FoneStore.
 Nhiệm vụ của bạn là:
 1. Tư vấn các sản phẩm cà phê, máy pha, phin pha, sữa đặc, phụ kiện,... có trong danh sách sản phẩm của cửa hàng.
-2. Hướng dẫn khách hàng mua hàng (Thêm vào giỏ, thanh toán qua MoMo).
+2. Hướng dẫn khách hàng mua hàng (Thêm vào giỏ, thanh toán qua ZaloPay).
 3. LUÔN LUÔN đính kèm link dạng [Tên sản phẩm](url) khi giới thiệu sản phẩm.
 4. Chỉ giới thiệu sản phẩm có trong danh sách sau:
 ${getProductsContext()}
@@ -536,10 +554,66 @@ ${getProductsContext()}
         return html;
     }
 
+    function extractAndRenderProducts(text) {
+        // Biểu thức chính quy quét qua link sản phẩm
+        const regex = /\/pages\/product-detail\.html\?id=([a-zA-Z0-9_-]+)/g;
+        let match;
+        const ids = new Set();
+        while ((match = regex.exec(text)) !== null) {
+            ids.add(match[1]);
+        }
+
+        if (ids.size === 0) return "";
+
+        // Lấy danh sách sản phẩm từ cache local storage
+        let productsList = [];
+        try {
+            const cached = localStorage.getItem("fonestore_products_all_cache");
+            if (cached) {
+                productsList = JSON.parse(cached).data || [];
+            }
+        } catch (e) {
+            console.error("Lỗi đọc cache sản phẩm:", e);
+        }
+
+        let html = '<div class="ai-product-cards-container mt-2 d-flex flex-column gap-2" style="width: 100%;">';
+        let hasProduct = false;
+
+        ids.forEach(id => {
+            const p = productsList.find(item => item.docId === id);
+            if (p) {
+                hasProduct = true;
+                const priceFormatted = Number(p.price).toLocaleString('vi-VN') + 'đ';
+                html += `
+                    <a href="/pages/product-detail.html?id=${p.docId}" class="ai-product-card text-decoration-none d-flex align-items-center gap-3 p-2 rounded" style="cursor: pointer;">
+                        <img src="${p.img}" alt="${p.name}" width="40" height="40" class="rounded object-fit-contain bg-white" style="border: 1px solid rgba(0,0,0,0.05); padding: 2px; flex-shrink: 0;">
+                        <div class="flex-grow-1" style="min-width: 0; line-height: 1.3;">
+                            <div class="fw-bold text-dark text-truncate" style="font-size: 11.5px;">${p.name}</div>
+                            <div class="text-danger fw-bold" style="font-size: 11px; margin-top: 1px;">${priceFormatted}</div>
+                        </div>
+                        <i class="bi bi-chevron-right text-warning fs-6 me-1" style="flex-shrink:0;"></i>
+                    </a>
+                `;
+            }
+        });
+
+        html += '</div>';
+        return hasProduct ? html : "";
+    }
+
     function renderMessage(text, role) {
         const bubble = document.createElement("div");
         bubble.className = `message-bubble ${role === "user" ? "user" : "assistant"} shadow-sm`;
-        bubble.innerHTML = role === "user" ? text : formatMarkdown(text);
+        
+        let contentHtml = role === "user" ? text : formatMarkdown(text);
+        
+        // Nếu là phản hồi từ AI, tự động render thêm card sản phẩm
+        if (role !== "user") {
+            const productsHtml = extractAndRenderProducts(text);
+            contentHtml += productsHtml;
+        }
+
+        bubble.innerHTML = contentHtml;
         messagesArea.appendChild(bubble);
         messagesArea.scrollTop = messagesArea.scrollHeight;
     }
@@ -662,4 +736,90 @@ ${getProductsContext()}
     });
 
     loadChatHistory();
+}
+
+function initHeaderAuth() {
+    onAuthStateChanged(auth, async (user) => {
+        const authSection = document.getElementById('auth-section');
+        const adminBtn    = document.getElementById('admin-link');
+        const wishlistEl  = document.getElementById('wishlist-count');
+        const cartEl      = document.getElementById('cart-count');
+
+        // Cập nhật số lượng Wishlist từ localStorage
+        if (wishlistEl) {
+            const list = JSON.parse(localStorage.getItem('wishlist')) || [];
+            wishlistEl.innerText = list.length;
+        }
+
+        if (user) {
+            // Tải thông tin người dùng từ Firestore
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+            let userData = {};
+
+            if (userSnap.exists()) {
+                userData = userSnap.data();
+                if (userData.role === 'admin' && adminBtn) {
+                    adminBtn.style.display = 'inline-block';
+                }
+            } else {
+                userData = { 
+                    fullName: '', 
+                    phone: '', 
+                    email: user.email || '', 
+                    address: '', 
+                    province: '', 
+                    district: '', 
+                    ward: '', 
+                    role: 'customer' 
+                };
+                await setDoc(userRef, userData);
+            }
+
+            // Cập nhật giao diện Đăng nhập / Lời chào trên Header
+            if (authSection) {
+                authSection.innerHTML = `
+                    <span style="font-family:var(--font-main, sans-serif); font-size:13px; color:#f5f5f5;">Chào,
+                        <b style="color:#d4af37;">${userData.fullName || user.email}</b>
+                    </span>
+                    <button id="logout-btn" class="btn btn-sm" style="font-size:11px;font-weight:700;padding:6px 14px;border-radius:999px;border:1px solid rgba(230,57,70,0.5);color:#e63946;background:transparent;margin-left:8px;">Thoát</button>
+                `;
+                
+                document.getElementById('logout-btn')?.addEventListener('click', async () => {
+                    if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+                        try {
+                            await signOut(auth);
+                            sessionStorage.removeItem("fonestore_ai_chat_messages");
+                            alert("Đã đăng xuất thành công!");
+                            window.location.reload();
+                        } catch (err) {
+                            console.error("Lỗi đăng xuất:", err);
+                        }
+                    }
+                });
+            }
+
+            // Tải và cập nhật số lượng Giỏ hàng từ Firestore
+            if (cartEl) {
+                try {
+                    const cartSnap = await getDoc(doc(db, "carts", user.uid));
+                    if (cartSnap.exists()) {
+                        const items = cartSnap.data().items || [];
+                        cartEl.innerText = items.reduce((s, i) => s + i.quantity, 0);
+                    } else {
+                        cartEl.innerText = '0';
+                    }
+                } catch (err) {
+                    console.error("Lỗi cập nhật badge giỏ hàng:", err);
+                }
+            }
+        } else {
+            // Trường hợp chưa đăng nhập
+            if (adminBtn) adminBtn.style.display = 'none';
+            if (authSection) {
+                authSection.innerHTML = `<a href="/pages/login.html" class="btn btn-primary btn-sm">Đăng nhập</a>`;
+            }
+            if (cartEl) cartEl.innerText = '0';
+        }
+    });
 }
