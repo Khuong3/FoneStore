@@ -29,14 +29,34 @@
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
         const urlParams = new URLSearchParams(window.location.search);
-        const resultCode = urlParams.get('resultCode');
-        const orderId = urlParams.get('orderId');
-        const amount = urlParams.get('amount');
+        
+        // Nhận diện các tham số từ MoMo
+        let resultCode = urlParams.get('resultCode');
+        let orderId = urlParams.get('orderId');
+        let amount = urlParams.get('amount');
+        let method = "MoMo";
+        let isSuccess = false;
+
+        // Nhận diện các tham số từ ZaloPay (Nếu có status hoặc apptransid)
+        const statusZP = urlParams.get('status');
+        const appTransIdZP = urlParams.get('apptransid');
+        const amountZP = urlParams.get('amount');
+
+        if (statusZP !== null || appTransIdZP !== null) {
+            method = "ZaloPay";
+            orderId = appTransIdZP;
+            amount = amountZP;
+            // status === "1" biểu thị ZaloPay thanh toán thành công
+            isSuccess = (statusZP === "1");
+        } else {
+            // Đối với MoMo, resultCode === "0" biểu thị thành công
+            isSuccess = (resultCode === "0");
+        }
 
         const statusContent = document.getElementById('status-content');
 
         onAuthStateChanged(auth, async (user) => {
-            if (resultCode === "0") {
+            if (isSuccess) {
                 try {
                     if (user) {
                         // SỬA LỖI: Ở cart.html bạn lưu là 'pending_items', nên ở đây phải đọc đúng tên đó
@@ -55,7 +75,7 @@
                             totalAmount: Number(amount), // Dành cho trang historyorder cũ
                             
                             status: "Hoàn thành",
-                            method: "MoMo",
+                            method: method,
                             createdAt: serverTimestamp()
                         });
 
