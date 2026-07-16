@@ -770,7 +770,8 @@
                 localStorage.setItem('pending_items', JSON.stringify(cartItems));
                 window.location.href = data.payUrl;
             } else {
-                throw new Error(data.message || "Không thể tạo liên kết thanh toán.");
+                const detail = data.debug ? `\nChi tiết: ${JSON.stringify(data.debug)}` : "";
+                throw new Error((data.message || "Không thể tạo liên kết thanh toán.") + detail);
             }
         } catch (e) {
             console.error(e);

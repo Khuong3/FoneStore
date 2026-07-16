@@ -83,7 +83,8 @@ export async function onRequestPost({ request }) {
         } else {
             return Response.json({ 
                 success: false, 
-                message: zalopayResult.return_message || "Giao dịch thất bại" 
+                message: zalopayResult.return_message || "Giao dịch thất bại",
+                debug: zalopayResult
             });
         }
 
