@@ -27,9 +27,7 @@ export async function onRequestPost({ request }) {
         const amountNum = Math.round(Number(amount)); // Đảm bảo số tiền là số nguyên
         
         // ZaloPay yêu cầu embed_data và item dạng JSON string
-        const embedData = JSON.stringify({
-            redirecturl: REDIRECT_URL
-        });
+        const embedData = "{}";
         const item = JSON.stringify([]);
         const description = orderInfo || `Thanh toán đơn hàng FStore Coffee #${appTransId}`;
 
