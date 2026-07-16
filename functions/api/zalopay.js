@@ -9,26 +9,40 @@ export async function onRequestPost({ request }) {
         const KEY1   = "9phuAOYbc5v14336B5be516H155091a2";
         const REDIRECT_URL = "https://fonestore.pages.dev/pages/checkout-success.html";
 
-        // Định dạng app_trans_id: yyMMdd_uniqueId (rút ngắn chiều dài để an toàn)
-        const today = new Date();
-        const tzOffset = 7 * 60 * 60 * 1000; 
-        const todayVN = new Date(today.getTime() + tzOffset);
-        const yy = String(todayVN.getUTCFullYear()).slice(-2);
-        const mm = String(todayVN.getUTCMonth() + 1).padStart(2, '0');
-        const dd = String(todayVN.getUTCDate()).padStart(2, '0');
-        const dateStr = `${yy}${mm}${dd}`;
+        // Đồng bộ thời gian thực tế từ CDN Cloudflare để tránh lệch năm giả lập (2026 vs 2024/2025)
+        let appTime = Date.now();
+        try {
+            const traceRes = await fetch("https://1.1.1.1/cdn-cgi/trace").then(r => r.text());
+            const tsMatch = traceRes.match(/ts=(\d+)/);
+            if (tsMatch) {
+                appTime = Number(tsMatch[1]) * 1000;
+                console.log("Đã đồng bộ thời gian thực tế:", appTime);
+            }
+        } catch (err) {
+            console.error("Lỗi đồng bộ thời gian qua Cloudflare Trace:", err);
+        }
+
+        // Định dạng app_trans_id: yyMMdd_uniqueId (Sử dụng Intl.DateTimeFormat chuẩn múi giờ Việt Nam)
+        const today = new Date(appTime);
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Ho_Chi_Minh',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+        const parts = formatter.formatToParts(today);
+        const year = parts.find(p => p.type === 'year').value;
+        const month = parts.find(p => p.type === 'month').value;
+        const day = parts.find(p => p.type === 'day').value;
+        const dateStr = `${year.slice(-2)}${month}${day}`;
         
-        // Chỉ lấy 6 số cuối của timestamp + 3 số ngẫu nhiên để tránh quá dài
-        const uniqueSuffix = String(Date.now()).slice(-6) + String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+        const uniqueSuffix = String(appTime).slice(-6) + String(Math.floor(Math.random() * 1000)).padStart(3, '0');
         const appTransId = `${dateStr}_${uniqueSuffix}`;
 
         const appUser = userId || "FStore_Customer";
-        const appTime = Date.now();
         const amountNum = Math.round(Number(amount)); // Đảm bảo số tiền là số nguyên
         
-        // ZaloPay yêu cầu embed_data và item dạng JSON string
-        // ZaloPay API v2 yêu cầu embed_data và item trong body là Object/Array thực tế
-        // Nhưng khi tính toán MAC, ta phải dùng định dạng stringify của chúng.
+        // ZaloPay Sandbox v2 yêu cầu embed_data và item trong body phải là String (JSON stringify)
         const embedDataObject = {
             redirecturl: REDIRECT_URL
         };
@@ -62,8 +76,8 @@ export async function onRequestPost({ request }) {
             app_trans_id: appTransId,
             app_time: appTime,
             amount: amountNum,
-            item: itemArray,              // Gửi Array thực tế
-            embed_data: embedDataObject,  // Gửi Object thực tế
+            item: itemStr,              // Gửi String
+            embed_data: embedDataStr,  // Gửi String
             description: description,
             bank_code: "",
             mac: mac
