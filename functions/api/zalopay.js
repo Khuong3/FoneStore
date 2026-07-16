@@ -9,7 +9,7 @@ export async function onRequestPost({ request }) {
         const KEY1   = "9phuAOYbc5v14336B5be516H155091a2";
         const REDIRECT_URL = "https://fonestore.pages.dev/pages/checkout-success.html";
 
-        // Định dạng app_trans_id: yyMMdd_uniqueId (chuẩn múi giờ Việt Nam GMT+7)
+        // Định dạng app_trans_id: yyMMdd_uniqueId (rút ngắn chiều dài để an toàn)
         const today = new Date();
         const tzOffset = 7 * 60 * 60 * 1000; 
         const todayVN = new Date(today.getTime() + tzOffset);
@@ -17,7 +17,10 @@ export async function onRequestPost({ request }) {
         const mm = String(todayVN.getUTCMonth() + 1).padStart(2, '0');
         const dd = String(todayVN.getUTCDate()).padStart(2, '0');
         const dateStr = `${yy}${mm}${dd}`;
-        const appTransId = `${dateStr}_${Date.now()}`;
+        
+        // Chỉ lấy 6 số cuối của timestamp + 3 số ngẫu nhiên để tránh quá dài
+        const uniqueSuffix = String(Date.now()).slice(-6) + String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+        const appTransId = `${dateStr}_${uniqueSuffix}`;
 
         const appUser = userId || "FStore_Customer";
         const appTime = Date.now();
@@ -84,7 +87,11 @@ export async function onRequestPost({ request }) {
             return Response.json({ 
                 success: false, 
                 message: zalopayResult.return_message || "Giao dịch thất bại",
-                debug: zalopayResult
+                debug: {
+                    zalopayResult: zalopayResult,
+                    rawData: rawData,
+                    requestBody: requestBody
+                }
             });
         }
 
