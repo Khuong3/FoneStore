@@ -4,25 +4,34 @@ export async function onRequestPost({ request }) {
         const data = await request.json();
         const { amount, orderInfo, userId } = data;
 
-        // Cấu hình ZaloPay Sandbox mặc định
+        // Cấu hình ZaloPay Sandbox
         const APP_ID = 2553;
-        const KEY1   = "9phuAOYbc5v14336B5be516H155091a2";
+        const KEY1   = "PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL";
         const REDIRECT_URL = "https://fonestore.pages.dev/pages/checkout-success.html";
 
-        // Đồng bộ thời gian thực tế từ CDN Cloudflare để tránh lệch năm giả lập (2026 vs 2024/2025)
+        // Đồng bộ thời gian thực tế từ Internet bằng cơ chế dự phòng kép (tránh giờ máy tính local bị chỉnh sai năm 2026)
         let appTime = Date.now();
         try {
-            const traceRes = await fetch("https://1.1.1.1/cdn-cgi/trace").then(r => r.text());
-            const tsMatch = traceRes.match(/ts=(\d+)/);
-            if (tsMatch) {
-                appTime = Number(tsMatch[1]) * 1000;
-                console.log("Đã đồng bộ thời gian thực tế:", appTime);
+            const timeRes = await fetch("https://worldtimeapi.org/api/timezone/Asia/Ho_Chi_Minh").then(r => r.json());
+            if (timeRes && timeRes.unixtime) {
+                appTime = timeRes.unixtime * 1000;
+                console.log("Đồng bộ thời gian qua WorldTimeAPI thành công:", appTime);
             }
         } catch (err) {
-            console.error("Lỗi đồng bộ thời gian qua Cloudflare Trace:", err);
+            console.error("Lỗi đồng bộ WorldTimeAPI, thử Cloudflare Trace:", err);
+            try {
+                const traceRes = await fetch("https://1.1.1.1/cdn-cgi/trace").then(r => r.text());
+                const tsMatch = traceRes.match(/ts=(\d+)/);
+                if (tsMatch) {
+                    appTime = Number(tsMatch[1]) * 1000;
+                    console.log("Đồng bộ thời gian qua Cloudflare Trace thành công:", appTime);
+                }
+            } catch (e) {
+                console.error("Tất cả các phương thức đồng bộ thời gian đều thất bại, dùng giờ hệ thống:", e);
+            }
         }
 
-        // Định dạng app_trans_id: yyMMdd_uniqueId (Sử dụng Intl.DateTimeFormat chuẩn múi giờ Việt Nam)
+        // Định dạng app_trans_id: yyMMdd_uniqueId (Dựa trên thời gian thực tế)
         const today = new Date(appTime);
         const formatter = new Intl.DateTimeFormat('en-US', {
             timeZone: 'Asia/Ho_Chi_Minh',
@@ -39,7 +48,8 @@ export async function onRequestPost({ request }) {
         const uniqueSuffix = String(appTime).slice(-6) + String(Math.floor(Math.random() * 1000)).padStart(3, '0');
         const appTransId = `${dateStr}_${uniqueSuffix}`;
 
-        const appUser = userId || "FStore_Customer";
+        // Chuẩn hóa appUser thành chuỗi viết thường đơn giản để tránh lỗi định dạng UID của ZaloPay Sandbox
+        const appUser = "fstore_user";
         const amountNum = Math.round(Number(amount)); // Đảm bảo số tiền là số nguyên
         
         // ZaloPay Sandbox v2 yêu cầu embed_data và item trong body phải là String (JSON stringify)
