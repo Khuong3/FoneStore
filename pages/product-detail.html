@@ -439,6 +439,40 @@
         const productId  = urlParams.get('id');
         let userUID      = null;
         let productData  = null;
+        let activeDiscounts = {};
+
+        async function loadActiveDiscounts() {
+            try {
+                const snap = await getDocs(collection(db, "vouchers"));
+                const now = new Date();
+                activeDiscounts = {};
+
+                snap.forEach(d => {
+                    const v = d.data();
+                    const start = v.startTime ? new Date(v.startTime) : null;
+                    const end = v.endTime ? new Date(v.endTime) : null;
+
+                    if ((!start || now >= start) && (!end || now <= end)) {
+                        if (v.products && Array.isArray(v.products)) {
+                            v.products.forEach(p => {
+                                if ((p.soldCount || 0) < (p.totalLimit || 100)) {
+                                    const currentBest = activeDiscounts[p.productId];
+                                    if (!currentBest || p.discountPrice < currentBest.discountPrice) {
+                                        activeDiscounts[p.productId] = {
+                                            discountPercent: v.discount,
+                                            discountPrice: p.discountPrice,
+                                            code: v.code
+                                        };
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error("Lỗi nạp thông tin khuyến mãi:", err);
+            }
+        }
 
         const functions         = getFunctions();
         const createMoMoPayment = httpsCallable(functions, 'createMoMoPayment');
@@ -497,6 +531,7 @@
             }
 
             try {
+                await loadActiveDiscounts();
                 const docSnap = await getDoc(doc(db, "products", productId));
 
                 if (docSnap.exists()) {
@@ -598,8 +633,19 @@
 
                                     <h1 class="product-name">${p.name}</h1>
 
-                                    <div class="price-row">
-                                        <span class="price-main">${Number(p.price).toLocaleString()}đ</span>
+                                    <div class="price-row align-items-center">
+                                        ${(() => {
+                                            const disc = activeDiscounts[productId];
+                                            if (disc) {
+                                                return `
+                                                    <span class="text-decoration-line-through text-muted small me-2" style="font-size: 1.1rem; font-weight: 500;">${Number(p.price).toLocaleString()}đ</span>
+                                                    <span class="price-main text-danger fw-bold" style="font-size: 1.8rem; color:#dc3545 !important;">${Number(disc.discountPrice).toLocaleString()}đ</span>
+                                                    <span class="badge bg-danger ms-2" style="font-size:0.8rem; font-weight: 700;">-${disc.discountPercent}%</span>
+                                                `;
+                                            } else {
+                                                return `<span class="price-main">${Number(p.price).toLocaleString()}đ</span>`;
+                                            }
+                                        })()}
                                         ${isOutOfStock
                                             ? `<span class="stock-badge out"><i class="bi bi-x-circle"></i>Hết hàng</span>`
                                             : `<span class="stock-badge in-stock"><i class="bi bi-check-circle"></i>Còn ${p.stock} sản phẩm</span>`
@@ -804,7 +850,7 @@
             }
             const btn = document.getElementById('btn-buy-now');
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>Đang kết nối ZaloPay...';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>Đang chuẩn bị đơn hàng...';
 
             const checkedAddonElements = Array.from(document.querySelectorAll('.addon-item-checkbox:checked'));
             const checkedAddons = checkedAddonElements.map(el => ({
@@ -815,38 +861,32 @@
                 quantity: 1
             }));
 
-            // Tính tổng tiền gồm sản phẩm chính và các món mua kèm
-            let totalAmount = productData.price;
-            const itemsToBuy = [{ ...productData, id: productId, quantity: 1 }];
-            
+            // Tạo danh sách sản phẩm mua ngay
+            const itemsToBuy = [{ id: productId, name: productData.name, price: productData.price, img: productData.img, quantity: 1 }];
             for (const addon of checkedAddons) {
-                totalAmount += addon.price;
                 itemsToBuy.push(addon);
             }
 
             try {
-                const response = await fetch('/api/zalopay', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        amount: totalAmount,
-                        orderInfo: `Mua nhanh - ${productData.name}` + (checkedAddons.length > 0 ? ` + ${checkedAddons.length} món đi kèm` : ''),
-                        cartItems: itemsToBuy,
-                        userId: userUID
-                    })
-                });
+                // Lưu danh sách sản phẩm mua ngay vào LocalStorage
+                localStorage.setItem('checkout_buy_now', JSON.stringify(itemsToBuy));
 
-                const data = await response.json();
-                if (data.success && data.payUrl) {
-                    localStorage.setItem('pending_items', JSON.stringify(itemsToBuy));
-                    window.location.href = data.payUrl;
+                // Nếu sản phẩm chính nằm trong chương trình giảm giá đang hoạt động, tự động áp dụng Voucher đó
+                const disc = activeDiscounts[productId];
+                if (disc) {
+                    localStorage.setItem('applied_voucher_info', JSON.stringify({
+                        code: disc.code,
+                        discountAmount: 0 // checkout sẽ tự động đọc và tính toán lại số tiền giảm
+                    }));
                 } else {
-                    const detail = data.debug ? `\nChi tiết: ${JSON.stringify(data.debug)}` : "";
-                    throw new Error((data.message || "Lỗi tạo link thanh toán!") + detail);
+                    localStorage.removeItem('applied_voucher_info');
                 }
+
+                // Chuyển hướng sang trang Checkout
+                window.location.href = "checkout.html?buynow=1";
             } catch (e) {
                 console.error(e);
-                alert("Lỗi: " + (e.message || e));
+                alert("Lỗi chuẩn bị thanh toán: " + (e.message || e));
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-wallet2"></i>Mua ngay qua ZaloPay';
             }

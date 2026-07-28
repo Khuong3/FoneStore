@@ -550,6 +550,40 @@
 
         let userUID = null;
         let currentUserData = null;
+        let activeDiscounts = {};
+
+        async function loadActiveDiscounts() {
+            try {
+                const snap = await getDocs(collection(db, "vouchers"));
+                const now = new Date();
+                activeDiscounts = {};
+
+                snap.forEach(d => {
+                    const v = d.data();
+                    const start = v.startTime ? new Date(v.startTime) : null;
+                    const end = v.endTime ? new Date(v.endTime) : null;
+
+                    if ((!start || now >= start) && (!end || now <= end)) {
+                        if (v.products && Array.isArray(v.products)) {
+                            v.products.forEach(p => {
+                                if ((p.soldCount || 0) < (p.totalLimit || 100)) {
+                                    const currentBest = activeDiscounts[p.productId];
+                                    if (!currentBest || p.discountPrice < currentBest.discountPrice) {
+                                        activeDiscounts[p.productId] = {
+                                            discountPercent: v.discount,
+                                            discountPrice: p.discountPrice,
+                                            code: v.code
+                                        };
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error("Lỗi nạp thông tin khuyến mãi:", err);
+            }
+        }
 
         const citis     = document.getElementById("province");
         const districts = document.getElementById("district");
@@ -588,10 +622,23 @@
                 const p = useDocId ? item.data : item;
                 const isOutOfStock = (p.stock <= 0 || p.stock === undefined);
 
+                // Kiểm tra giảm giá hoạt động
+                const disc = activeDiscounts[d];
+                let priceHtml = '';
+                if (disc) {
+                    priceHtml = `
+                        <span class="text-decoration-line-through text-muted small me-2" style="font-size: 0.82rem;">${Number(p.price).toLocaleString()}đ</span>
+                        <span class="text-danger fw-bold" style="font-size: 1.05rem;">${Number(disc.discountPrice).toLocaleString()}đ</span>
+                    `;
+                } else {
+                    priceHtml = `<span class="fw-bold">${Number(p.price).toLocaleString()}đ</span>`;
+                }
+
                 html += `
                 <div class="col-md-3 mb-4">
                     <div class="card h-100 product-card shadow-sm">
                         ${isOutOfStock ? '<span class="badge out-of-stock-label">HẾT HÀNG</span>' : ''}
+                        ${disc ? `<span class="badge bg-danger position-absolute top-0 end-0 m-2" style="font-size:0.75rem; font-weight:700;">-${disc.discountPercent}%</span>` : ''}
                         <a href="pages/product-detail.html?id=${d}" style="overflow:hidden; display:block;">
                             <img loading="lazy" src="${p.img}"
                                 class="card-img-top p-3 ${isOutOfStock ? 'img-out-of-stock' : ''}"
@@ -599,7 +646,7 @@
                         </a>
                         <div class="card-body text-center">
                             <h6 class="fw-bold">${p.name}</h6>
-                            <p class="price">${Number(p.price).toLocaleString()}đ</p>
+                            <p class="price mb-3">${priceHtml}</p>
                             <div class="d-grid gap-2">
                                 <button class="btn-add-cart ${isOutOfStock ? 'disabled' : ''}"
                                     ${isOutOfStock ? 'disabled' : `onclick="addToCart('${d}','${p.name}',${p.price},'${p.img}')"`}>
@@ -833,6 +880,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const keywordFromUrl = urlParams.get("search");
 
+        await loadActiveDiscounts();
         await Promise.allSettled([loadProvinceData(), loadCategoriesMenu(), loadProductsByCategory(null)]);
 
         if (keywordFromUrl) {
