@@ -345,21 +345,46 @@
                             </div>
                             <div class="summary-row">
                                 <span class="lbl">Phí vận chuyển</span>
-                                <span class="val" style="color: var(--gold); font-weight: 700;">Miễn phí</span>
+                                <span class="val" id="shipping-fee-display" style="font-weight: 700;">0đ</span>
                             </div>
 
                             <!-- Voucher hiển thị cố định đã được áp dụng từ giỏ hàng -->
-                            <div class="mb-3 mt-2 border-top pt-2" id="applied-voucher-summary-block" style="display: none;">
+                            <div class="mb-3 mt-2 border-top pt-2 d-none" id="applied-voucher-summary-block">
                                 <label class="form-label text-muted small" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;">MÃ GIẢM GIÁ ĐÃ ÁP DỤNG</label>
-                                <div class="d-flex align-items-center justify-content-between bg-light p-2 rounded border">
-                                    <span class="badge bg-dark px-3 py-2 fw-bold" id="applied-voucher-badge" style="letter-spacing: 0.5px; font-size: 0.82rem;">NONE</span>
-                                    <span class="text-success small fw-bold"><i class="bi bi-patch-check-fill me-1"></i>Đã kích hoạt</span>
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="d-flex align-items-center justify-content-between bg-light p-2 rounded border d-none" id="checkout-prod-voucher-badge-block">
+                                        <div>
+                                            <span class="badge bg-dark px-2 py-1 fw-bold" id="applied-voucher-badge">NONE</span>
+                                            <span class="small text-secondary ms-1">Giảm SP</span>
+                                        </div>
+                                        <span class="text-success small fw-bold"><i class="bi bi-patch-check-fill me-1"></i>Đã áp dụng</span>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-between bg-light p-2 rounded border d-none" id="checkout-ship-voucher-badge-block">
+                                        <div>
+                                            <span class="badge bg-success px-2 py-1 fw-bold" id="applied-ship-voucher-badge">NONE</span>
+                                            <span class="small text-secondary ms-1">Giảm Ship</span>
+                                        </div>
+                                        <span class="text-success small fw-bold"><i class="bi bi-patch-check-fill me-1"></i>Đã áp dụng</span>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="summary-row" id="voucher-discount-row" style="display: none; color: #dc3545;">
                                 <span class="lbl" style="color: #dc3545; font-weight: 600;">Giảm giá (<span id="applied-code-label"></span>)</span>
                                 <span class="val" id="voucher-discount-display">-0đ</span>
+                            </div>
+
+                            <!-- Danh sách chọn mã giảm ship ngay tại checkout -->
+                            <div class="mb-3 mt-2 border-top pt-2" id="checkout-ship-vouchers-block" style="display: none;">
+                                <label class="form-label small fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.5px;">MÃ GIẢM PHÍ VẬN CHUYỂN KHẢ DỤNG</label>
+                                <div id="checkout-ship-vouchers-list" class="border rounded p-2 bg-light" style="max-height: 125px; overflow-y: auto;">
+                                    <!-- Loaded dynamically -->
+                                </div>
+                            </div>
+
+                            <div class="summary-row" id="shipping-discount-row" style="display: none; color: #dc3545;">
+                                <span class="lbl" style="color: #dc3545; font-weight: 600;">Giảm giá ship (<span id="applied-ship-code-label"></span>)</span>
+                                <span class="val" id="shipping-discount-display">-0đ</span>
                             </div>
 
                             <div class="summary-total">
@@ -391,7 +416,7 @@
         import { loadLayout } from '../js/layout.js';
         import { auth, db } from '../js/config.js';
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-        import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
         await loadLayout();
 
@@ -401,6 +426,215 @@
         let totalAmount = 0;
         let activeVoucher = null;
         let discountAmount = 0;
+        
+        let activeShipVoucher = null;
+        let shipDiscountAmount = 0;
+        let baseShippingFee = 30000;
+        let checkoutActiveVouchersList = [];
+
+        async function getVoucherUsageCount(voucherCode, targetUID) {
+            if (!targetUID || !voucherCode) return 0;
+            try {
+                const q = query(collection(db, "orders"), where("userId", "==", targetUID));
+                const snap = await getDocs(q);
+                let count = 0;
+                snap.forEach(doc => {
+                    const order = doc.data();
+                    if (order.status !== "Đã hủy" && (order.voucherUsed === voucherCode || order.shipVoucherUsed === voucherCode)) {
+                        count++;
+                    }
+                });
+                return count;
+            } catch (e) {
+                console.error("Lỗi getVoucherUsageCount:", e);
+                return 0;
+            }
+        }
+
+        async function renderCheckoutShipVouchers() {
+            const shipVouchers = [];
+            const now = new Date();
+
+            for (const v of checkoutActiveVouchersList) {
+                const vType = v.type || "product";
+                if (vType === "shipping") {
+                    const rule = v.shippingRule || {};
+                    let computedDiscount = 0;
+                    if (rule.discountShipType === "freeship") {
+                        computedDiscount = baseShippingFee;
+                    } else {
+                        computedDiscount = Math.min(baseShippingFee, rule.discountShipValue || 0);
+                    }
+
+                    const usageCount = await getVoucherUsageCount(v.code, userUID);
+                    const limitPerUser = v.limitPerUser || 0;
+                    const isUserLimitReached = limitPerUser > 0 && usageCount >= limitPerUser;
+                    
+                    const isMinOrderNotReached = totalAmount < (rule.minOrderValue || 0);
+                    const isTotalLimitReached = (rule.soldCount || 0) >= (rule.totalLimit || 100);
+                    
+                    shipVouchers.push({
+                        code: v.code,
+                        type: "shipping",
+                        discountAmount: computedDiscount,
+                        shippingRule: rule,
+                        limitPerUser: limitPerUser,
+                        usageCount: usageCount,
+                        isUserLimitReached: isUserLimitReached,
+                        isMinOrderNotReached: isMinOrderNotReached,
+                        isTotalLimitReached: isTotalLimitReached
+                    });
+                }
+            }
+
+            shipVouchers.sort((a, b) => b.discountAmount - a.discountAmount);
+
+            const block = document.getElementById('checkout-ship-vouchers-block');
+            const listContainer = document.getElementById('checkout-ship-vouchers-list');
+
+            if (shipVouchers.length > 0) {
+                let html = '';
+                
+                html += `
+                    <div class="form-check mb-1">
+                        <input class="form-check-input checkout-ship-radio-btn" type="radio" name="checkout-voucher-ship-choice" id="checkout-v-opt-none-ship" value="none" ${!activeShipVoucher ? 'checked' : ''}>
+                        <label class="form-check-label small text-secondary" for="checkout-v-opt-none-ship" style="cursor: pointer; user-select: none;">
+                            Không sử dụng mã giảm ship
+                        </label>
+                    </div>
+                `;
+
+                shipVouchers.forEach(v => {
+                    const isChecked = activeShipVoucher && activeShipVoucher.code === v.code;
+                    const ruleText = v.shippingRule.discountShipType === 'freeship' ? 'Freeship' : `Giảm ${v.shippingRule.discountShipValue.toLocaleString()}đ ship`;
+                    
+                    let extraText = '';
+                    let disabledAttr = '';
+                    let colorClass = '';
+                    
+                    if (v.isUserLimitReached) {
+                        extraText = ` - <span class="text-danger fw-bold">Hết lượt dùng (${v.usageCount}/${v.limitPerUser} lần)</span>`;
+                        disabledAttr = 'disabled';
+                        colorClass = 'text-decoration-line-through text-muted';
+                    } else if (v.isTotalLimitReached) {
+                        extraText = ` - <span class="text-danger fw-bold">Đã hết lượt sử dụng</span>`;
+                        disabledAttr = 'disabled';
+                        colorClass = 'text-decoration-line-through text-muted';
+                    } else if (v.isMinOrderNotReached) {
+                        extraText = ` - <span class="text-warning fw-bold">Đơn tối thiểu ${(v.shippingRule.minOrderValue || 0).toLocaleString()}đ (Chưa đủ)</span>`;
+                        disabledAttr = 'disabled';
+                        colorClass = 'text-muted';
+                        // Nếu đang chọn cái này mà hụt điều kiện tối thiểu (do đổi tỉnh thành làm phí ship/tổng tiền đổi) thì bỏ chọn nó
+                        if (isChecked) {
+                            activeShipVoucher = null;
+                        }
+                    } else if (v.limitPerUser > 0) {
+                        extraText = ` - <span class="text-primary fw-bold">Đã dùng ${v.usageCount}/${v.limitPerUser} lần</span>`;
+                    }
+
+                    html += `
+                        <div class="form-check mb-1 ${colorClass}">
+                            <input class="form-check-input checkout-ship-radio-btn" type="radio" name="checkout-voucher-ship-choice" id="checkout-v-opt-${v.code}" value="${v.code}" ${isChecked ? 'checked' : ''} ${disabledAttr}>
+                            <label class="form-check-label small" for="checkout-v-opt-${v.code}" style="cursor: pointer; user-select: none;">
+                                <span class="badge bg-success me-1">${v.code}</span> ${ruleText}${extraText}
+                            </label>
+                        </div>
+                    `;
+                });
+
+                listContainer.innerHTML = html;
+                block.style.display = 'block';
+
+                document.querySelectorAll('.checkout-ship-radio-btn').forEach(btn => {
+                    btn.onchange = function() {
+                        const code = this.value;
+                        if (code === "none") {
+                            activeShipVoucher = null;
+                            shipDiscountAmount = 0;
+                            localStorage.setItem('applied_ship_voucher_info', JSON.stringify({ code: "none", discountAmount: 0 }));
+                        } else {
+                            const found = shipVouchers.find(v => v.code === code);
+                            if (found && !found.isUserLimitReached && !found.isMinOrderNotReached && !found.isTotalLimitReached) {
+                                activeShipVoucher = {
+                                    code: found.code,
+                                    shippingRule: found.shippingRule
+                                };
+                            }
+                        }
+                        recalculateShippingAndTotal();
+                    };
+                });
+            } else {
+                block.style.display = 'none';
+            }
+        }
+
+        function recalculateShippingAndTotal() {
+            const cityName = citis.value;
+            if (!cityName) {
+                baseShippingFee = 0;
+            } else {
+                const isMajor = ['Hà Nội', 'Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ'].some(c => cityName.includes(c));
+                baseShippingFee = isMajor ? 30000 : 45000;
+            }
+            document.getElementById('shipping-fee-display').innerText = baseShippingFee.toLocaleString() + "đ";
+
+            // Tính toán số tiền được giảm ship nếu có activeShipVoucher
+            if (activeShipVoucher && activeShipVoucher.shippingRule) {
+                const rule = activeShipVoucher.shippingRule;
+                if (totalAmount >= (rule.minOrderValue || 0)) {
+                    if (rule.discountShipType === "freeship") {
+                        shipDiscountAmount = baseShippingFee;
+                    } else if (rule.discountShipType === "fixed") {
+                        shipDiscountAmount = Math.min(baseShippingFee, rule.discountShipValue || 0);
+                    }
+
+                    document.getElementById('applied-ship-code-label').innerText = activeShipVoucher.code;
+                    document.getElementById('shipping-discount-display').innerText = `-${shipDiscountAmount.toLocaleString()}đ`;
+                    document.getElementById('shipping-discount-row').style.display = 'flex';
+                    
+                    document.getElementById('applied-ship-voucher-badge').innerText = activeShipVoucher.code;
+                    document.getElementById('checkout-ship-voucher-badge-block').classList.remove('d-none');
+
+                    localStorage.setItem('applied_ship_voucher_info', JSON.stringify({
+                        code: activeShipVoucher.code,
+                        discountAmount: shipDiscountAmount
+                    }));
+                } else {
+                    activeShipVoucher = null;
+                    shipDiscountAmount = 0;
+                    document.getElementById('shipping-discount-row').style.display = 'none';
+                    document.getElementById('checkout-ship-voucher-badge-block').classList.add('d-none');
+                }
+            } else {
+                shipDiscountAmount = 0;
+                document.getElementById('shipping-discount-row').style.display = 'none';
+                document.getElementById('checkout-ship-voucher-badge-block').classList.add('d-none');
+            }
+
+            // Đồng bộ hiển thị Voucher Sản phẩm
+            if (activeVoucher) {
+                document.getElementById('applied-voucher-badge').innerText = activeVoucher.code;
+                document.getElementById('checkout-prod-voucher-badge-block').classList.remove('d-none');
+                
+                document.getElementById('applied-code-label').innerText = activeVoucher.code;
+                document.getElementById('voucher-discount-display').innerText = `-${discountAmount.toLocaleString()}đ`;
+                document.getElementById('voucher-discount-row').style.display = 'flex';
+            } else {
+                document.getElementById('checkout-prod-voucher-badge-block').classList.add('d-none');
+                document.getElementById('voucher-discount-row').style.display = 'none';
+            }
+
+            // Nếu có ít nhất 1 voucher được áp dụng thì hiện summary block, ngược lại ẩn đi
+            if (activeVoucher || activeShipVoucher) {
+                document.getElementById('applied-voucher-summary-block').classList.remove('d-none');
+            } else {
+                document.getElementById('applied-voucher-summary-block').classList.add('d-none');
+            }
+
+            const finalTotal = totalAmount + baseShippingFee - discountAmount - shipDiscountAmount;
+            document.getElementById('total-price').innerText = finalTotal.toLocaleString() + "đ";
+        }
 
         // ÁP DỤNG VOUCHER
         async function applyVoucherCode() {
@@ -560,6 +794,8 @@
                         const sel = provinceData.find(p => p.name === this.value);
                         sel?.districts.forEach(d => districts.options[districts.options.length] = new Option(d.name, d.name));
                     }
+                    recalculateShippingAndTotal();
+                    renderCheckoutShipVouchers();
                 };
 
                 districts.onchange = function () {
@@ -680,7 +916,7 @@
                 document.getElementById('total-price').innerText = totalAmount.toLocaleString() + "đ";
                 btnSubmit.disabled = false;
 
-                // 3. Tự động áp dụng voucher đã chọn từ giỏ hàng hoặc trang mua ngay, hoặc tự động tìm voucher tốt nhất
+                // 3. Tải Voucher sản phẩm
                 let voucherCodeToApply = null;
                 const appliedVoucherStr = localStorage.getItem('applied_voucher_info');
                 if (appliedVoucherStr) {
@@ -690,80 +926,155 @@
                     } catch (e) {}
                 }
 
-                // Nếu chưa chỉ định voucher, tự động quét tìm voucher đang hiệu lực tối ưu nhất cho giỏ hàng
-                if (!voucherCodeToApply) {
+                // Tải Voucher Ship
+                let shipVoucherCodeToApply = null;
+                const appliedShipVoucherStr = localStorage.getItem('applied_ship_voucher_info');
+                if (appliedShipVoucherStr) {
                     try {
-                        const snap = await getDocs(collection(db, "vouchers"));
-                        const now = new Date();
-                        let bestVoucher = null;
-                        let maxDiscount = 0;
-
-                        snap.forEach(d => {
-                            const v = d.data();
-                            const start = v.startTime ? new Date(v.startTime) : null;
-                            const end = v.endTime ? new Date(v.endTime) : null;
-
-                            if ((!start || now >= start) && (!end || now <= end)) {
-                                let currentDiscount = 0;
-                                if (v.products && Array.isArray(v.products)) {
-                                    cartItems.forEach(item => {
-                                        const match = v.products.find(p => p.productId === item.id);
-                                        if (match && (match.soldCount || 0) < (match.totalLimit || 100)) {
-                                            currentDiscount += (item.price - match.discountPrice) * item.quantity;
-                                        }
-                                    });
-                                }
-                                if (currentDiscount > maxDiscount) {
-                                    maxDiscount = currentDiscount;
-                                    bestVoucher = v;
-                                }
-                            }
-                        });
-
-                        if (bestVoucher) {
-                            voucherCodeToApply = bestVoucher.code;
-                        }
-                    } catch (err) {
-                        console.error("Lỗi tự động quét voucher tốt nhất:", err);
-                    }
+                        const apShipVoucher = JSON.parse(appliedShipVoucherStr);
+                        shipVoucherCodeToApply = apShipVoucher ? apShipVoucher.code : null;
+                    } catch (e) {}
                 }
 
-                if (voucherCodeToApply) {
-                    try {
-                        const vDocRef = doc(db, "vouchers", voucherCodeToApply);
-                        const vDocSnap = await getDoc(vDocRef);
-                        if (vDocSnap.exists()) {
-                            const v = vDocSnap.data();
-                            let discountTotal = 0;
-                            
+                // Tải toàn bộ các voucher trong DB một lần để quét tự động (nếu thiếu)
+                let allActiveVouchers = [];
+                try {
+                    const snap = await getDocs(collection(db, "vouchers"));
+                    const now = new Date();
+                    snap.forEach(d => {
+                        const v = d.data();
+                        const start = v.startTime ? new Date(v.startTime) : null;
+                        const end = v.endTime ? new Date(v.endTime) : null;
+                        const isTimeValid = (!start || now >= start) && (!end || now <= end);
+                        if (isTimeValid) {
+                            allActiveVouchers.push({ ...v, code: d.id });
+                        }
+                    });
+                } catch (err) {
+                    console.error("Lỗi tải vouchers trong checkout:", err);
+                }
+
+                // A. QUÉT VÀ ÁP DỤNG VOUCHER SẢN PHẨM TỰ ĐỘNG NẾU CHƯA CÓ
+                if (!voucherCodeToApply) {
+                    let bestProdVoucher = null;
+                    let maxDiscount = 0;
+                    for (const v of allActiveVouchers) {
+                        const vType = v.type || "product";
+                        if (vType === "product") {
+                            // Kiểm tra giới hạn sử dụng của người dùng
+                            const usageCount = await getVoucherUsageCount(v.code, userUID);
+                            const limitPerUser = v.limitPerUser || 0;
+                            if (limitPerUser > 0 && usageCount >= limitPerUser) {
+                                continue;
+                            }
+
+                            let currentDiscount = 0;
                             if (v.products && Array.isArray(v.products)) {
                                 cartItems.forEach(item => {
                                     const match = v.products.find(p => p.productId === item.id);
+                                    if (match && (match.soldCount || 0) < (match.totalLimit || 100)) {
+                                        currentDiscount += (item.price - match.discountPrice) * item.quantity;
+                                    }
+                                });
+                            }
+                            if (currentDiscount > maxDiscount) {
+                                maxDiscount = currentDiscount;
+                                bestProdVoucher = v;
+                            }
+                        }
+                    }
+                    if (bestProdVoucher) {
+                        voucherCodeToApply = bestProdVoucher.code;
+                    }
+                }
+
+                // B. QUÉT VÀ ÁP DỤNG VOUCHER SHIP TỰ ĐỘNG NẾU CHƯA CÓ
+                if (!shipVoucherCodeToApply) {
+                    const cityName = citis.value;
+                    const isMajor = ['Hà Nội', 'Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ'].some(c => cityName.includes(c));
+                    const estShipFee = cityName ? (isMajor ? 30000 : 45000) : 30000;
+
+                    let bestShipVoucher = null;
+                    let maxShipDiscount = 0;
+
+                    for (const v of allActiveVouchers) {
+                        const vType = v.type || "product";
+                        if (vType === "shipping") {
+                            // Kiểm tra giới hạn sử dụng của người dùng
+                            const usageCount = await getVoucherUsageCount(v.code, userUID);
+                            const limitPerUser = v.limitPerUser || 0;
+                            if (limitPerUser > 0 && usageCount >= limitPerUser) {
+                                continue;
+                            }
+
+                            const rule = v.shippingRule || {};
+                            if (totalAmount >= (rule.minOrderValue || 0) && (rule.soldCount || 0) < (rule.totalLimit || 100)) {
+                                let currentDiscount = 0;
+                                if (rule.discountShipType === "freeship") {
+                                    currentDiscount = estShipFee;
+                                } else {
+                                    currentDiscount = Math.min(estShipFee, rule.discountShipValue || 0);
+                                }
+
+                                if (currentDiscount > maxShipDiscount) {
+                                    maxShipDiscount = currentDiscount;
+                                    bestShipVoucher = v;
+                                }
+                            }
+                        }
+                    }
+                    if (bestShipVoucher) {
+                        shipVoucherCodeToApply = bestShipVoucher.code;
+                    }
+                }
+
+                // C. ÁP DỤNG VÀ THIẾT LẬP VOUCHER SẢN PHẨM LÊN UI
+                if (voucherCodeToApply && voucherCodeToApply !== "none") {
+                    const matchVoucher = allActiveVouchers.find(v => v.code === voucherCodeToApply && (v.type || "product") === "product");
+                    if (matchVoucher) {
+                        // Kiểm tra giới hạn sử dụng của người dùng
+                        const usageCount = await getVoucherUsageCount(matchVoucher.code, userUID);
+                        const limitPerUser = matchVoucher.limitPerUser || 0;
+                        if (limitPerUser > 0 && usageCount >= limitPerUser) {
+                            console.warn(`Mã giảm giá sản phẩm ${matchVoucher.code} đã đạt giới hạn tài khoản.`);
+                        } else {
+                            let discountTotal = 0;
+                            if (matchVoucher.products && Array.isArray(matchVoucher.products)) {
+                                cartItems.forEach(item => {
+                                    const match = matchVoucher.products.find(p => p.productId === item.id);
                                     if (match && (match.soldCount || 0) < (match.totalLimit || 100)) {
                                         discountTotal += (item.price - match.discountPrice) * item.quantity;
                                     }
                                 });
                             }
-
                             if (discountTotal > 0) {
-                                activeVoucher = v;
+                                activeVoucher = matchVoucher;
                                 discountAmount = discountTotal;
 
-                                document.getElementById('applied-voucher-badge').innerText = v.code;
-                                document.getElementById('applied-voucher-summary-block').style.display = 'block';
-                                
-                                document.getElementById('applied-code-label').innerText = v.code;
-                                document.getElementById('voucher-discount-display').innerText = `-${discountTotal.toLocaleString()}đ`;
-                                document.getElementById('voucher-discount-row').style.display = 'flex';
-                                
-                                const finalTotal = totalAmount - discountTotal;
-                                document.getElementById('total-price').innerText = finalTotal.toLocaleString() + "đ";
                             }
                         }
-                    } catch (e) {
-                        console.warn("Lỗi tự động load voucher cố định:", e);
                     }
                 }
+
+                // D. ÁP DỤNG VÀ THIẾT LẬP VOUCHER SHIP LÊN UI
+                if (shipVoucherCodeToApply && shipVoucherCodeToApply !== "none") {
+                    const matchShipVoucher = allActiveVouchers.find(v => v.code === shipVoucherCodeToApply && v.type === "shipping");
+                    if (matchShipVoucher) {
+                        // Kiểm tra giới hạn sử dụng của người dùng
+                        const usageCount = await getVoucherUsageCount(matchShipVoucher.code, userUID);
+                        const limitPerUser = matchShipVoucher.limitPerUser || 0;
+                        if (limitPerUser > 0 && usageCount >= limitPerUser) {
+                            console.warn(`Mã giảm giá vận chuyển ${matchShipVoucher.code} đã đạt giới hạn tài khoản.`);
+                        } else {
+                            activeShipVoucher = matchShipVoucher;
+                        }
+                    }
+                }
+
+                // E. ĐỒNG BỘ LẠI TỔNG TIỀN VÀ PHÍ SHIP CUỐI CÙNG
+                checkoutActiveVouchersList = allActiveVouchers;
+                recalculateShippingAndTotal();
+                renderCheckoutShipVouchers();
 
             } catch (err) {
                 console.error("Lỗi load checkout:", err);
@@ -802,7 +1113,11 @@
                 localStorage.setItem('checkout_shipping_address', JSON.stringify(shippingInfo));
 
                 const orderDescription = `FoneStore: ${name} (${phone})`;
-                const finalPayAmount = totalAmount - discountAmount;
+                const finalPayAmount = totalAmount + baseShippingFee - discountAmount - shipDiscountAmount;
+
+                // Lưu các thông tin ship và giảm ship vào LocalStorage để phục vụ trang Success
+                localStorage.setItem('checkout_shipping_fee', baseShippingFee.toString());
+                localStorage.setItem('checkout_shipping_discount', shipDiscountAmount.toString());
 
                 if (activeVoucher) {
                     localStorage.setItem('applied_voucher_info', JSON.stringify({
@@ -810,7 +1125,36 @@
                         discountAmount: discountAmount
                     }));
                 } else {
-                    localStorage.removeItem('applied_voucher_info');
+                    const curr = localStorage.getItem('applied_voucher_info');
+                    if (curr) {
+                        try {
+                            const parsed = JSON.parse(curr);
+                            if (parsed.code !== "none") {
+                                localStorage.removeItem('applied_voucher_info');
+                            }
+                        } catch (e) {
+                            localStorage.removeItem('applied_voucher_info');
+                        }
+                    }
+                }
+
+                if (activeShipVoucher) {
+                    localStorage.setItem('applied_ship_voucher_info', JSON.stringify({
+                        code: activeShipVoucher.code,
+                        discountAmount: shipDiscountAmount
+                    }));
+                } else {
+                    const curr = localStorage.getItem('applied_ship_voucher_info');
+                    if (curr) {
+                        try {
+                            const parsed = JSON.parse(curr);
+                            if (parsed.code !== "none") {
+                                localStorage.removeItem('applied_ship_voucher_info');
+                            }
+                        } catch (e) {
+                            localStorage.removeItem('applied_ship_voucher_info');
+                        }
+                    }
                 }
 
                 const response = await fetch('/api/zalopay', {

@@ -182,6 +182,11 @@
                                 voucherCode = vInfo.code || "";
                                 discountAmount = vInfo.discountAmount || 0;
                                 
+                                if (voucherCode === "none") {
+                                    voucherCode = "";
+                                    discountAmount = 0;
+                                }
+                                
                                 // Cập nhật tăng soldCount cho voucher
                                 if (voucherCode) {
                                     const vDocRef = doc(db, "vouchers", voucherCode);
@@ -202,6 +207,40 @@
                                 }
                             } catch (e) {
                                 console.error("Lỗi cập nhật soldCount cho voucher:", e);
+                            }
+                        }
+
+                        // Đọc phí ship động và giảm ship
+                        const shipFeeVal = Number(localStorage.getItem('checkout_shipping_fee')) || 30000;
+                        const shipDiscountVal = Number(localStorage.getItem('checkout_shipping_discount')) || 0;
+
+                        // Đọc thông tin Voucher Ship đã sử dụng
+                        const shipVoucherStr = localStorage.getItem('applied_ship_voucher_info');
+                        let shipVoucherCode = "";
+                        if (shipVoucherStr) {
+                            try {
+                                const svInfo = JSON.parse(shipVoucherStr);
+                                shipVoucherCode = svInfo.code || "";
+                                
+                                if (shipVoucherCode === "none") {
+                                    shipVoucherCode = "";
+                                }
+                                
+                                if (shipVoucherCode) {
+                                    const svDocRef = doc(db, "vouchers", shipVoucherCode);
+                                    const svDocSnap = await getDoc(svDocRef);
+                                    if (svDocSnap.exists()) {
+                                        const svData = svDocSnap.data();
+                                        if (svData.type === "shipping" && svData.shippingRule) {
+                                            const rule = svData.shippingRule;
+                                            await updateDoc(svDocRef, {
+                                                "shippingRule.soldCount": (rule.soldCount || 0) + 1
+                                            });
+                                        }
+                                    }
+                                }
+                            } catch (e) {
+                                console.error("Lỗi cập nhật soldCount cho ship voucher:", e);
                             }
                         }
                         
@@ -227,6 +266,11 @@
                             
                             voucherUsed: voucherCode,
                             discountAmount: discountAmount,
+
+                            // Lưu phí ship & voucher ship
+                            shippingFee: shipFeeVal,
+                            shippingDiscount: shipDiscountVal,
+                            shipVoucherUsed: shipVoucherCode,
                             
                             status: "Hoàn thành",
                             method: method,
@@ -238,6 +282,9 @@
                         localStorage.removeItem('pending_items'); 
                         localStorage.removeItem('checkout_shipping_address');
                         localStorage.removeItem('applied_voucher_info');
+                        localStorage.removeItem('applied_ship_voucher_info');
+                        localStorage.removeItem('checkout_shipping_fee');
+                        localStorage.removeItem('checkout_shipping_discount');
                         localStorage.removeItem('checkout_buy_now');
                     }
                     showSuccess(orderId, amount);

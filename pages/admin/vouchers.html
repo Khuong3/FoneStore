@@ -224,26 +224,75 @@
                             <h5><i class="bi bi-plus-circle-fill"></i> Tạo chiến dịch giảm giá</h5>
                             <form id="voucher-form" onsubmit="return false;">
                                 <div class="mb-3">
+                                    <label class="form-label" for="v-type">Loại Voucher</label>
+                                    <select class="form-select" id="v-type" onchange="toggleVoucherTypeFields()">
+                                        <option value="product">Giảm giá sản phẩm (theo %)</option>
+                                        <option value="shipping">Giảm giá vận chuyển (Freeship / Giảm ship)</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
                                     <label class="form-label" for="v-code">Mã Voucher (Đặt tên viết liền không dấu)</label>
                                     <input type="text" class="form-control" id="v-code" placeholder="Ví dụ: COFFEE20, TRUNGBIEU" required style="text-transform: uppercase;">
                                 </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label d-flex justify-content-between">
-                                        <span>Phần trăm giảm giá:</span>
-                                        <span id="discount-val-label" class="fw-bold text-danger">10%</span>
-                                    </label>
-                                    <input type="range" class="form-range" id="v-discount" min="1" max="100" value="10" oninput="document.getElementById('discount-val-label').innerText = this.value + '%'">
-                                </div>
+                                <!-- CÁC TRƯỜNG GIẢM GIÁ SẢN PHẨM -->
+                                <div id="product-voucher-fields">
+                                    <div class="mb-3">
+                                        <label class="form-label d-flex justify-content-between">
+                                            <span>Phần trăm giảm giá:</span>
+                                            <span id="discount-val-label" class="fw-bold text-danger">10%</span>
+                                        </label>
+                                        <input type="range" class="form-range" id="v-discount" min="1" max="100" value="10" oninput="document.getElementById('discount-val-label').innerText = this.value + '%'">
+                                    </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label">Chọn sản phẩm được áp dụng & Nhập giới hạn voucher</label>
-                                    <div class="product-select-list" id="product-checkbox-container">
-                                        <div class="text-center py-3 text-muted small">Đang tải sản phẩm...</div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Chọn sản phẩm được áp dụng & Nhập giới hạn voucher</label>
+                                        <div class="product-select-list" id="product-checkbox-container">
+                                            <div class="text-center py-3 text-muted small">Đang tải sản phẩm...</div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="row">
+                                <!-- CÁC TRƯỜNG VOUCHER SHIP -->
+                                <div id="shipping-voucher-fields" style="display: none;">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="v-min-order">Giá trị đơn hàng tối thiểu (đ)</label>
+                                        <input type="number" class="form-control" id="v-min-order" value="0" min="0" placeholder="Ví dụ: 100000">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Kiểu giảm phí vận chuyển</label>
+                                        <div class="d-flex gap-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="v-ship-type" id="ship-type-free" value="freeship" checked onchange="toggleShipDiscountValue()">
+                                                <label class="form-check-label small fw-bold" for="ship-type-free">Miễn phí vận chuyển (Freeship)</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="v-ship-type" id="ship-type-fixed" value="fixed" onchange="toggleShipDiscountValue()">
+                                                <label class="form-check-label small fw-bold" for="ship-type-fixed">Giảm tiền ship cố định</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3" id="ship-discount-value-block" style="display: none;">
+                                        <label class="form-label" for="v-ship-discount-val">Số tiền giảm ship (đ)</label>
+                                        <input type="number" class="form-control" id="v-ship-discount-val" value="20000" min="1000" placeholder="Ví dụ: 20000">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label" for="v-ship-limit">Tổng số lượt sử dụng voucher ship</label>
+                                        <input type="number" class="form-control" id="v-ship-limit" value="100" min="1">
+                                    </div>
+                                </div>
+
+                                <!-- THỜI GIAN HIỆU LỰC -->
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="v-unlimited-time" onchange="toggleTimeInputs()">
+                                    <label class="form-check-label small fw-bold" for="v-unlimited-time">Không giới hạn thời gian (Vô thời hạn)</label>
+                                </div>
+
+                                <div class="row" id="time-inputs-row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label" for="v-start">Thời gian bắt đầu</label>
                                         <input type="datetime-local" class="form-control" id="v-start" required>
@@ -255,13 +304,23 @@
                                 </div>
 
                                 <div class="mb-3">
+                                    <label class="form-label" for="v-user-limit">Giới hạn sử dụng mỗi tài khoản (Nhập số lần, để trống hoặc 0 là không giới hạn)</label>
+                                    <input type="number" class="form-control" id="v-user-limit" placeholder="Ví dụ: 1 hoặc 2" min="1" value="1">
+                                </div>
+
+                                <div class="mb-3">
                                     <label class="form-label" for="v-reason">Lý do giảm giá</label>
                                     <textarea class="form-control" id="v-reason" rows="2" placeholder="Ví dụ: Khuyến mãi tết Trung Thu, Tri ân khách hàng" required></textarea>
                                 </div>
 
-                                <button type="button" class="btn btn-pay w-100" onclick="createVoucher()">
-                                    <i class="bi bi-save-fill me-1"></i> Tạo chiến dịch giảm giá
-                                </button>
+                                <div class="d-flex gap-2">
+                                    <button type="button" id="btn-submit-voucher" class="btn btn-pay w-100" onclick="createVoucher()">
+                                        <i class="bi bi-save-fill me-1"></i> Tạo chiến dịch giảm giá
+                                    </button>
+                                    <button type="button" id="btn-cancel-edit-voucher" class="btn btn-outline-secondary w-50" style="display: none;" onclick="cancelEditVoucher()">
+                                        Hủy
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -381,6 +440,42 @@
             }
         };
 
+        window.toggleVoucherTypeFields = () => {
+            const vType = document.getElementById('v-type').value;
+            const prodFields = document.getElementById('product-voucher-fields');
+            const shipFields = document.getElementById('shipping-voucher-fields');
+            if (vType === 'shipping') {
+                prodFields.style.display = 'none';
+                shipFields.style.display = 'block';
+            } else {
+                prodFields.style.display = 'block';
+                shipFields.style.display = 'none';
+            }
+        };
+
+        window.toggleShipDiscountValue = () => {
+            const isFixed = document.getElementById('ship-type-fixed').checked;
+            const block = document.getElementById('ship-discount-value-block');
+            block.style.display = isFixed ? 'block' : 'none';
+        };
+
+        window.toggleTimeInputs = () => {
+            const isUnlimited = document.getElementById('v-unlimited-time').checked;
+            const timeInputsRow = document.getElementById('time-inputs-row');
+            const startInput = document.getElementById('v-start');
+            const endInput = document.getElementById('v-end');
+            
+            if (isUnlimited) {
+                timeInputsRow.style.display = 'none';
+                startInput.removeAttribute('required');
+                endInput.removeAttribute('required');
+            } else {
+                timeInputsRow.style.display = 'flex';
+                startInput.setAttribute('required', 'true');
+                endInput.setAttribute('required', 'true');
+            }
+        };
+
         // Khởi tạo thời gian chạy mặc định (Bắt đầu: ngay bây giờ, Kết thúc: sau 7 ngày)
         function initDefaultDates() {
             const now = new Date();
@@ -393,96 +488,277 @@
             document.getElementById('v-end').value = localEnd;
         }
 
-        // 3. TẠO VOUCHER CHIẾN DỊCH GIẢM GIÁ MỚI
+        let editingVoucherCode = null;
+
+        // 3. TẠO HOẶC CẬP NHẬT CHIẾN DỊCH GIẢM GIÁ
         window.createVoucher = async () => {
             let code = document.getElementById('v-code').value.trim().toUpperCase();
-            const discount = Number(document.getElementById('v-discount').value);
+            const vType = document.getElementById('v-type').value;
             const reason = document.getElementById('v-reason').value.trim();
-            const startTime = document.getElementById('v-start').value;
-            const endTime = document.getElementById('v-end').value;
+            const limitPerUser = Number(document.getElementById('v-user-limit').value) || 0;
+            
+            const isUnlimitedTime = document.getElementById('v-unlimited-time').checked;
+            let startTime = '';
+            let endTime = '';
+
+            if (!isUnlimitedTime) {
+                startTime = document.getElementById('v-start').value;
+                endTime = document.getElementById('v-end').value;
+                if (!startTime || !endTime) return alert("Vui lòng chọn thời gian chạy chiến dịch!");
+                if (new Date(endTime) <= new Date(startTime)) {
+                    return alert("Thời gian kết thúc phải diễn ra sau thời gian bắt đầu!");
+                }
+            }
 
             if (!code) return alert("Vui lòng nhập Mã Voucher!");
             if (!reason) return alert("Vui lòng nhập Lý do giảm giá!");
-            if (!startTime || !endTime) return alert("Vui lòng chọn thời gian chạy chiến dịch!");
-
-            if (new Date(endTime) <= new Date(startTime)) {
-                return alert("Thời gian kết thúc phải diễn ra sau thời gian bắt đầu!");
-            }
 
             // Bỏ dấu và ký tự lạ của Voucher code
             code = code.replace(/[^A-Z0-9]/g, '');
 
-            const checkedBoxes = document.querySelectorAll('.product-chk:checked');
-            if (checkedBoxes.length === 0) {
-                return alert("Vui lòng chọn ít nhất 1 sản phẩm để áp dụng giảm giá!");
-            }
-
-            const chosenProducts = [];
-            const priceLogsToCreate = [];
-
-            for (const chk of checkedBoxes) {
-                const pId = chk.value;
-                const limitVal = Number(document.getElementById(`limit-${pId}`).value) || 100;
-                
-                const product = allProducts.find(p => p.id === pId);
-                if (product) {
-                    const originalPrice = product.price;
-                    const discountPrice = Math.round(originalPrice * (1 - discount / 100));
-
-                    chosenProducts.push({
-                        productId: pId,
-                        name: product.name,
-                        originalPrice: originalPrice,
-                        discountPrice: discountPrice,
-                        totalLimit: limitVal,
-                        soldCount: 0
-                    });
-
-                    // Chuẩn bị ghi log đổi giá
-                    priceLogsToCreate.push({
-                        productId: pId,
-                        productName: product.name,
-                        oldPrice: originalPrice,
-                        newPrice: discountPrice,
-                        reason: reason,
-                        voucherCode: code,
-                        timestamp: new Date()
-                    });
-                }
-            }
-
             try {
-                // Lưu chiến dịch Voucher vào Firestore
-                await setDoc(doc(db, "vouchers", code), {
-                    code: code,
-                    discount: discount,
-                    reason: reason,
-                    products: chosenProducts,
-                    startTime: startTime,
-                    endTime: endTime,
-                    createdAt: serverTimestamp()
-                });
-
-                // Lưu các bản ghi Price Logs vào Firestore
-                for (const log of priceLogsToCreate) {
-                    await addDoc(collection(db, "price_logs"), log);
+                // Kiểm tra xem mã đã tồn tại chưa (chỉ khi đang tạo mới)
+                if (!editingVoucherCode) {
+                    const checkDoc = await getDoc(doc(db, "vouchers", code));
+                    if (checkDoc.exists()) {
+                        return alert("Mã Voucher này đã tồn tại! Vui lòng chọn mã khác hoặc chỉnh sửa mã cũ.");
+                    }
                 }
 
-                alert("Tạo chiến dịch giảm giá thành công!");
-                document.getElementById('v-code').value = '';
-                document.getElementById('v-reason').value = '';
-                document.getElementById('v-discount').value = 10;
-                document.getElementById('discount-val-label').innerText = '10%';
-                initDefaultDates();
+                // Đọc dữ liệu cũ của voucher (nếu có) để bảo toàn soldCount
+                const oldDoc = await getDoc(doc(db, "vouchers", code));
+                const oldData = oldDoc.exists() ? oldDoc.data() : {};
+
+                if (vType === 'product') {
+                    const discount = Number(document.getElementById('v-discount').value);
+                    const checkedBoxes = document.querySelectorAll('.product-chk:checked');
+                    if (checkedBoxes.length === 0) {
+                        return alert("Vui lòng chọn ít nhất 1 sản phẩm để áp dụng giảm giá!");
+                    }
+
+                    const chosenProducts = [];
+                    const priceLogsToCreate = [];
+
+                    for (const chk of checkedBoxes) {
+                        const pId = chk.value;
+                        const limitVal = Number(document.getElementById(`limit-${pId}`).value) || 100;
+                        
+                        const product = allProducts.find(p => p.id === pId);
+                        if (product) {
+                            const originalPrice = product.price;
+                            const discountPrice = Math.round(originalPrice * (1 - discount / 100));
+
+                            // Tìm soldCount cũ để không bị reset về 0
+                            let oldSoldCount = 0;
+                            if (oldData.products && Array.isArray(oldData.products)) {
+                                const oldProd = oldData.products.find(p => p.productId === pId);
+                                if (oldProd) oldSoldCount = oldProd.soldCount || 0;
+                            }
+
+                            chosenProducts.push({
+                                productId: pId,
+                                name: product.name,
+                                originalPrice: originalPrice,
+                                discountPrice: discountPrice,
+                                totalLimit: limitVal,
+                                soldCount: oldSoldCount
+                            });
+
+                            // Chuẩn bị ghi log đổi giá (chỉ khi tạo mới hoặc giá mới khác giá cũ)
+                            let shouldLog = true;
+                            if (oldData.products && Array.isArray(oldData.products)) {
+                                const oldProd = oldData.products.find(p => p.productId === pId);
+                                if (oldProd && oldProd.discountPrice === discountPrice) {
+                                    shouldLog = false; // Trùng giá không cần ghi log mới
+                                }
+                            }
+
+                            if (shouldLog) {
+                                priceLogsToCreate.push({
+                                    productId: pId,
+                                    productName: product.name,
+                                    oldPrice: originalPrice,
+                                    newPrice: discountPrice,
+                                    reason: reason,
+                                    voucherCode: code,
+                                    timestamp: new Date()
+                                });
+                            }
+                        }
+                    }
+
+                    // Lưu chiến dịch Voucher Sản phẩm vào Firestore
+                    await setDoc(doc(db, "vouchers", code), {
+                        code: code,
+                        type: "product",
+                        discount: discount,
+                        reason: reason,
+                        products: chosenProducts,
+                        startTime: startTime,
+                        endTime: endTime,
+                        limitPerUser: limitPerUser,
+                        createdAt: oldData.createdAt || serverTimestamp()
+                    });
+
+                    // Lưu các bản ghi Price Logs vào Firestore
+                    for (const log of priceLogsToCreate) {
+                        await addDoc(collection(db, "price_logs"), log);
+                    }
+                } else {
+                    // Xử lý lưu Voucher Vận chuyển (shipping)
+                    const minOrder = Number(document.getElementById('v-min-order').value) || 0;
+                    const shipType = document.querySelector('input[name="v-ship-type"]:checked').value;
+                    const shipDiscountVal = shipType === 'freeship' ? 0 : (Number(document.getElementById('v-ship-discount-val').value) || 0);
+                    const shipLimit = Number(document.getElementById('v-ship-limit').value) || 100;
+
+                    if (shipType === 'fixed' && shipDiscountVal <= 0) {
+                        return alert("Vui lòng nhập số tiền giảm ship hợp lệ!");
+                    }
+
+                    // Bảo toàn soldCount cũ của ship voucher
+                    let oldShipSoldCount = 0;
+                    if (oldData.shippingRule) {
+                        oldShipSoldCount = oldData.shippingRule.soldCount || 0;
+                    }
+
+                    // Lưu chiến dịch Voucher Ship vào Firestore
+                    await setDoc(doc(db, "vouchers", code), {
+                        code: code,
+                        type: "shipping",
+                        reason: reason,
+                        startTime: startTime,
+                        endTime: endTime,
+                        limitPerUser: limitPerUser,
+                        shippingRule: {
+                            minOrderValue: minOrder,
+                            discountShipType: shipType,
+                            discountShipValue: shipDiscountVal,
+                            totalLimit: shipLimit,
+                            soldCount: oldShipSoldCount
+                        },
+                        createdAt: oldData.createdAt || serverTimestamp()
+                    });
+                }
+
+                alert(editingVoucherCode ? "Cập nhật chiến dịch thành công!" : "Tạo chiến dịch giảm giá thành công!");
+                cancelEditVoucher();
                 
                 await loadProductCheckboxes();
                 await loadVouchers();
                 await loadPriceLogs();
 
             } catch (err) {
-                console.error("Lỗi tạo chiến dịch giảm giá:", err);
+                console.error("Lỗi lưu chiến dịch giảm giá:", err);
                 alert("Lỗi: " + err.message);
             }
+        };
+
+        // CHỈNH SỬA VOUCHER
+        window.editCampaign = async (code) => {
+            try {
+                const docSnap = await getDoc(doc(db, "vouchers", code));
+                if (!docSnap.exists()) return alert("Voucher không tồn tại!");
+                const v = docSnap.data();
+
+                editingVoucherCode = code;
+                
+                // Điền thông tin lên form
+                document.getElementById('v-code').value = v.code;
+                document.getElementById('v-code').disabled = true; // Khóa trường mã code
+
+                document.getElementById('v-type').value = v.type || "product";
+                toggleVoucherTypeFields();
+
+                document.getElementById('v-reason').value = v.reason || "";
+                document.getElementById('v-user-limit').value = v.limitPerUser || 1;
+
+                if (v.type === "shipping") {
+                    const rule = v.shippingRule || {};
+                    document.getElementById('v-min-order').value = rule.minOrderValue || 0;
+                    
+                    if (rule.discountShipType === "freeship") {
+                        document.getElementById('ship-type-free').checked = true;
+                    } else {
+                        document.getElementById('ship-type-fixed').checked = true;
+                    }
+                    toggleShipDiscountValue();
+
+                    document.getElementById('v-ship-discount-val').value = rule.discountShipValue || 20000;
+                    document.getElementById('v-ship-limit').value = rule.totalLimit || 100;
+                } else {
+                    document.getElementById('v-discount').value = v.discount || 10;
+                    document.getElementById('discount-val-label').innerText = (v.discount || 10) + '%';
+                    
+                    // Reset checkbox sản phẩm
+                    document.querySelectorAll('.product-chk').forEach(chk => {
+                        chk.checked = false;
+                        document.getElementById(`limit-${chk.value}`).disabled = true;
+                    });
+
+                    // Tích lại các checkbox sản phẩm
+                    if (v.products && Array.isArray(v.products)) {
+                        v.products.forEach(p => {
+                            const chk = document.getElementById(`chk-${p.productId}`);
+                            if (chk) {
+                                chk.checked = true;
+                                const limitInput = document.getElementById(`limit-${p.productId}`);
+                                if (limitInput) {
+                                    limitInput.disabled = false;
+                                    limitInput.value = p.totalLimit || 100;
+                                }
+                            }
+                        });
+                    }
+                }
+
+                // Cài đặt thời gian
+                if (!v.startTime && !v.endTime) {
+                    document.getElementById('v-unlimited-time').checked = true;
+                } else {
+                    document.getElementById('v-unlimited-time').checked = false;
+                    document.getElementById('v-start').value = v.startTime || "";
+                    document.getElementById('v-end').value = v.endTime || "";
+                }
+                toggleTimeInputs();
+
+                // Đổi nút submit
+                const btnSubmit = document.getElementById('btn-submit-voucher');
+                btnSubmit.innerHTML = `<i class="bi bi-pencil-square"></i> Cập nhật chiến dịch`;
+                btnSubmit.className = "btn btn-success w-100";
+
+                // Hiện nút hủy
+                document.getElementById('btn-cancel-edit-voucher').style.display = "block";
+
+            } catch (err) {
+                console.error("Lỗi nạp thông tin chỉnh sửa:", err);
+                alert("Lỗi: " + err.message);
+            }
+        };
+
+        // HỦY CHỈNH SỬA
+        window.cancelEditVoucher = () => {
+            editingVoucherCode = null;
+
+            document.getElementById('v-code').value = '';
+            document.getElementById('v-code').disabled = false;
+
+            document.getElementById('v-reason').value = '';
+            document.getElementById('v-discount').value = 10;
+            document.getElementById('discount-val-label').innerText = '10%';
+            document.getElementById('v-min-order').value = 0;
+            document.getElementById('v-ship-discount-val').value = 20000;
+            document.getElementById('v-ship-limit').value = 100;
+            document.getElementById('v-user-limit').value = 1;
+            document.getElementById('v-unlimited-time').checked = false;
+
+            toggleTimeInputs();
+            initDefaultDates();
+
+            const btnSubmit = document.getElementById('btn-submit-voucher');
+            btnSubmit.innerHTML = `<i class="bi bi-save-fill me-1"></i> Tạo chiến dịch giảm giá`;
+            btnSubmit.className = "btn btn-pay w-100";
+
+            document.getElementById('btn-cancel-edit-voucher').style.display = "none";
         };
 
         // 4. HIỂN THỊ DANH SÁCH CHIẾN DỊCH KHUYẾN MÃI & THỐNG KÊ DOANH SỐ
@@ -499,42 +775,70 @@
 
                 snap.forEach(d => {
                     const v = d.data();
+                    const vType = v.type || "product";
+                    
                     let prodDetailsHTML = '';
                     let totalVouchers = 0;
                     let totalSold = 0;
+                    let typeBadge = '';
+                    let valueDisplay = '';
 
-                    if (v.products && Array.isArray(v.products)) {
-                        v.products.forEach(p => {
-                            prodDetailsHTML += `
-                                <div class="mb-1">
-                                    • <b>${p.name}</b>: 
-                                    <span class="text-decoration-line-through text-muted small">${p.originalPrice.toLocaleString()}đ</span> 
-                                    → <span class="text-danger fw-bold">${p.discountPrice.toLocaleString()}đ</span>
-                                    <br><small class="text-secondary">(Giới hạn: ${p.totalLimit} món | Đã bán: ${p.soldCount || 0})</small>
-                                </div>
-                            `;
-                            totalVouchers += (p.totalLimit || 0);
-                            totalSold += (p.soldCount || 0);
-                        });
+                    if (vType === "shipping") {
+                        typeBadge = `<span class="badge bg-success small me-1">SHIP</span>`;
+                        const rule = v.shippingRule || {};
+                        if (rule.discountShipType === "freeship") {
+                            valueDisplay = `<span class="text-success fw-bold">FREESHIP</span>`;
+                            prodDetailsHTML = `<div>• <b>Miễn phí ship</b> cho đơn từ <b>${(rule.minOrderValue || 0).toLocaleString()}đ</b></div>`;
+                        } else {
+                            valueDisplay = `<span class="text-success fw-bold">-${(rule.discountShipValue || 0).toLocaleString()}đ Ship</span>`;
+                            prodDetailsHTML = `<div>• <b>Giảm ${rule.discountShipValue.toLocaleString()}đ ship</b> cho đơn từ <b>${(rule.minOrderValue || 0).toLocaleString()}đ</b></div>`;
+                        }
+                        totalVouchers = rule.totalLimit || 100;
+                        totalSold = rule.soldCount || 0;
+                    } else {
+                        typeBadge = `<span class="badge bg-dark small me-1">PRODUCT</span>`;
+                        valueDisplay = `<span class="text-danger fw-bold">-${v.discount}%</span>`;
+                        
+                        if (v.products && Array.isArray(v.products)) {
+                            v.products.forEach(p => {
+                                prodDetailsHTML += `
+                                    <div class="mb-1">
+                                        • <b>${p.name}</b>: 
+                                        <span class="text-decoration-line-through text-muted small">${p.originalPrice.toLocaleString()}đ</span> 
+                                        → <span class="text-danger fw-bold">${p.discountPrice.toLocaleString()}đ</span>
+                                        <br><small class="text-secondary">(Giới hạn: ${p.totalLimit} món | Đã bán: ${p.soldCount || 0})</small>
+                                    </div>
+                                `;
+                                totalVouchers += (p.totalLimit || 0);
+                                totalSold += (p.soldCount || 0);
+                            });
+                        }
                     }
 
-                    const startLocal = v.startTime ? new Date(v.startTime).toLocaleString('vi-VN') : 'N/A';
-                    const endLocal = v.endTime ? new Date(v.endTime).toLocaleString('vi-VN') : 'N/A';
+                    const startLocal = v.startTime ? new Date(v.startTime).toLocaleString('vi-VN') : 'Vô thời hạn';
+                    const endLocal = v.endTime ? new Date(v.endTime).toLocaleString('vi-VN') : 'Vô thời hạn';
+
+                    const limitUserText = v.limitPerUser ? `<div class="mt-1 text-primary fw-bold" style="font-size:0.7rem;"><i class="bi bi-person-fill-lock"></i> Giới hạn: ${v.limitPerUser} lần/tài khoản</div>` : '';
 
                     html += `
                         <tr>
                             <td>
-                                <span class="badge bg-dark px-3 py-2 fw-bold" style="letter-spacing: 0.5px; font-size: 0.85rem;">${v.code}</span>
+                                <div class="d-flex align-items-center gap-1 mb-1">
+                                    ${typeBadge}
+                                    <span class="badge bg-secondary px-2 py-1 fw-bold" style="letter-spacing: 0.5px; font-size: 0.8rem;">${v.code}</span>
+                                </div>
                                 <div class="mt-2 text-muted" style="font-size: 0.72rem; line-height: 1.4;">
                                     <div><i class="bi bi-play-circle-fill text-success"></i> <b>Bắt đầu:</b><br>${startLocal}</div>
                                     <div class="mt-1"><i class="bi bi-stop-circle-fill text-danger"></i> <b>Kết thúc:</b><br>${endLocal}</div>
+                                    ${limitUserText}
                                 </div>
                             </td>
-                            <td class="text-danger fw-bold" style="font-size: 1.1rem;">-${v.discount}%</td>
+                            <td style="font-size: 1rem;">${valueDisplay}</td>
                             <td>${prodDetailsHTML || '<span class="text-muted">Áp dụng tất cả</span>'}</td>
                             <td class="text-center fw-bold text-primary" style="font-size: 1rem;">${totalVouchers}</td>
                             <td class="text-center fw-bold text-success" style="font-size: 1rem;">${totalSold}</td>
                             <td class="text-end">
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editCampaign('${v.code}')"><i class="bi bi-pencil-fill"></i></button>
                                 <button class="btn btn-sm btn-outline-danger" onclick="deleteCampaign('${v.code}')"><i class="bi bi-trash-fill"></i></button>
                             </td>
                         </tr>
