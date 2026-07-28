@@ -391,10 +391,11 @@
         import { loadLayout } from '../js/layout.js';
         import { auth, db } from '../js/config.js';
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
         await loadLayout();
 
+        const urlParams = new URLSearchParams(window.location.search);
         let userUID = null;
         let cartItems = [];
         let totalAmount = 0;
@@ -679,42 +680,84 @@
                 document.getElementById('total-price').innerText = totalAmount.toLocaleString() + "đ";
                 btnSubmit.disabled = false;
 
-                // 3. Tự động áp dụng voucher đã chọn từ giỏ hàng hoặc trang mua ngay
+                // 3. Tự động áp dụng voucher đã chọn từ giỏ hàng hoặc trang mua ngay, hoặc tự động tìm voucher tốt nhất
+                let voucherCodeToApply = null;
                 const appliedVoucherStr = localStorage.getItem('applied_voucher_info');
                 if (appliedVoucherStr) {
                     try {
                         const apVoucher = JSON.parse(appliedVoucherStr);
-                        const vCode = apVoucher.code;
-                        if (vCode) {
-                            const vDocRef = doc(db, "vouchers", vCode);
-                            const vDocSnap = await getDoc(vDocRef);
-                            if (vDocSnap.exists()) {
-                                const v = vDocSnap.data();
-                                let discountTotal = 0;
-                                
+                        voucherCodeToApply = apVoucher ? apVoucher.code : null;
+                    } catch (e) {}
+                }
+
+                // Nếu chưa chỉ định voucher, tự động quét tìm voucher đang hiệu lực tối ưu nhất cho giỏ hàng
+                if (!voucherCodeToApply) {
+                    try {
+                        const snap = await getDocs(collection(db, "vouchers"));
+                        const now = new Date();
+                        let bestVoucher = null;
+                        let maxDiscount = 0;
+
+                        snap.forEach(d => {
+                            const v = d.data();
+                            const start = v.startTime ? new Date(v.startTime) : null;
+                            const end = v.endTime ? new Date(v.endTime) : null;
+
+                            if ((!start || now >= start) && (!end || now <= end)) {
+                                let currentDiscount = 0;
                                 if (v.products && Array.isArray(v.products)) {
                                     cartItems.forEach(item => {
                                         const match = v.products.find(p => p.productId === item.id);
                                         if (match && (match.soldCount || 0) < (match.totalLimit || 100)) {
-                                            discountTotal += (item.price - match.discountPrice) * item.quantity;
+                                            currentDiscount += (item.price - match.discountPrice) * item.quantity;
                                         }
                                     });
                                 }
-
-                                if (discountTotal > 0) {
-                                    activeVoucher = v;
-                                    discountAmount = discountTotal;
-
-                                    document.getElementById('applied-voucher-badge').innerText = v.code;
-                                    document.getElementById('applied-voucher-summary-block').style.display = 'block';
-                                    
-                                    document.getElementById('applied-code-label').innerText = v.code;
-                                    document.getElementById('voucher-discount-display').innerText = `-${discountTotal.toLocaleString()}đ`;
-                                    document.getElementById('voucher-discount-row').style.display = 'flex';
-                                    
-                                    const finalTotal = totalAmount - discountTotal;
-                                    document.getElementById('total-price').innerText = finalTotal.toLocaleString() + "đ";
+                                if (currentDiscount > maxDiscount) {
+                                    maxDiscount = currentDiscount;
+                                    bestVoucher = v;
                                 }
+                            }
+                        });
+
+                        if (bestVoucher) {
+                            voucherCodeToApply = bestVoucher.code;
+                        }
+                    } catch (err) {
+                        console.error("Lỗi tự động quét voucher tốt nhất:", err);
+                    }
+                }
+
+                if (voucherCodeToApply) {
+                    try {
+                        const vDocRef = doc(db, "vouchers", voucherCodeToApply);
+                        const vDocSnap = await getDoc(vDocRef);
+                        if (vDocSnap.exists()) {
+                            const v = vDocSnap.data();
+                            let discountTotal = 0;
+                            
+                            if (v.products && Array.isArray(v.products)) {
+                                cartItems.forEach(item => {
+                                    const match = v.products.find(p => p.productId === item.id);
+                                    if (match && (match.soldCount || 0) < (match.totalLimit || 100)) {
+                                        discountTotal += (item.price - match.discountPrice) * item.quantity;
+                                    }
+                                });
+                            }
+
+                            if (discountTotal > 0) {
+                                activeVoucher = v;
+                                discountAmount = discountTotal;
+
+                                document.getElementById('applied-voucher-badge').innerText = v.code;
+                                document.getElementById('applied-voucher-summary-block').style.display = 'block';
+                                
+                                document.getElementById('applied-code-label').innerText = v.code;
+                                document.getElementById('voucher-discount-display').innerText = `-${discountTotal.toLocaleString()}đ`;
+                                document.getElementById('voucher-discount-row').style.display = 'flex';
+                                
+                                const finalTotal = totalAmount - discountTotal;
+                                document.getElementById('total-price').innerText = finalTotal.toLocaleString() + "đ";
                             }
                         }
                     } catch (e) {
