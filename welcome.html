@@ -15,29 +15,29 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
         /* ══════════════════════════════════════════
            DESIGN TOKENS
         ══════════════════════════════════════════ */
         :root {
-            --coffee-deep:   #1a0e0a;
-            --coffee-dark:   #2c1810;
-            --coffee-rich:   #3e2215;
-            --coffee-warm:   #6f4e37;
-            --coffee-light:  #c4a882;
-            --cream:         #f5e6d3;
-            --cream-soft:    #faf3eb;
-            --gold:          #d4a76a;
-            --gold-light:    #e8c89e;
-            --gold-glow:     rgba(212, 167, 106, 0.15);
-            --accent:        #c45e3a;
-            --accent-soft:   rgba(196, 94, 58, 0.12);
-            --text-light:    #f8f0e5;
-            --text-muted:    #b8a89a;
-            --font-display:  'Playfair Display', Georgia, serif;
-            --font-body:     'Inter', 'Montserrat', sans-serif;
+            --coffee-deep:   #0a0604;
+            --coffee-dark:   #111111;
+            --coffee-rich:   #1a1a1a;
+            --coffee-warm:   #d4af37;
+            --coffee-light:  #eaeaea;
+            --cream:         #ffffff;
+            --cream-soft:    #f9f9f9;
+            --gold:          #d4af37;
+            --gold-light:    #f5d76e;
+            --gold-glow:     rgba(212, 175, 55, 0.12);
+            --accent:        #d4af37;
+            --accent-soft:   rgba(212, 175, 55, 0.08);
+            --text-light:    #f5f5f5;
+            --text-muted:    #8e8e8e;
+            --font-display:  'Montserrat', sans-serif;
+            --font-body:     'Montserrat', sans-serif;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1007,6 +1007,152 @@
             .section { padding: 80px 0; }
             .hero-actions { flex-direction: column; align-items: center; }
             .btn-hero { width: 100%; max-width: 280px; text-align: center; }
+        }
+
+        /* ── CUSTOM PREMIUM OVERRIDES FOR LIGHT/DARK CONTRAST ── */
+        
+        /* Hero Text Gradient & Spacing */
+        .hero-content {
+            padding-top: 100px !important; /* Đẩy chữ xuống dưới tránh bị header che khuất */
+        }
+
+        .hero-title {
+            background: linear-gradient(135deg, #ffffff 40%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: clamp(2.2rem, 5.2vw, 3.8rem) !important; /* Giảm kích thước chữ nhỏ lại */
+            font-weight: 800 !important;
+            letter-spacing: -1px;
+            line-height: 1.25 !important; /* Tạo độ thưa dòng hài hòa */
+        }
+        
+        .hero-title .accent {
+            background: linear-gradient(135deg, var(--gold) 10%, var(--gold-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-style: normal !important;
+            text-shadow: none !important;
+        }
+
+        /* 1. Story Section Overrides */
+        .story-section {
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+        .story-section .section-title {
+            color: #111111 !important;
+        }
+        .story-section .section-desc {
+            color: #333333 !important;
+        }
+        .story-section .text-muted {
+            color: #555555 !important;
+        }
+
+        /* 2. Features Section Overrides */
+        #features {
+            background: #f9f9f9 !important;
+            color: #111111 !important;
+        }
+        #features .section-title {
+            color: #111111 !important;
+        }
+        #features .section-desc {
+            color: #333333 !important;
+        }
+        #features .feature-card {
+            background: #ffffff !important;
+            border: 1px solid rgba(212, 175, 55, 0.18) !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03) !important;
+            backdrop-filter: none !important;
+        }
+        #features .feature-card h4 {
+            color: #111111 !important;
+            font-weight: 700;
+        }
+        #features .feature-card p {
+            color: #444444 !important;
+        }
+        #features .feature-card:hover {
+            border-color: var(--gold) !important;
+            box-shadow: 0 20px 45px rgba(212, 175, 55, 0.15) !important;
+            transform: translateY(-8px) !important;
+        }
+
+        /* 3. Collection/Showcase Section Overrides */
+        .showcase-section {
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+        .showcase-section .section-title {
+            color: #111111 !important;
+        }
+        .showcase-card {
+            background: #ffffff !important;
+            border: 1px solid rgba(212, 175, 55, 0.18) !important;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.03) !important;
+        }
+        .showcase-card-body h5 {
+            color: #111111 !important;
+            font-weight: 700;
+        }
+        .showcase-card-body p {
+            color: #444444 !important;
+        }
+        .showcase-card:hover {
+            border-color: var(--gold) !important;
+            box-shadow: 0 25px 50px rgba(212, 175, 55, 0.15) !important;
+            transform: translateY(-6px) scale(1.01) !important;
+        }
+
+        /* 4. Process Section Overrides */
+        .process-section {
+            background: #f9f9f9 !important;
+            color: #111111 !important;
+            border-top: 1px solid rgba(212, 175, 55, 0.08);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.08);
+        }
+        .process-section .section-title {
+            color: #111111 !important;
+        }
+        .process-section .section-desc {
+            color: #333333 !important;
+        }
+        .process-step h5 {
+            color: #111111 !important;
+            font-weight: 700;
+        }
+        .process-step p {
+            color: #444444 !important;
+        }
+        .process-number {
+            color: var(--gold) !important;
+            opacity: 0.85;
+        }
+        .process-icon {
+            background: rgba(212, 175, 55, 0.08) !important;
+            border-color: rgba(212, 175, 55, 0.25) !important;
+        }
+        .process-step:hover .process-icon {
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.15) !important;
+        }
+        
+        /* 5. Stats Strip Override */
+        .stats-strip {
+            background: linear-gradient(135deg, var(--coffee-dark) 0%, var(--coffee-deep) 100%) !important;
+            border-top: 1px solid rgba(212, 175, 55, 0.1);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+        }
+
+        /* 6. CTA Section */
+        .cta-section {
+            background: linear-gradient(180deg, var(--coffee-deep) 0%, #000000 100%) !important;
+        }
+        
+        /* 7. Footer */
+        .coffee-footer {
+            background: #000000 !important;
+            border-top: 1px solid rgba(212, 175, 55, 0.1) !important;
         }
     </style>
 </head>

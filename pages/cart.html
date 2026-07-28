@@ -527,8 +527,8 @@
                             </div>
 
                             <button id="btn-checkout" class="btn-checkout" disabled>
-                                <i class="bi bi-wallet2"></i>
-                                Thanh toán ZaloPay
+                                <i class="bi bi-arrow-right-circle-fill"></i>
+                                Tiến hành đặt hàng
                             </button>
 
                             <div class="summary-note">
@@ -781,7 +781,9 @@
         }
     }
 
-    document.getElementById('btn-checkout').addEventListener('click', startZaloPayPayment);
+    document.getElementById('btn-checkout').addEventListener('click', () => {
+        window.location.href = "checkout.html";
+    });
 </script>
 </body>
 </html>

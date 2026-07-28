@@ -115,7 +115,7 @@
     <script type="module">
         import { loadLayout } from '../js/layout.js';
         import { db, auth } from '../js/config.js';
-        import { doc, getDoc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { doc, getDoc, setDoc, deleteDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
         await loadLayout();
@@ -153,27 +153,80 @@
                         const userSnap = await getDoc(doc(db, "users", user.uid));
                         const userData = userSnap.exists() ? userSnap.data() : {};
 
+                        const checkoutAddressStr = localStorage.getItem('checkout_shipping_address');
+                        let checkoutAddress = null;
+                        if (checkoutAddressStr) {
+                            try {
+                                checkoutAddress = JSON.parse(checkoutAddressStr);
+                            } catch (e) {
+                                console.warn("Lỗi parse checkout_shipping_address:", e);
+                            }
+                        }
+
+                        const finalName = (checkoutAddress && checkoutAddress.fullName) ? checkoutAddress.fullName : (userData.fullName || user.email || "Khách hàng");
+                        const finalPhone = (checkoutAddress && checkoutAddress.phone) ? checkoutAddress.phone : (userData.phone || "Chưa cập nhật");
+                        const finalAddress = (checkoutAddress && checkoutAddress.address) ? checkoutAddress.address : (userData.address || "Chưa cập nhật");
+                        const finalProvince = (checkoutAddress && checkoutAddress.province) ? checkoutAddress.province : (userData.province || "");
+                        const finalDistrict = (checkoutAddress && checkoutAddress.district) ? checkoutAddress.district : (userData.district || "");
+                        const finalWard = (checkoutAddress && checkoutAddress.ward) ? checkoutAddress.ward : (userData.ward || "");
+
                         const cartItems = JSON.parse(localStorage.getItem('pending_items')) || [];
+
+                        // Đọc thông tin Voucher đã sử dụng
+                        const voucherInfoStr = localStorage.getItem('applied_voucher_info');
+                        let voucherCode = "";
+                        let discountAmount = 0;
+                        if (voucherInfoStr) {
+                            try {
+                                const vInfo = JSON.parse(voucherInfoStr);
+                                voucherCode = vInfo.code || "";
+                                discountAmount = vInfo.discountAmount || 0;
+                                
+                                // Cập nhật tăng soldCount cho voucher
+                                if (voucherCode) {
+                                    const vDocRef = doc(db, "vouchers", voucherCode);
+                                    const vDocSnap = await getDoc(vDocRef);
+                                    if (vDocSnap.exists()) {
+                                        const vData = vDocSnap.data();
+                                        let vProducts = [...(vData.products || [])];
+                                        
+                                        cartItems.forEach(item => {
+                                            const idx = vProducts.findIndex(p => p.productId === item.id);
+                                            if (idx !== -1) {
+                                                vProducts[idx].soldCount = (vProducts[idx].soldCount || 0) + item.quantity;
+                                            }
+                                        });
+                                        
+                                        await updateDoc(vDocRef, { products: vProducts });
+                                    }
+                                }
+                            } catch (e) {
+                                console.error("Lỗi cập nhật soldCount cho voucher:", e);
+                            }
+                        }
                         
                         // Lưu thông tin chi tiết đơn hàng
                         await setDoc(doc(db, "orders", orderId), {
                             userId: user.uid,
                             customerUID: user.uid, 
                             userEmail: user.email, 
-                            fullName: userData.fullName || user.email || "Khách hàng",
-                            phone: userData.phone || "Chưa cập nhật",
+                            fullName: finalName,
+                            phone: finalPhone,
                             
                             // Lưu địa chỉ giao nhận chi tiết
-                            address: userData.address || "Chưa cập nhật",
-                            province: userData.province || "",
-                            district: userData.district || "",
-                            ward: userData.ward || "",
+                            address: finalAddress,
+                            province: finalProvince,
+                            district: finalDistrict,
+                            ward: finalWard,
                             
                             items: cartItems,
                             
                             amount: Number(amount),
                             totalPrice: Number(amount),  
                             totalAmount: Number(amount), 
+                            
+                            voucherUsed: voucherCode,
+                            discountAmount: discountAmount,
                             
                             status: "Hoàn thành",
                             method: method,
@@ -183,6 +236,8 @@
                         await deleteDoc(doc(db, "carts", user.uid));
                         localStorage.removeItem('cart');
                         localStorage.removeItem('pending_items'); 
+                        localStorage.removeItem('checkout_shipping_address');
+                        localStorage.removeItem('applied_voucher_info');
                     }
                     showSuccess(orderId, amount);
                 } catch (error) {
