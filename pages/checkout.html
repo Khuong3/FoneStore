@@ -428,6 +428,34 @@
                 }
 
                 const v = docSnap.data();
+                
+                // Kiểm tra thời gian hiệu lực
+                const now = new Date();
+                const startTime = v.startTime ? new Date(v.startTime) : null;
+                const endTime = v.endTime ? new Date(v.endTime) : null;
+
+                if (startTime && now < startTime) {
+                    msgEl.style.display = 'block';
+                    msgEl.className = 'small mt-1 text-danger';
+                    msgEl.innerText = `Mã giảm giá chưa đến thời gian áp dụng (Bắt đầu từ: ${startTime.toLocaleString('vi-VN')})!`;
+                    discountRow.style.display = 'none';
+                    activeVoucher = null;
+                    discountAmount = 0;
+                    document.getElementById('total-price').innerText = totalAmount.toLocaleString() + "đ";
+                    return;
+                }
+
+                if (endTime && now > endTime) {
+                    msgEl.style.display = 'block';
+                    msgEl.className = 'small mt-1 text-danger';
+                    msgEl.innerText = `Mã giảm giá đã hết hạn sử dụng (Hết hạn từ: ${endTime.toLocaleString('vi-VN')})!`;
+                    discountRow.style.display = 'none';
+                    activeVoucher = null;
+                    discountAmount = 0;
+                    document.getElementById('total-price').innerText = totalAmount.toLocaleString() + "đ";
+                    return;
+                }
+
                 let discountTotal = 0;
 
                 // Kiểm tra xem sản phẩm trong giỏ có trùng với sản phẩm được giảm giá của Voucher không
