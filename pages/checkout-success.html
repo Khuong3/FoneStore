@@ -280,7 +280,7 @@
                         // Gửi email thông báo qua EmailJS
                         try {
                             const orderObj = {
-                                userEmail: user.email,
+                                userEmail: userData.email || user.email || "",
                                 fullName: finalName,
                                 phone: finalPhone,
                                 address: finalAddress,

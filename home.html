@@ -774,6 +774,14 @@
             const fullName = document.getElementById('profile-fullname').value.trim();
             const phone    = document.getElementById('profile-phone').value.trim();
             const email    = document.getElementById('profile-email').value.trim();
+            
+            if (!email.toLowerCase().endsWith("@gmail.com")) {
+                alert("Vui lòng nhập địa chỉ Email liên hệ có đuôi chính xác là @gmail.com!");
+                btn.disabled = false;
+                btn.innerText = "Lưu thay đổi";
+                return;
+            }
+            
             const province = citis.value; const district = districts.value; const ward = wards.value;
             const address  = document.getElementById('address-detail').value.trim();
             if (!fullName || !phone || !email) { alert("Vui lòng nhập đầy đủ thông tin."); btn.disabled = false; btn.innerText = "Lưu thay đổi"; return; }

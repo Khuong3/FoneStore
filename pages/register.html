@@ -319,7 +319,7 @@
                 <label class="form-label">Email</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                    <input type="email" id="email" class="form-control" placeholder="name@example.com" required>
+                    <input type="email" id="email" class="form-control" placeholder="name@gmail.com" required>
                 </div>
             </div>
 
@@ -354,7 +354,15 @@
         btnSubmit.disabled = true;
         btnSubmit.innerText = "Đang xử lý...";
 
-        const email = document.getElementById('email').value;
+        const email = document.getElementById('email').value.trim();
+        
+        if (!email.toLowerCase().endsWith("@gmail.com")) {
+            alert("Vui lòng đăng ký bằng địa chỉ Email có đuôi chính xác là @gmail.com!");
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = "Đăng ký ngay";
+            return;
+        }
+
         const password = document.getElementById('password').value;
         const info = {
             fullName: document.getElementById('fullName').value,
