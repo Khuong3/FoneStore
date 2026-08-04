@@ -292,15 +292,17 @@
                                 method: method
                             };
                             
+                            console.log("Đang tải module email.js...");
                             const { sendOrderConfirmationToCustomer, sendOrderNotificationToStaff } = await import('../js/email.js');
                             
-                            // Gửi cho khách
-                            sendOrderConfirmationToCustomer(orderId, orderObj);
+                            console.log("Gửi email cho Khách hàng...");
+                            await sendOrderConfirmationToCustomer(orderId, orderObj);
                             
-                            // Gửi cho nhân viên
-                            sendOrderNotificationToStaff(orderId, orderObj);
+                            console.log("Gửi email cho Staff/Admin...");
+                            await sendOrderNotificationToStaff(orderId, orderObj);
+                            console.log("Gửi các email thông báo hoàn tất!");
                         } catch (mailErr) {
-                            console.error("Lỗi gửi email:", mailErr);
+                            console.error("Lỗi gửi email trong checkout-success:", mailErr);
                         }
 
                         await deleteDoc(doc(db, "carts", user.uid));

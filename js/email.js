@@ -5,7 +5,7 @@ import { collection, getDocs, query, where } from "https://www.gstatic.com/fireb
 
 // CẤU HÌNH EMAILJS: Hỗ trợ gói Free tối đa 2 Email Templates
 export const emailjsConfig = {
-    serviceId: "service_fstore",          // Service ID của bạn từ EmailJS
+    serviceId: "service_53hagsn",          // Service ID của bạn từ EmailJS
     publicKey: "tlBWYrwaB2_uOtB5b",    // Public Key của bạn từ EmailJS
     privateKey: "I5eiLCuM4AccA2jVgIxZ9",  // Private Key (chỉ dùng nếu chạy ở Server-side / Cloud Functions)
     

@@ -269,7 +269,7 @@ exports.dailyOrderSummaryReport = functions.pubsub
             }
             
             // 4. Gửi email thông qua EmailJS REST API
-            const SERVICE_ID = "service_fstore"; 
+            const SERVICE_ID = "service_53hagsn"; 
             const TEMPLATE_ID = "template_099l9zq";
             const PUBLIC_KEY = "tlBWYrwaB2_uOtB5b";
             const PRIVATE_KEY = "I5eiLCuM4AccA2jVgIxZ9"; // Cần cung cấp Private Key cho server-side
