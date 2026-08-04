@@ -3,18 +3,16 @@
 import { db } from './config.js';
 import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-// ĐỐI VỚI NGƯỜI DÙNG: Hãy điền các thông tin EmailJS của bạn ở đây
+// CẤU HÌNH EMAILJS: Hỗ trợ gói Free tối đa 2 Email Templates
 export const emailjsConfig = {
     serviceId: "service_fstore",          // Service ID của bạn từ EmailJS
     publicKey: "tlBWYrwaB2_uOtB5b",    // Public Key của bạn từ EmailJS
     privateKey: "I5eiLCuM4AccA2jVgIxZ9",  // Private Key (chỉ dùng nếu chạy ở Server-side / Cloud Functions)
     
-    // Các Template ID tương ứng
+    // 2 mẫu Email tương ứng
     templates: {
-        adminProductNotification: "template_admin_prod", // Gửi mail cho Admin khi nhân viên thêm/sửa/đóng sản phẩm
-        customerOrderConfirmation: "template_cust_order", // Gửi xác nhận đơn hàng cho khách hàng
-        staffOrderNotification: "template_staff_order",   // Gửi báo đơn mới cho nhân viên
-        dailySummaryNotification: "template_daily_summary" // Gửi báo cáo đơn hàng chưa hoàn thành cuối ngày
+        customerOrderConfirmation: "template_vbkai2r", // Mẫu 1: Gửi xác nhận đơn hàng cho khách hàng
+        staffOrderNotification: "template_099l9zq"   // Mẫu 2: Gửi cho nội bộ Admin/Staff (dùng chung cho mọi thông báo đơn mới, duyệt sản phẩm, báo cáo ngày)
     },
     
     // Email người nhận mặc định (nếu không truy vấn được từ Firestore)
@@ -23,10 +21,9 @@ export const emailjsConfig = {
 };
 
 // Tự động tải thư viện EmailJS Browser SDK từ CDN nếu chưa được tích hợp
-export function initEmailJS() {
+function initEmailJS() {
     return new Promise((resolve) => {
         if (window.emailjs) {
-            window.emailjs.init({ publicKey: emailjsConfig.publicKey });
             resolve(window.emailjs);
             return;
         }
@@ -40,7 +37,7 @@ export function initEmailJS() {
     });
 }
 
-// 1. Gửi thông báo phê duyệt sản phẩm cho Admin
+// 1. Gửi thông báo phê duyệt sản phẩm cho Admin (Dùng chung mẫu template_staff_order)
 export async function sendAdminProductNotification({ staffName, actionType, productName, details, editReason }) {
     await initEmailJS();
     
@@ -56,20 +53,50 @@ export async function sendAdminProductNotification({ staffName, actionType, prod
         console.error("Lỗi tìm email Admin:", e);
     }
 
+    const htmlContent = `
+        <p style="margin-top: 0; font-size: 16px;">Xin chào Admin,</p>
+        <p style="line-height: 1.6;">Một nhân viên bán hàng vừa gửi yêu cầu phê duyệt thao tác sản phẩm trên hệ thống. Chi tiết yêu cầu:</p>
+        
+        <div style="background-color: #f9f9f9; border-left: 4px solid #d4af37; padding: 16px; border-radius: 4px; margin: 20px 0;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <tr>
+                    <td style="padding: 6px 0; color: #666666; width: 140px; font-weight: 600;">Nhân viên yêu cầu:</td>
+                    <td style="padding: 6px 0; font-weight: 700; color: #111;">${staffName}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #666666; font-weight: 600;">Loại yêu cầu:</td>
+                    <td style="padding: 6px 0; font-weight: 700; color: #e76f51;">${actionType}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #666666; font-weight: 600;">Sản phẩm:</td>
+                    <td style="padding: 6px 0; font-weight: 700; color: #d4af37;">${productName}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #666666; font-weight: 600;">Thông tin đề xuất:</td>
+                    <td style="padding: 6px 0; font-weight: 600;">${details}</td>
+                </tr>
+            </table>
+        </div>
+
+        <h4 style="margin: 20px 0 10px 0; font-size: 15px; border-bottom: 1px solid #eeeeee; padding-bottom: 6px; color: #e63946;">Lý do thực hiện thay đổi:</h4>
+        <div style="font-size: 14px; background-color: #fff0f0; border-left: 4px solid #e63946; padding: 12px 16px; border-radius: 4px; color: #c0392b; font-style: italic;">
+            "${editReason || "Không có lý do"}"
+        </div>
+
+        <p style="margin-top: 24px; line-height: 1.6; font-size: 14px; color: #555555;">Vui lòng đăng nhập vào trang quản lý Admin, mở mục **Quản lý sản phẩm** và chọn tab **"Duyệt yêu cầu"** để xem chi tiết thông tin ảnh và tiến hành Duyệt hoặc Từ chối.</p>
+    `;
+
     const templateParams = {
         to_email: adminEmail,
-        staff_name: staffName,
-        action_type: actionType,
-        product_name: productName,
-        details: details,
-        edit_reason: editReason || "Không có",
+        notification_title: "YÊU CẦU PHÊ DUYỆT SẢN PHẨM",
+        message_content: htmlContent,
         subject: `[FoneStore Admin] Yêu cầu phê duyệt: ${actionType} - ${productName}`
     };
 
     try {
         const response = await window.emailjs.send(
             emailjsConfig.serviceId,
-            emailjsConfig.templates.adminProductNotification,
+            emailjsConfig.templates.staffOrderNotification,
             templateParams
         );
         console.log("Email gửi cho Admin thành công:", response);
@@ -80,7 +107,7 @@ export async function sendAdminProductNotification({ staffName, actionType, prod
     }
 }
 
-// 2. Gửi xác nhận đơn hàng cho Khách hàng
+// 2. Gửi xác nhận đơn hàng cho Khách hàng (Dùng mẫu template_cust_order độc lập)
 export async function sendOrderConfirmationToCustomer(orderId, orderData) {
     await initEmailJS();
 
@@ -118,7 +145,7 @@ export async function sendOrderConfirmationToCustomer(orderId, orderData) {
     }
 }
 
-// 3. Gửi thông báo đơn hàng mới cho Nhân viên
+// 3. Gửi thông báo đơn hàng mới cho Nhân viên (Dùng chung mẫu template_staff_order)
 export async function sendOrderNotificationToStaff(orderId, orderData) {
     await initEmailJS();
 
@@ -141,14 +168,44 @@ export async function sendOrderNotificationToStaff(orderId, orderData) {
         `- ${item.name} x ${item.quantity}`
     ).join("\n");
 
+    const htmlContent = `
+        <p style="margin-top: 0; font-size: 16px;">Xin chào Nhân viên bán hàng,</p>
+        <p style="line-height: 1.6;">Hệ thống vừa ghi nhận một đơn hàng mới cần được xử lý nhanh chóng. Dưới đây là thông tin chi tiết:</p>
+        
+        <div style="background-color: #f9f9f9; border-left: 4px solid #d4af37; padding: 16px; border-radius: 4px; margin: 20px 0;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <tr>
+                    <td style="padding: 6px 0; color: #666666; width: 140px; font-weight: 600;">Mã đơn hàng:</td>
+                    <td style="padding: 6px 0; font-weight: 700; color: #d4af37;">#${orderId}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #666666; font-weight: 600;">Khách hàng:</td>
+                    <td style="padding: 6px 0; font-weight: 600;">${orderData.fullName || "Khách hàng"}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #666666; font-weight: 600;">Tổng giá trị:</td>
+                    <td style="padding: 6px 0; font-weight: 700; color: #e63946;">${Number(orderData.amount).toLocaleString()}đ</td>
+                </tr>
+                <tr>
+                    <td style="padding: 6px 0; color: #666666; font-weight: 600;">Thanh toán:</td>
+                    <td style="padding: 6px 0; font-weight: 600; color: #2a9d8f;">${orderData.method || "ZaloPay"}</td>
+                </tr>
+            </table>
+        </div>
+
+        <h4 style="margin: 20px 0 10px 0; font-size: 15px; border-bottom: 1px solid #eeeeee; padding-bottom: 6px; color: #111;">Sản phẩm đặt mua:</h4>
+        <div style="white-space: pre-line; line-height: 1.6; font-size: 14px; background-color: #fafafa; padding: 12px 16px; border-radius: 6px; border: 1px dashed #e0e0e0;">
+            ${itemsText}
+        </div>
+
+        <p style="margin-top: 24px; line-height: 1.6; font-size: 14px; color: #555555;">Vui lòng truy cập trang quản lý đơn hàng của Admin FoneStore để xác nhận và tiến hành đóng gói giao nhận cho đơn vị vận chuyển.</p>
+    `;
+
     const promises = staffEmails.map(async (email) => {
         const templateParams = {
             to_email: email,
-            order_id: orderId,
-            customer_name: orderData.fullName || "Khách hàng",
-            items_list: itemsText,
-            total_amount: `${Number(orderData.amount).toLocaleString()}đ`,
-            payment_method: orderData.method || "ZaloPay",
+            notification_title: "THÔNG BÁO ĐƠN HÀNG MỚI",
+            message_content: htmlContent,
             subject: `[FoneStore Staff] Đơn hàng mới cần xử lý #${orderId}`
         };
 
@@ -167,22 +224,35 @@ export async function sendOrderNotificationToStaff(orderId, orderData) {
     return await Promise.all(promises);
 }
 
-// 4. Gửi báo cáo đơn hàng chưa hoàn thành cuối ngày (5:00 PM)
+// 4. Gửi báo cáo đơn hàng chưa hoàn thành cuối ngày (5:00 PM) (Dùng chung mẫu template_staff_order)
 export async function sendDailyIncompleteOrdersSummary(emailList, summaryContent) {
     await initEmailJS();
+
+    const reportDate = new Date().toLocaleDateString("vi-VN");
+    const htmlContent = `
+        <p style="margin-top: 0; font-size: 16px;">Xin chào thành viên FoneStore,</p>
+        <p style="line-height: 1.6;">Dưới đây là danh sách tổng hợp các đơn hàng hiện có trạng thái **chưa hoàn thành** cần xử lý cuối ngày hôm nay:</p>
+        
+        <div style="margin: 20px 0; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; white-space: pre-line; line-height: 1.8; font-size: 14px; color: #333333; font-family: monospace, Courier;">
+            ${summaryContent}
+        </div>
+
+        <p style="margin-top: 24px; line-height: 1.6; font-size: 14px; color: #e63946; font-weight: 600;">⚠️ Yêu cầu:</p>
+        <p style="line-height: 1.6; font-size: 14px; color: #555555; margin-top: 4px;">Tất cả nhân viên và Admin phụ trách đơn hàng vui lòng đối soát trạng thái, liên hệ đơn vị vận chuyển hoặc khách hàng để hoàn tất các đơn hàng tồn đọng trên.</p>
+    `;
 
     const promises = emailList.map(async (email) => {
         const templateParams = {
             to_email: email,
-            summary_content: summaryContent,
-            report_date: new Date().toLocaleDateString("vi-VN"),
+            notification_title: `BÁO CÁO ĐƠN HÀNG CHƯA HOÀN THÀNH - ${reportDate}`,
+            message_content: htmlContent,
             subject: `[FoneStore Daily Summary] Báo cáo các đơn hàng chưa hoàn thành cần xử lý`
         };
 
         try {
             return await window.emailjs.send(
                 emailjsConfig.serviceId,
-                emailjsConfig.templates.dailySummaryNotification,
+                emailjsConfig.templates.staffOrderNotification,
                 templateParams
             );
         } catch (err) {

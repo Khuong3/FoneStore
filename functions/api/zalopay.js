@@ -12,12 +12,12 @@ export async function onRequestPost({ request }) {
     try {
         // Lấy dữ liệu gửi từ Frontend lên
         const data = await request.json();
-        const { amount, orderInfo, userId } = data;
+        const { amount, orderInfo, userId, redirectUrl } = data;
 
         // Cấu hình ZaloPay Sandbox
         const APP_ID = 2553;
         const KEY1   = "PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL";
-        const REDIRECT_URL = "https://fonestore.pages.dev/pages/checkout-success.html";
+        const REDIRECT_URL = redirectUrl || "https://fonestore.pages.dev/pages/checkout-success.html";
 
         // Đồng bộ thời gian thực tế từ Internet bằng cơ chế dự phòng kép (tránh giờ máy tính local bị chỉnh sai năm 2026)
         let appTime = Date.now();

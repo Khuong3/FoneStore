@@ -270,9 +270,22 @@ exports.dailyOrderSummaryReport = functions.pubsub
             
             // 4. Gửi email thông qua EmailJS REST API
             const SERVICE_ID = "service_fstore"; 
-            const TEMPLATE_ID = "template_daily_summary";
+            const TEMPLATE_ID = "template_099l9zq";
             const PUBLIC_KEY = "tlBWYrwaB2_uOtB5b";
             const PRIVATE_KEY = "I5eiLCuM4AccA2jVgIxZ9"; // Cần cung cấp Private Key cho server-side
+
+            const reportDate = new Date().toLocaleDateString("vi-VN");
+            const htmlContent = `
+                <p style="margin-top: 0; font-size: 16px;">Xin chào thành viên FoneStore,</p>
+                <p style="line-height: 1.6;">Dưới đây là danh sách tổng hợp các đơn hàng hiện có trạng thái **chưa hoàn thành** cần xử lý cuối ngày hôm nay:</p>
+                
+                <div style="margin: 20px 0; background-color: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; white-space: pre-line; line-height: 1.8; font-size: 14px; color: #333333; font-family: monospace, Courier;">
+                    ${summaryContent}
+                </div>
+
+                <p style="margin-top: 24px; line-height: 1.6; font-size: 14px; color: #e63946; font-weight: 600;">⚠️ Yêu cầu:</p>
+                <p style="line-height: 1.6; font-size: 14px; color: #555555; margin-top: 4px;">Tất cả nhân viên và Admin phụ trách đơn hàng vui lòng đối soát trạng thái, liên hệ đơn vị vận chuyển hoặc khách hàng để hoàn tất các đơn hàng tồn đọng trên.</p>
+            `;
 
             const promises = emailList.map(async (email) => {
                 const requestBody = {
@@ -282,8 +295,9 @@ exports.dailyOrderSummaryReport = functions.pubsub
                     accessToken: PRIVATE_KEY,
                     template_params: {
                         to_email: email,
-                        summary_content: summaryContent,
-                        report_date: new Date().toLocaleDateString("vi-VN")
+                        notification_title: `BÁO CÁO ĐƠN HÀNG CHƯA HOÀN THÀNH - ${reportDate}`,
+                        message_content: htmlContent,
+                        subject: `[FoneStore Daily Summary] Báo cáo các đơn hàng chưa hoàn thành cần xử lý`
                     }
                 };
                 
