@@ -271,8 +271,8 @@ exports.dailyOrderSummaryReport = functions.pubsub
             // 4. Gửi email thông qua EmailJS REST API
             const SERVICE_ID = "service_53hagsn"; 
             const TEMPLATE_ID = "template_099l9zq";
-            const PUBLIC_KEY = "tlBWYrwaB2_uOtB5b";
-            const PRIVATE_KEY = "I5eiLCuM4AccA2jVgIxZ9"; // Cần cung cấp Private Key cho server-side
+            const PUBLIC_KEY = "tIBWYrwaB2_uOtB5b";
+            const PRIVATE_KEY = "l5eiLCuM4AccA2jVgIxZ9"; // Cần cung cấp Private Key cho server-side
 
             const reportDate = new Date().toLocaleDateString("vi-VN");
             const htmlContent = `
