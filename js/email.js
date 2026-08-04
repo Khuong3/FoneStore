@@ -88,6 +88,7 @@ export async function sendAdminProductNotification({ staffName, actionType, prod
 
     const templateParams = {
         to_email: adminEmail,
+        email: adminEmail, // Đồng bộ với {{email}} trên giao diện EmailJS
         notification_title: "YÊU CẦU PHÊ DUYỆT SẢN PHẨM",
         message_content: htmlContent,
         subject: `[FoneStore Admin] Yêu cầu phê duyệt: ${actionType} - ${productName}`
@@ -119,8 +120,11 @@ export async function sendOrderConfirmationToCustomer(orderId, orderData) {
     estDelivery.setDate(estDelivery.getDate() + 3); // Dự kiến giao hàng sau 3 ngày
     const estDeliveryStr = estDelivery.toLocaleDateString("vi-VN");
 
+    const targetEmail = orderData.userEmail || orderData.email || "";
+
     const templateParams = {
-        to_email: orderData.userEmail || orderData.email || "",
+        to_email: targetEmail,
+        email: targetEmail, // Đồng bộ với {{email}} trên giao diện EmailJS
         customer_name: orderData.fullName || "Khách hàng",
         order_id: orderId,
         items_list: itemsText,
@@ -204,6 +208,7 @@ export async function sendOrderNotificationToStaff(orderId, orderData) {
     const promises = staffEmails.map(async (email) => {
         const templateParams = {
             to_email: email,
+            email: email, // Đồng bộ với {{email}} trên giao diện EmailJS
             notification_title: "THÔNG BÁO ĐƠN HÀNG MỚI",
             message_content: htmlContent,
             subject: `[FoneStore Staff] Đơn hàng mới cần xử lý #${orderId}`
@@ -244,6 +249,7 @@ export async function sendDailyIncompleteOrdersSummary(emailList, summaryContent
     const promises = emailList.map(async (email) => {
         const templateParams = {
             to_email: email,
+            email: email, // Đồng bộ với {{email}} trên giao diện EmailJS
             notification_title: `BÁO CÁO ĐƠN HÀNG CHƯA HOÀN THÀNH - ${reportDate}`,
             message_content: htmlContent,
             subject: `[FoneStore Daily Summary] Báo cáo các đơn hàng chưa hoàn thành cần xử lý`

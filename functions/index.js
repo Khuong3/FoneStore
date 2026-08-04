@@ -295,6 +295,7 @@ exports.dailyOrderSummaryReport = functions.pubsub
                     accessToken: PRIVATE_KEY,
                     template_params: {
                         to_email: email,
+                        email: email, // Hỗ trợ cả {{email}}
                         notification_title: `BÁO CÁO ĐƠN HÀNG CHƯA HOÀN THÀNH - ${reportDate}`,
                         message_content: htmlContent,
                         subject: `[FoneStore Daily Summary] Báo cáo các đơn hàng chưa hoàn thành cần xử lý`
