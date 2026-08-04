@@ -1,3 +1,13 @@
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type"
+};
+
+export async function onRequestOptions() {
+    return new Response(null, { headers: corsHeaders });
+}
+
 export async function onRequestPost({ request }) {
     try {
         // Lấy dữ liệu gửi từ Frontend lên
@@ -105,15 +115,16 @@ export async function onRequestPost({ request }) {
         // Ghi log kết quả để debug
         console.log("ZaloPay Sandbox API response:", JSON.stringify(zalopayResult));
 
+        let res;
         if (zalopayResult.return_code === 1 && zalopayResult.order_url) {
             // Trả link thanh toán về cho Frontend
-            return Response.json({ 
+            res = Response.json({ 
                 success: true, 
                 payUrl: zalopayResult.order_url, 
                 orderId: appTransId 
             });
         } else {
-            return Response.json({ 
+            res = Response.json({ 
                 success: false, 
                 message: zalopayResult.return_message || "Giao dịch thất bại",
                 debug: {
@@ -124,7 +135,13 @@ export async function onRequestPost({ request }) {
             });
         }
 
+        // Gán CORS headers cho Response
+        Object.entries(corsHeaders).forEach(([k, v]) => res.headers.set(k, v));
+        return res;
+
     } catch (error) {
-        return Response.json({ success: false, message: error.message }, { status: 500 });
+        const res = Response.json({ success: false, message: error.message }, { status: 500 });
+        Object.entries(corsHeaders).forEach(([k, v]) => res.headers.set(k, v));
+        return res;
     }
 }

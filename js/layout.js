@@ -759,7 +759,13 @@ function initHeaderAuth() {
 
             if (userSnap.exists()) {
                 userData = userSnap.data();
-                if (userData.role === 'admin' && adminBtn) {
+                if (userData.status === 'blocked') {
+                    alert("Tài khoản của bạn đã bị khóa bởi Quản trị viên!");
+                    await auth.signOut();
+                    window.location.reload();
+                    return;
+                }
+                if ((userData.role === 'admin' || userData.role === 'staff') && adminBtn) {
                     adminBtn.style.display = 'inline-block';
                 }
             } else {

@@ -277,6 +277,32 @@
                             createdAt: serverTimestamp()
                         });
 
+                        // Gửi email thông báo qua EmailJS
+                        try {
+                            const orderObj = {
+                                userEmail: user.email,
+                                fullName: finalName,
+                                phone: finalPhone,
+                                address: finalAddress,
+                                province: finalProvince,
+                                district: finalDistrict,
+                                ward: finalWard,
+                                items: cartItems,
+                                amount: Number(amount),
+                                method: method
+                            };
+                            
+                            const { sendOrderConfirmationToCustomer, sendOrderNotificationToStaff } = await import('../js/email.js');
+                            
+                            // Gửi cho khách
+                            sendOrderConfirmationToCustomer(orderId, orderObj);
+                            
+                            // Gửi cho nhân viên
+                            sendOrderNotificationToStaff(orderId, orderObj);
+                        } catch (mailErr) {
+                            console.error("Lỗi gửi email:", mailErr);
+                        }
+
                         await deleteDoc(doc(db, "carts", user.uid));
                         localStorage.removeItem('cart');
                         localStorage.removeItem('pending_items'); 

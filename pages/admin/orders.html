@@ -116,6 +116,11 @@
                                 <i class="bi bi-tags-fill"></i> Khuyến mãi
                             </a>
                         </li>
+                        <li class="nav-item" id="sidebar-users-li" style="display: none;">
+                            <a class="nav-link" href="users.html">
+                                <i class="bi bi-people-fill"></i> Thành viên
+                            </a>
+                        </li>
                     </ul>
                 </div>
                 <div class="pb-4">
@@ -136,13 +141,110 @@
     <script type="module">
         import { auth, db } from '../../js/config.js';
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-        import { doc, getDoc, collection, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { doc, getDoc, setDoc, collection, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) { window.location.href = "../login.html"; return; }
             const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (!userDoc.exists() || userDoc.data().role !== "admin") { window.location.href = "../../home.html"; }
+            if (!userDoc.exists() || (userDoc.data().role !== "admin" && userDoc.data().role !== "staff")) {
+                window.location.href = "../../home.html";
+                return;
+            }
+            if (userDoc.data().status === "blocked") {
+                alert("Tài khoản của bạn đã bị khóa!");
+                await auth.signOut();
+                window.location.href = "../../home.html";
+                return;
+            }
+            const role = userDoc.data().role;
+            if (role === "admin") {
+                const userLi = document.getElementById("sidebar-users-li");
+                if (userLi) userLi.style.display = "block";
+            }
+            if (role === "staff") {
+                const sidebarLinks = document.querySelectorAll('.sidebar .nav-link');
+                sidebarLinks.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && (href.includes('dashboard.html') || href.includes('vouchers.html'))) {
+                        link.parentElement.style.display = 'none';
+                    }
+                });
+            }
+            
+            // Chạy kiểm tra gửi báo cáo cuối ngày lúc 5h chiều
+            checkAndSendDailySummary();
         });
+
+        async function checkAndSendDailySummary() {
+            const now = new Date();
+            const hours = now.getHours();
+            
+            // Chỉ gửi nếu giờ hiện tại >= 17 (5h chiều)
+            if (hours >= 17) {
+                const todayStr = now.toISOString().slice(0, 10); // Định dạng YYYY-MM-DD
+                const docRef = doc(db, "system_settings", "daily_summary");
+                
+                try {
+                    const summaryDoc = await getDoc(docRef);
+                    if (!summaryDoc.exists() || summaryDoc.data().lastSentDate !== todayStr) {
+                        console.log("Tiến hành gửi báo cáo đơn hàng chưa hoàn thành cuối ngày...");
+                        
+                        // Lấy tất cả các đơn hàng có trạng thái KHÁC "Hoàn thành" và "Hủy"
+                        const snapshot = await getDocs(collection(db, "orders"));
+                        const incompleteOrders = [];
+                        snapshot.forEach(doc => {
+                            const o = doc.data();
+                            if (o.status !== "Hoàn thành" && o.status !== "Hủy") {
+                                incompleteOrders.push({ id: doc.id, ...o });
+                            }
+                        });
+                        
+                        if (incompleteOrders.length === 0) {
+                            console.log("Không có đơn hàng nào chưa hoàn thành.");
+                            await setDoc(docRef, { lastSentDate: todayStr }, { merge: true });
+                            return;
+                        }
+                        
+                        // Tạo nội dung tóm tắt
+                        let summaryContent = `Báo cáo ngày ${new Date().toLocaleDateString("vi-VN")}:\n`;
+                        summaryContent += `Có tổng cộng ${incompleteOrders.length} đơn hàng chưa hoàn thành và cần xử lý:\n\n`;
+                        incompleteOrders.forEach((o, index) => {
+                            const itemsStr = o.items ? o.items.map(i => `${i.name} x${i.quantity}`).join(", ") : "Không có";
+                            summaryContent += `${index + 1}. Đơn hàng #${o.id || o.orderId}\n`;
+                            summaryContent += `   - Khách hàng: ${o.fullName || "N/A"} (${o.phone || "N/A"})\n`;
+                            summaryContent += `   - Trạng thái: ${o.status || "N/A"}\n`;
+                            summaryContent += `   - Trị giá: ${Number(o.amount).toLocaleString()}đ\n`;
+                            summaryContent += `   - Chi tiết sản phẩm: ${itemsStr}\n`;
+                            summaryContent += `   - Địa chỉ: ${o.address || ""}, ${o.ward || ""}, ${o.district || ""}, ${o.province || ""}\n\n`;
+                        });
+                        
+                        // Lấy toàn bộ email của Admin và Staff
+                        const emailList = [];
+                        const usersSnap = await getDocs(collection(db, "users"));
+                        usersSnap.forEach(d => {
+                            const u = d.data();
+                            if ((u.role === "admin" || u.role === "staff") && u.email) {
+                                emailList.push(u.email);
+                            }
+                        });
+                        
+                        if (emailList.length === 0) {
+                            emailList.push("admin_fonestore@mailinator.com");
+                        }
+                        
+                        // Gửi email
+                        const { sendDailyIncompleteOrdersSummary } = await import('../../js/email.js');
+                        await sendDailyIncompleteOrdersSummary(emailList, summaryContent);
+                        
+                        // Lưu trạng thái đã gửi hôm nay
+                        await setDoc(docRef, { lastSentDate: todayStr }, { merge: true });
+                        console.log("Gửi báo cáo cuối ngày thành công!");
+                    }
+                } catch (err) {
+                    console.error("Lỗi khi kiểm tra/gửi báo cáo cuối ngày:", err);
+                }
+            }
+        }
 
         async function loadOrders() {
             try {

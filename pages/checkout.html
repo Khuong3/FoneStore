@@ -1157,7 +1157,8 @@
                     }
                 }
 
-                const response = await fetch('/api/zalopay', {
+                const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'https://fonestore.pages.dev' : '';
+                const response = await fetch(`${apiBase}/api/zalopay`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

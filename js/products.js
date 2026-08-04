@@ -15,8 +15,9 @@ async function showProducts() {
         let htmlContent = '';
 
         querySnapshot.forEach((doc) => {
-    const data = doc.data();
-    htmlContent += `
+            const data = doc.data();
+            if (data.status === "closed") return;
+            htmlContent += `
     <div class="col-12 col-md-4 col-lg-3">
         <div class="product-card">
             <img src="${data.img}" class="product-img mb-3" onclick="goToDetail('${doc.id}')" style="cursor:pointer">

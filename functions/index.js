@@ -214,3 +214,94 @@ exports.createZaloPayPayment = functions.https.onCall(async (data, context) => {
         };
     }
 });
+
+// ==================== BÁO CÁO CUỐI NGÀY (5:00 PM) ====================
+// Chạy lúc 17h00 hàng ngày (giờ Việt Nam, tương đương 10h00 UTC)
+exports.dailyOrderSummaryReport = functions.pubsub
+    .schedule('0 17 * * *')
+    .timeZone('Asia/Ho_Chi_Minh')
+    .onRun(async (context) => {
+        try {
+            console.log("Bắt đầu chạy báo cáo đơn hàng chưa hoàn thành cuối ngày...");
+            
+            // 1. Lấy tất cả các đơn hàng có trạng thái KHÁC "Hoàn thành" và "Hủy"
+            const ordersSnap = await admin.firestore().collection("orders").get();
+            const incompleteOrders = [];
+            
+            ordersSnap.forEach(doc => {
+                const o = doc.data();
+                if (o.status !== "Hoàn thành" && o.status !== "Hủy") {
+                    incompleteOrders.push({ id: doc.id, ...o });
+                }
+            });
+            
+            if (incompleteOrders.length === 0) {
+                console.log("Không có đơn hàng chưa hoàn thành nào.");
+                return null;
+            }
+            
+            // 2. Tạo nội dung tóm tắt
+            let summaryContent = `Báo cáo ngày ${new Date().toLocaleDateString("vi-VN")}:\n`;
+            summaryContent += `Có tổng cộng ${incompleteOrders.length} đơn hàng chưa hoàn thành và cần xử lý:\n\n`;
+            incompleteOrders.forEach((o, index) => {
+                const itemsStr = o.items ? o.items.map(i => `${i.name} x${i.quantity}`).join(", ") : "Không có";
+                summaryContent += `${index + 1}. Đơn hàng #${o.id || o.orderId}\n`;
+                summaryContent += `   - Khách hàng: ${o.fullName || "N/A"} (${o.phone || "N/A"})\n`;
+                summaryContent += `   - Trạng thái: ${o.status || "N/A"}\n`;
+                summaryContent += `   - Trị giá: ${Number(o.amount || o.totalPrice || 0).toLocaleString()}đ\n`;
+                summaryContent += `   - Chi tiết sản phẩm: ${itemsStr}\n`;
+                summaryContent += `   - Địa chỉ: ${o.address || ""}, ${o.ward || ""}, ${o.district || ""}, ${o.province || ""}\n\n`;
+            });
+            
+            // 3. Lấy toàn bộ email của Admin và Staff
+            const usersSnap = await admin.firestore().collection("users").get();
+            const emailList = [];
+            usersSnap.forEach(doc => {
+                const u = doc.data();
+                if ((u.role === "admin" || u.role === "staff") && u.email) {
+                    emailList.push(u.email);
+                }
+            });
+            
+            // Fallback nếu không tìm thấy email nào
+            if (emailList.length === 0) {
+                emailList.push("admin_fonestore@mailinator.com");
+            }
+            
+            // 4. Gửi email thông qua EmailJS REST API
+            const SERVICE_ID = "service_fstore"; 
+            const TEMPLATE_ID = "template_daily_summary";
+            const PUBLIC_KEY = "tlBWYrwaB2_uOtB5b";
+            const PRIVATE_KEY = "I5eiLCuM4AccA2jVgIxZ9"; // Cần cung cấp Private Key cho server-side
+
+            const promises = emailList.map(async (email) => {
+                const requestBody = {
+                    service_id: SERVICE_ID,
+                    template_id: TEMPLATE_ID,
+                    user_id: PUBLIC_KEY,
+                    accessToken: PRIVATE_KEY,
+                    template_params: {
+                        to_email: email,
+                        summary_content: summaryContent,
+                        report_date: new Date().toLocaleDateString("vi-VN")
+                    }
+                };
+                
+                try {
+                    await axios.post("https://api.emailjs.com/api/v1.0/email/send", requestBody, {
+                        headers: { "Content-Type": "application/json" }
+                    });
+                    console.log(`Báo cáo cuối ngày đã gửi thành công tới: ${email}`);
+                } catch (err) {
+                    console.error(`Lỗi gửi báo cáo tới ${email}:`, err.response ? err.response.data : err.message);
+                }
+            });
+            
+            await Promise.all(promises);
+            console.log("Hoàn thành quy trình gửi báo cáo cuối ngày.");
+            return null;
+        } catch (error) {
+            console.error("Lỗi trong dailyOrderSummaryReport:", error);
+            return null;
+        }
+    });

@@ -1181,7 +1181,8 @@
             const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const orderDescription = `FoneStore: ${userData.fullName || auth.currentUser.email}`;
 
-            const response = await fetch('/api/zalopay', {
+            const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'https://fonestore.pages.dev' : '';
+            const response = await fetch(`${apiBase}/api/zalopay`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

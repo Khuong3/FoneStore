@@ -494,7 +494,13 @@
 
                 if (userDoc.exists()) {
                     userData = userDoc.data();
-                    if (userData.role === 'admin' && adminBtn) adminBtn.style.display = 'inline-block';
+                    if (userData.status === 'blocked') {
+                        alert("Tài khoản của bạn đã bị khóa bởi Quản trị viên!");
+                        await auth.signOut();
+                        window.location.reload();
+                        return;
+                    }
+                    if ((userData.role === 'admin' || userData.role === 'staff') && adminBtn) adminBtn.style.display = 'inline-block';
                 } else {
                     userData = { fullName: '', phone: '', email: user.email || '', address: '', province: '', district: '', ward: '', role: 'customer' };
                     await setDoc(userRef, userData);
@@ -536,6 +542,10 @@
 
                 if (docSnap.exists()) {
                     productData = docSnap.data();
+                    if (productData.status === "closed") {
+                        container.innerHTML = `<div class="alert alert-warning text-center m-4">Sản phẩm này đã ngừng kinh doanh.</div>`;
+                        return;
+                    }
                     const p = productData;
                     const s = p.specs || {};
 

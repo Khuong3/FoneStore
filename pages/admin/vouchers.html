@@ -199,6 +199,11 @@
                                 <i class="bi bi-tags-fill"></i> Khuyến mãi
                             </a>
                         </li>
+                        <li class="nav-item" id="sidebar-users-li" style="display: none;">
+                            <a class="nav-link" href="users.html">
+                                <i class="bi bi-people-fill"></i> Thành viên
+                            </a>
+                        </li>
                     </ul>
                 </div>
                 <div class="pb-4">
@@ -399,7 +404,16 @@
             if (!userDoc.exists() || userDoc.data().role !== "admin") {
                 alert("Bạn không có quyền truy cập!");
                 window.location.href = "../../home.html";
+                return;
             }
+            if (userDoc.data().status === "blocked") {
+                alert("Tài khoản của bạn đã bị khóa!");
+                await auth.signOut();
+                window.location.href = "../../home.html";
+                return;
+            }
+            const li = document.getElementById("sidebar-users-li");
+            if (li) li.style.display = "block";
         });
 
         // 2. TẢI DANH SÁCH SẢN PHẨM LÀM CHECKBOX
