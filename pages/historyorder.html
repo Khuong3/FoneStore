@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
@@ -357,6 +358,40 @@
             </a>
         </div>
 
+        <!-- Purchase Analysis Section -->
+        <div class="purchase-analytics-section mb-4" id="purchase-analytics-section" style="display: none;">
+            <div class="card border-0 shadow-sm p-4 mb-4" style="background: #faf8f5; border: 1.5px solid var(--gold-border) !important; border-radius: 20px;">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2" style="color: var(--dark); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
+                    <i class="bi bi-bar-chart-line-fill text-warning"></i> Phân tích chi tiêu cá nhân
+                </h5>
+                <div class="row align-items-center">
+                    <div class="col-md-7 mb-3 mb-md-0">
+                        <div style="position: relative; height: 180px; width: 100%;">
+                            <canvas id="purchaseChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="d-flex flex-column gap-2">
+                            <div class="p-3 bg-white border d-flex justify-content-between align-items-center" style="border-radius: 12px; border-color: #eee !important; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                                <div>
+                                    <div class="text-secondary small fw-bold" style="font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.5px; color: #777 !important;">Tổng tích lũy mua sắm</div>
+                                    <div class="fw-bold text-danger fs-5 mt-1" id="stat-total-spent">0đ</div>
+                                </div>
+                                <div class="fs-4 text-warning"><i class="bi bi-cash-coin"></i></div>
+                            </div>
+                            <div class="p-3 bg-white border d-flex justify-content-between align-items-center" style="border-radius: 12px; border-color: #eee !important; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                                <div>
+                                    <div class="text-secondary small fw-bold" style="font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.5px; color: #777 !important;">Số lượng sản phẩm đã mua</div>
+                                    <div class="fw-bold text-dark fs-5 mt-1" id="stat-total-items">0</div>
+                                </div>
+                                <div class="fs-4 text-success"><i class="bi bi-cup-hot-fill"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Order list -->
         <div id="order-list">
             <div class="loading-state">
@@ -379,6 +414,90 @@
         import { collection, getDocs, query, where, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
         await loadLayout();
+
+        function renderChart(ordersData) {
+            const ctx = document.getElementById('purchaseChart').getContext('2d');
+            
+            const monthlySpent = {};
+            ordersData.forEach(o => {
+                const monthStr = `${String(o.date.getMonth() + 1).padStart(2, '0')}/${o.date.getFullYear()}`;
+                monthlySpent[monthStr] = (monthlySpent[monthStr] || 0) + o.amount;
+            });
+
+            const labels = Object.keys(monthlySpent);
+            const values = Object.values(monthlySpent);
+
+            let chartLabels = labels;
+            let chartValues = values;
+
+            if (labels.length <= 1) {
+                const recentOrders = ordersData.slice(-8);
+                chartLabels = recentOrders.map(o => o.date.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit'}));
+                chartValues = recentOrders.map(o => o.amount);
+            }
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 180);
+            gradient.addColorStop(0, 'rgba(212, 175, 55, 0.4)');
+            gradient.addColorStop(1, 'rgba(212, 175, 55, 0.02)');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Số tiền chi tiêu',
+                        data: chartValues,
+                        borderColor: '#d4af37',
+                        borderWidth: 2,
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#d4af37',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1.5,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#111',
+                            titleFont: { family: 'Montserrat', size: 10, weight: '700' },
+                            bodyFont: { family: 'Montserrat', size: 11 },
+                            padding: 8,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Đã chi: ' + context.raw.toLocaleString() + 'đ';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0, 0, 0, 0.04)' },
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000000) return (value / 1000000) + 'M';
+                                    if (value >= 1000) return (value / 1000) + 'k';
+                                    return value;
+                                },
+                                font: { family: 'Montserrat', size: 8 }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Montserrat', size: 8, weight: '600' } }
+                        }
+                    }
+                }
+            });
+        }
 
         onAuthStateChanged(auth, async (user) => {
             const container   = document.getElementById('order-list');
@@ -461,6 +580,34 @@
                 if (countEl) {
                     countEl.textContent  = snap.size + ' đơn hàng';
                     countEl.style.display = 'inline-flex';
+                }
+
+                // Tải dữ liệu vẽ biểu đồ và tính toán thống kê
+                const ordersData = [];
+                snap.forEach(orderDoc => {
+                    const data = orderDoc.data();
+                    if (data.status !== "Hủy" && data.status !== "pending_payment") {
+                        ordersData.push({
+                            id: orderDoc.id,
+                            date: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+                            amount: Number(data.amount || data.totalAmount || data.totalPrice || 0),
+                            itemsCount: (data.items || []).reduce((sum, item) => sum + (item.quantity || 1), 0)
+                        });
+                    }
+                });
+
+                if (ordersData.length > 0) {
+                    ordersData.sort((a, b) => a.date - b.date);
+                    const totalSpent = ordersData.reduce((sum, o) => sum + o.amount, 0);
+                    const totalItems = ordersData.reduce((sum, o) => sum + o.itemsCount, 0);
+
+                    document.getElementById('stat-total-spent').innerText = totalSpent.toLocaleString() + 'đ';
+                    document.getElementById('stat-total-items').innerText = totalItems.toString();
+                    document.getElementById('purchase-analytics-section').style.display = 'block';
+
+                    renderChart(ordersData);
+                } else {
+                    document.getElementById('purchase-analytics-section').style.display = 'none';
                 }
 
                 // Status helper

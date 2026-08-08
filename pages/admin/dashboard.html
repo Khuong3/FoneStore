@@ -203,25 +203,44 @@
 
                 <!-- STATS ROW -->
                 <div class="row g-4 mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="stat-card">
-                            <div class="stat-icon revenue-icon"><i class="bi bi-currency-dollar"></i></div>
+                            <div class="stat-icon revenue-icon" style="background-color: rgba(13, 110, 253, 0.1); color: #0d6efd;"><i class="bi bi-cash-stack"></i></div>
                             <h6>Tổng doanh thu</h6>
                             <h3 id="total-revenue">0đ</h3>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="stat-card">
-                            <div class="stat-icon orders-icon"><i class="bi bi-check2-circle"></i></div>
+                            <div class="stat-icon orders-icon" style="background-color: rgba(25, 135, 84, 0.1); color: #198754;"><i class="bi bi-check2-circle"></i></div>
                             <h6>Đơn hoàn thành</h6>
                             <h3 id="order-count">0</h3>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="stat-card">
-                            <div class="stat-icon products-icon"><i class="bi bi-cup-straw"></i></div>
+                            <div class="stat-icon products-icon" style="background-color: rgba(212, 175, 55, 0.15); color: var(--gold);"><i class="bi bi-cup-straw"></i></div>
                             <h6>Sản phẩm đã bán</h6>
                             <h3 id="total-items-sold">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon aov-icon" style="background-color: rgba(220, 53, 69, 0.1); color: #dc3545;"><i class="bi bi-calculator"></i></div>
+                            <h6>Giá trị đơn TB (AOV)</h6>
+                            <h3 id="aov-display">0đ</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REVENUE TREND CHART -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="chart-card" style="min-height: 350px;">
+                            <h5><i class="bi bi-graph-up-arrow"></i> Xu hướng doanh thu theo thời gian</h5>
+                            <div style="position: relative; height: 280px; width: 100%;">
+                                <canvas id="revenueTrendChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -259,6 +278,7 @@
 
         let barChartInstance = null;
         let doughnutChartInstance = null;
+        let trendChartInstance = null;
 
         // 1. KIỂM TRA PHÂN QUYỀN ADMIN
         onAuthStateChanged(auth, async (user) => {
@@ -286,15 +306,32 @@
                 const q = query(collection(db, "orders"), where("status", "==", "Hoàn thành"));
                 const snapshot = await getDocs(q);
                 
+                const ordersList = [];
+                snapshot.forEach(doc => {
+                    ordersList.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sắp xếp các đơn hàng theo ngày đặt tăng dần để vẽ xu hướng
+                ordersList.sort((a, b) => {
+                    const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+                    const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+                    return dateA - dateB;
+                });
+
                 let revenueTotal = 0;
                 let itemsSoldTotal = 0;
-                
-                // Gom nhóm số lượng bán ra của từng sản phẩm: { "Tên SP": số_lượng }
                 const productSales = {};
+                const dailyRevenue = {}; // { "dd/MM": amount }
 
-                snapshot.forEach(doc => {
-                    const order = doc.data();
-                    revenueTotal += (order.totalPrice || order.amount || 0);
+                ordersList.forEach(order => {
+                    const amount = (order.totalPrice || order.amount || 0);
+                    revenueTotal += amount;
+
+                    if (order.createdAt?.toDate) {
+                        const date = order.createdAt.toDate();
+                        const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                        dailyRevenue[dateStr] = (dailyRevenue[dateStr] || 0) + amount;
+                    }
 
                     if (order.items && Array.isArray(order.items)) {
                         order.items.forEach(item => {
@@ -310,20 +347,28 @@
                 document.getElementById('total-revenue').innerText = revenueTotal.toLocaleString() + 'đ';
                 document.getElementById('order-count').innerText = snapshot.size;
                 document.getElementById('total-items-sold').innerText = itemsSoldTotal.toLocaleString();
+                
+                // Tính AOV
+                const aov = snapshot.size > 0 ? Math.round(revenueTotal / snapshot.size) : 0;
+                document.getElementById('aov-display').innerText = aov.toLocaleString() + 'đ';
 
-                // Chuẩn bị mảng labels (Tên SP) và data (Số lượng) vẽ biểu đồ
+                // Chuẩn bị mảng labels (Tên SP) và data (Số lượng) vẽ biểu đồ sản phẩm
                 const labels = Object.keys(productSales);
                 const salesData = Object.values(productSales);
 
+                // Chuẩn bị mảng xu hướng doanh thu
+                const trendLabels = Object.keys(dailyRevenue);
+                const trendValues = Object.values(dailyRevenue);
+
                 if (labels.length === 0) {
-                    // Hiển thị thông báo nếu chưa có sản phẩm nào được bán ra
                     document.getElementById('productsBarChart').parentElement.innerHTML = `<div class="text-center py-5 text-muted">Chưa có sản phẩm bán ra để thống kê biểu đồ.</div>`;
                     document.getElementById('productsDoughnutChart').parentElement.innerHTML = `<div class="text-center py-5 text-muted">Chưa có dữ liệu.</div>`;
+                    document.getElementById('revenueTrendChart').parentElement.innerHTML = `<div class="text-center py-5 text-muted">Chưa có dữ liệu doanh thu.</div>`;
                     return;
                 }
 
                 // Vẽ các biểu đồ
-                renderCharts(labels, salesData);
+                renderCharts(labels, salesData, trendLabels, trendValues);
 
             } catch (err) { 
                 console.error("Lỗi tải thông tin thống kê:", err); 
@@ -331,12 +376,11 @@
         }
 
         // 3. VẼ BIỂU ĐỒ BẰNG CHART.JS
-        function renderCharts(labels, data) {
-            // Hủy biểu đồ cũ nếu đã tồn tại để tránh xung đột
+        function renderCharts(labels, data, trendLabels, trendData) {
             if (barChartInstance) barChartInstance.destroy();
             if (doughnutChartInstance) doughnutChartInstance.destroy();
+            if (trendChartInstance) trendChartInstance.destroy();
 
-            // Mảng màu sắc ngẫu nhiên, nhẹ nhàng sang trọng
             const backgroundColors = [
                 '#d4af37', // Gold chủ đạo FStore
                 '#1a0e0a', // Đen thẫm
@@ -350,7 +394,71 @@
                 '#6f42c1'  // Tím
             ];
 
-            // A. BIỂU ĐỒ CỘT (BAR CHART) - SỐ LƯỢNG
+            // A. BIỂU ĐỒ ĐƯỜNG (LINE CHART) - XU HƯỚNG DOANH THU
+            const ctxTrend = document.getElementById('revenueTrendChart').getContext('2d');
+            const trendGradient = ctxTrend.createLinearGradient(0, 0, 0, 240);
+            trendGradient.addColorStop(0, 'rgba(13, 110, 253, 0.25)');
+            trendGradient.addColorStop(1, 'rgba(13, 110, 253, 0.01)');
+
+            trendChartInstance = new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: trendLabels,
+                    datasets: [{
+                        label: 'Doanh thu',
+                        data: trendData,
+                        borderColor: '#0d6efd',
+                        borderWidth: 2.5,
+                        backgroundColor: trendGradient,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#0d6efd',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1.5,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#111',
+                            titleFont: { family: 'Montserrat', size: 10, weight: '700' },
+                            bodyFont: { family: 'Montserrat', size: 11 },
+                            padding: 8,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Doanh thu: ' + context.raw.toLocaleString() + 'đ';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0, 0, 0, 0.04)' },
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000000) return (value / 1000000) + 'M';
+                                    if (value >= 1000) return (value / 1000) + 'k';
+                                    return value;
+                                },
+                                font: { family: 'Montserrat', size: 8 }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Montserrat', size: 8, weight: '600' } }
+                        }
+                    }
+                }
+            });
+
+            // B. BIỂU ĐỒ CỘT (BAR CHART) - SỐ LƯỢNG
             const ctxBar = document.getElementById('productsBarChart').getContext('2d');
             barChartInstance = new Chart(ctxBar, {
                 type: 'bar',
@@ -359,10 +467,10 @@
                     datasets: [{
                         label: 'Số lượng bán ra',
                         data: data,
-                        backgroundColor: '#d4af37', // Màu Gold của FStore
+                        backgroundColor: 'rgba(212, 175, 55, 0.85)',
                         borderColor: '#b4932c',
                         borderWidth: 1,
-                        borderRadius: 8,
+                        borderRadius: 6,
                         barPercentage: 0.5
                     }]
                 },
@@ -376,20 +484,22 @@
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                precision: 0 // chỉ hiển thị số nguyên
+                                precision: 0,
+                                font: { family: 'Montserrat', size: 8 }
                             },
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
+                                color: 'rgba(0, 0, 0, 0.04)'
                             }
                         },
                         x: {
-                            grid: { display: false }
+                            grid: { display: false },
+                            ticks: { font: { family: 'Montserrat', size: 8, weight: '600' } }
                         }
                     }
                 }
             });
 
-            // B. BIỂU ĐỒ TRÒN (DOUGHNUT CHART) - TỶ LỆ CƠ CẤU
+            // C. BIỂU ĐỒ TRÒN (DOUGHNUT CHART) - TỶ LỆ CƠ CẤU
             const ctxDoughnut = document.getElementById('productsDoughnutChart').getContext('2d');
             doughnutChartInstance = new Chart(ctxDoughnut, {
                 type: 'doughnut',
@@ -409,12 +519,12 @@
                         legend: {
                             position: 'bottom',
                             labels: {
-                                boxWidth: 12,
-                                font: { size: 10, family: 'Montserrat' }
+                                boxWidth: 10,
+                                font: { size: 9, family: 'Montserrat' }
                             }
                         }
                     },
-                    cutout: '65%'
+                    cutout: '60%'
                 }
             });
         }

@@ -95,6 +95,7 @@ export async function sendAdminProductNotification({ staffName, actionType, prod
     };
 
     try {
+        console.log(`Gửi mail yêu cầu phê duyệt sản phẩm tới Admin: ${adminEmail}`);
         const response = await window.emailjs.send(
             emailjsConfig.serviceId,
             emailjsConfig.templates.staffOrderNotification,
@@ -136,6 +137,7 @@ export async function sendOrderConfirmationToCustomer(orderId, orderData) {
     };
 
     try {
+        console.log(`Tiến hành gửi email xác nhận cho Khách hàng tới địa chỉ: ${targetEmail}`);
         const response = await window.emailjs.send(
             emailjsConfig.serviceId,
             emailjsConfig.templates.customerOrderConfirmation,
@@ -149,23 +151,33 @@ export async function sendOrderConfirmationToCustomer(orderId, orderData) {
     }
 }
 
-// 3. Gửi thông báo đơn hàng mới cho Nhân viên (Dùng chung mẫu template_staff_order)
+// 3. Gửi thông báo đơn hàng mới cho Nhân viên và cả Admin (Dùng chung mẫu template_staff_order)
 export async function sendOrderNotificationToStaff(orderId, orderData) {
     await initEmailJS();
 
-    // Lấy danh sách email của nhân viên (staff) trong DB
-    let staffEmails = [emailjsConfig.staffFallbackEmail];
+    // Lấy danh sách email của toàn bộ Nhân viên (staff) và cả Admin (admin) từ Firestore
+    let recipientEmails = [emailjsConfig.staffFallbackEmail, emailjsConfig.adminFallbackEmail];
     try {
-        const q = query(collection(db, "users"), where("role", "==", "staff"));
-        const snap = await getDocs(q);
+        const qStaff = query(collection(db, "users"), where("role", "==", "staff"));
+        const qAdmin = query(collection(db, "users"), where("role", "==", "admin"));
+        
+        const [snapStaff, snapAdmin] = await Promise.all([getDocs(qStaff), getDocs(qAdmin)]);
         const fetched = [];
-        snap.forEach(d => {
+        
+        snapStaff.forEach(d => {
             const u = d.data();
             if (u.email) fetched.push(u.email);
         });
-        if (fetched.length > 0) staffEmails = fetched;
+        snapAdmin.forEach(d => {
+            const u = d.data();
+            if (u.email) fetched.push(u.email);
+        });
+        
+        if (fetched.length > 0) {
+            recipientEmails = [...new Set(fetched)]; // Loại bỏ trùng lặp nếu có
+        }
     } catch (e) {
-        console.error("Lỗi tìm email Nhân viên:", e);
+        console.error("Lỗi tìm email Nhân viên/Admin:", e);
     }
 
     const itemsText = orderData.items.map(item => 
@@ -173,7 +185,7 @@ export async function sendOrderNotificationToStaff(orderId, orderData) {
     ).join("\n");
 
     const htmlContent = `
-        <p style="margin-top: 0; font-size: 16px;">Xin chào Nhân viên bán hàng,</p>
+        <p style="margin-top: 0; font-size: 16px;">Xin chào,</p>
         <p style="line-height: 1.6;">Hệ thống vừa ghi nhận một đơn hàng mới cần được xử lý nhanh chóng. Dưới đây là thông tin chi tiết:</p>
         
         <div style="background-color: #f9f9f9; border-left: 4px solid #d4af37; padding: 16px; border-radius: 4px; margin: 20px 0;">
@@ -202,10 +214,12 @@ export async function sendOrderNotificationToStaff(orderId, orderData) {
             ${itemsText}
         </div>
 
-        <p style="margin-top: 24px; line-height: 1.6; font-size: 14px; color: #555555;">Vui lòng truy cập trang quản lý đơn hàng của Admin FoneStore để xác nhận và tiến hành đóng gói giao nhận cho đơn vị vận chuyển.</p>
+        <p style="margin-top: 24px; line-height: 1.6; font-size: 14px; color: #555555;">Vui lòng truy cập trang quản trị Admin FoneStore để xác nhận và tiến hành đóng gói giao nhận cho đơn vị vận chuyển.</p>
     `;
 
-    const promises = staffEmails.map(async (email) => {
+    console.log("Danh sách hòm thư nhận thông báo đơn hàng mới (Staff & Admin):", recipientEmails);
+
+    const promises = recipientEmails.map(async (email) => {
         const templateParams = {
             to_email: email,
             email: email, // Đồng bộ với {{email}} trên giao diện EmailJS
@@ -221,7 +235,7 @@ export async function sendOrderNotificationToStaff(orderId, orderData) {
                 templateParams
             );
         } catch (err) {
-            console.error(`Lỗi gửi EmailJS đến nhân viên (${email}):`, err);
+            console.error(`Lỗi gửi EmailJS đến nhân viên/admin (${email}):`, err);
             return null;
         }
     });
@@ -245,6 +259,8 @@ export async function sendDailyIncompleteOrdersSummary(emailList, summaryContent
         <p style="margin-top: 24px; line-height: 1.6; font-size: 14px; color: #e63946; font-weight: 600;">⚠️ Yêu cầu:</p>
         <p style="line-height: 1.6; font-size: 14px; color: #555555; margin-top: 4px;">Tất cả nhân viên và Admin phụ trách đơn hàng vui lòng đối soát trạng thái, liên hệ đơn vị vận chuyển hoặc khách hàng để hoàn tất các đơn hàng tồn đọng trên.</p>
     `;
+
+    console.log("Gửi báo cáo các đơn hàng tồn đọng cuối ngày tới danh sách:", emailList);
 
     const promises = emailList.map(async (email) => {
         const templateParams = {
